@@ -10,7 +10,7 @@ import yaml
 from comfy_orch.artifacts import collect_outputs
 from comfy_orch.binder import apply_bindings, list_media_fields
 from comfy_orch.client import ComfyClient
-from comfy_orch.errors import ConnectionFailed, ValidationError
+from comfy_orch.errors import ComfyOrchError, ValidationError
 from comfy_orch.manifest import load_and_validate_job
 from comfy_orch.status import JobStatus, write_status
 
@@ -45,11 +45,7 @@ def submit_job(job_dir: Path, *, base_url: str, root: Path) -> str:
 
             client = ComfyClient(base_url)
             try:
-                try:
-                    client.system_stats()
-                except ConnectionFailed as exc:
-                    _write_failed(str(exc))
-                    raise
+                client.system_stats()
 
                 bindings_yaml = (template_dir / "bindings.yaml").read_text(encoding="utf-8")
                 values = dict(job.fields)
@@ -86,6 +82,9 @@ def submit_job(job_dir: Path, *, base_url: str, root: Path) -> str:
             finally:
                 client.close()
         except ValidationError as exc:
+            _write_failed(str(exc))
+            raise
+        except ComfyOrchError as exc:
             _write_failed(str(exc))
             raise
 

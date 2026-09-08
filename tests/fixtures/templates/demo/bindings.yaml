@@ -1,0 +1,8 @@
+bindings:
+  - field: prompt
+    node_title: 正向提示词
+    input: text
+  - field: first_frame
+    node_title: 首帧
+    input: image
+    media: true

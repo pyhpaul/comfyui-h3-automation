@@ -1,0 +1,4 @@
+required_fields:
+  - prompt
+required_files:
+  - first_frame

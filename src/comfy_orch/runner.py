@@ -47,15 +47,27 @@ def submit_job(job_dir: Path, *, base_url: str, root: Path) -> str:
             try:
                 client.system_stats()
 
-                bindings_yaml = (template_dir / "bindings.yaml").read_text(encoding="utf-8")
+                try:
+                    bindings_yaml = (template_dir / "bindings.yaml").read_text(
+                        encoding="utf-8"
+                    )
+                except FileNotFoundError as exc:
+                    raise ValidationError(
+                        f"missing bindings.yaml for template {job.template}"
+                    ) from exc
                 values = dict(job.fields)
                 for field in list_media_fields(bindings_yaml):
                     remote_name = client.upload_image(job.resolve_path(field))
                     values[field] = remote_name
 
-                workflow = json.loads(
-                    (template_dir / "workflow_api.json").read_text(encoding="utf-8")
-                )
+                try:
+                    workflow = json.loads(
+                        (template_dir / "workflow_api.json").read_text(encoding="utf-8")
+                    )
+                except FileNotFoundError as exc:
+                    raise ValidationError(
+                        f"missing workflow_api.json for template {job.template}"
+                    ) from exc
                 bound = apply_bindings(
                     workflow,
                     bindings_yaml=bindings_yaml,

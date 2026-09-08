@@ -4,7 +4,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from comfy_orch.client import ComfyClient
-from comfy_orch.errors import QueueRejected
+from comfy_orch.errors import ConnectionFailed, QueueRejected
 
 
 BASE = "http://comfy.test"
@@ -43,6 +43,33 @@ def test_queue_prompt(httpx_mock: HTTPXMock):
     client = ComfyClient(BASE)
     try:
         assert client.queue_prompt({"1": {}}) == "pid-1"
+    finally:
+        client.close()
+
+
+def test_upload_image_http_error(httpx_mock: HTTPXMock, tmp_path):
+    path = tmp_path / "a.png"
+    path.write_bytes(b"\x89PNG\r\n\x1a\n")
+    httpx_mock.add_response(url=f"{BASE}/upload/image", method="POST", status_code=503)
+    client = ComfyClient(BASE)
+    try:
+        with pytest.raises(ConnectionFailed):
+            client.upload_image(path)
+    finally:
+        client.close()
+
+
+def test_queue_prompt_bad_json(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url=f"{BASE}/prompt",
+        method="POST",
+        status_code=200,
+        content=b"not json",
+    )
+    client = ComfyClient(BASE)
+    try:
+        with pytest.raises(QueueRejected):
+            client.queue_prompt({"1": {}})
     finally:
         client.close()
 

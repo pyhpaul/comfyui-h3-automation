@@ -28,24 +28,36 @@ class ComfyClient:
             raise ConnectionFailed(str(e)) from e
 
     def upload_image(self, path: Path, overwrite: bool = True) -> str:
-        with path.open("rb") as f:
-            r = self._client.post(
-                "/upload/image",
-                files={"image": (path.name, f, "application/octet-stream")},
-                data={"overwrite": "true" if overwrite else "false"},
-            )
-        r.raise_for_status()
-        return r.json()["name"]
+        try:
+            with path.open("rb") as f:
+                r = self._client.post(
+                    "/upload/image",
+                    files={"image": (path.name, f, "application/octet-stream")},
+                    data={"overwrite": "true" if overwrite else "false"},
+                )
+            r.raise_for_status()
+            return r.json()["name"]
+        except httpx.HTTPError as e:
+            raise ConnectionFailed(str(e)) from e
 
     def queue_prompt(self, workflow: dict[str, Any]) -> str:
-        r = self._client.post(
-            "/prompt",
-            json={"prompt": workflow, "client_id": self.client_id},
-        )
-        data = r.json()
+        try:
+            r = self._client.post(
+                "/prompt",
+                json={"prompt": workflow, "client_id": self.client_id},
+            )
+        except httpx.HTTPError as e:
+            raise ConnectionFailed(str(e)) from e
+        try:
+            data = r.json()
+        except ValueError as e:
+            raise QueueRejected(str(e)) from e
         if r.status_code >= 400 or data.get("node_errors"):
             raise QueueRejected(str(data))
-        return data["prompt_id"]
+        try:
+            return data["prompt_id"]
+        except KeyError as e:
+            raise QueueRejected(str(e)) from e
 
     def wait_until_done(
         self,
@@ -56,9 +68,12 @@ class ComfyClient:
     ) -> dict[str, Any]:
         deadline = time.time() + timeout
         while time.time() < deadline:
-            r = self._client.get(f"/history/{prompt_id}")
-            r.raise_for_status()
-            data = r.json()
+            try:
+                r = self._client.get(f"/history/{prompt_id}")
+                r.raise_for_status()
+                data = r.json()
+            except httpx.HTTPError as e:
+                raise ConnectionFailed(str(e)) from e
             if prompt_id in data:
                 entry = data[prompt_id]
                 if entry.get("status", {}).get("status_str") == "error":

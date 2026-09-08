@@ -40,6 +40,29 @@ def test_runner_rejects_missing_file_without_comfy(httpx_mock: HTTPXMock, tmp_pa
     assert "first_frame" in st.message
 
 
+def test_runner_missing_bindings_marks_failed(httpx_mock: HTTPXMock, tmp_path: Path):
+    dest = tmp_path / "templates" / "demo"
+    dest.mkdir(parents=True)
+    for name in ("manifest.schema.yaml", "workflow_api.json"):
+        shutil.copy(FIXTURES / name, dest / name)
+    job_dir = tmp_path / "job"
+    (job_dir / "assets").mkdir(parents=True)
+    (job_dir / "assets" / "ref.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+    (job_dir / "job.yaml").write_text(
+        "template: demo\nfields:\n  prompt: hello\n  first_frame: assets/ref.png\n",
+        encoding="utf-8",
+    )
+    httpx_mock.add_response(url=f"{BASE}/system_stats", json={"system": {}})
+
+    with pytest.raises(ValidationError, match="bindings.yaml"):
+        submit_job(job_dir, base_url=BASE, root=tmp_path)
+
+    run_dirs = list((tmp_path / "runs").iterdir())
+    st = read_status(run_dirs[0] / "status.json")
+    assert st.state == "failed"
+    assert "bindings.yaml" in st.message
+
+
 def test_runner_happy_path(httpx_mock: HTTPXMock, tmp_path: Path):
     _install_demo_template(tmp_path)
     job_dir = tmp_path / "job"

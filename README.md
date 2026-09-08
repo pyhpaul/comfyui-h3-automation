@@ -50,3 +50,33 @@ comfy-orch status <job_id>
 ```
 
 `doctor` / `submit` 需要已设置 `COMFY_BASE_URL`；`status` 只读本地 `runs/<job_id>/status.json`。
+
+## 模板
+
+| 模板 | 用途 |
+|------|------|
+| `demo_txt` | 仅提示词字段示例（调 bindings） |
+| `smoke_passthrough` | VM 冒烟：`LoadImage → SaveImage`，无需 checkpoint / H3 |
+
+## vm122 冒烟（已验证）
+
+```bash
+# 远端（SSH Host vm122 / 192.168.5.122）
+# ~/ComfyUI: python main.py --listen 0.0.0.0 --port 8188 --cpu
+
+export COMFY_BASE_URL=http://192.168.5.122:8188
+comfy-orch doctor
+
+# 示例 job：template=smoke_passthrough，fields.first_frame 指向本地 png
+comfy-orch submit /path/to/job
+```
+
+## inbox 监控
+
+```bash
+# 将任务目录放入 inbox/<job-name>/（含 job.yaml）
+comfy-orch watch --once          # 扫一轮后退出
+comfy-orch watch --interval 5    # 持续轮询
+```
+
+成功提交的目录会移到 `inbox/.done/`；失败移到 `inbox/.failed/`。

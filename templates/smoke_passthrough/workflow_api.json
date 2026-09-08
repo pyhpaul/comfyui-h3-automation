@@ -1,0 +1,15 @@
+{
+  "10": {
+    "class_type": "LoadImage",
+    "_meta": {"title": "首帧"},
+    "inputs": {"image": "example.png"}
+  },
+  "9": {
+    "class_type": "SaveImage",
+    "_meta": {"title": "保存"},
+    "inputs": {
+      "filename_prefix": "comfy_orch_smoke",
+      "images": ["10", 0]
+    }
+  }
+}

@@ -27,18 +27,33 @@ class ComfyClient:
         except httpx.HTTPError as e:
             raise ConnectionFailed(str(e)) from e
 
-    def upload_image(self, path: Path, overwrite: bool = True) -> str:
-        try:
-            with path.open("rb") as f:
-                r = self._client.post(
-                    "/upload/image",
-                    files={"image": (path.name, f, "application/octet-stream")},
-                    data={"overwrite": "true" if overwrite else "false"},
-                )
-            r.raise_for_status()
-            return r.json()["name"]
-        except httpx.HTTPError as e:
-            raise ConnectionFailed(str(e)) from e
+    def upload_image(
+        self,
+        path: Path,
+        overwrite: bool = True,
+        *,
+        retries: int = 3,
+        retry_backoff: float = 0.5,
+    ) -> str:
+        last_error: Exception | None = None
+        attempts = max(1, retries)
+        for attempt in range(attempts):
+            try:
+                with path.open("rb") as f:
+                    r = self._client.post(
+                        "/upload/image",
+                        files={"image": (path.name, f, "application/octet-stream")},
+                        data={"overwrite": "true" if overwrite else "false"},
+                    )
+                r.raise_for_status()
+                return r.json()["name"]
+            except httpx.HTTPError as e:
+                last_error = e
+                if attempt + 1 >= attempts:
+                    break
+                time.sleep(retry_backoff * (attempt + 1))
+        assert last_error is not None
+        raise ConnectionFailed(str(last_error)) from last_error
 
     def queue_prompt(self, workflow: dict[str, Any]) -> str:
         try:

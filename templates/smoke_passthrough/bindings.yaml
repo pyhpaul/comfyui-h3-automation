@@ -1,0 +1,5 @@
+bindings:
+  - field: first_frame
+    node_title: 首帧
+    input: image
+    media: true

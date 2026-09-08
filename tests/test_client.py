@@ -54,7 +54,7 @@ def test_upload_image_http_error(httpx_mock: HTTPXMock, tmp_path):
     client = ComfyClient(BASE)
     try:
         with pytest.raises(ConnectionFailed):
-            client.upload_image(path)
+            client.upload_image(path, retries=1)
     finally:
         client.close()
 

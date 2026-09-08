@@ -1,0 +1,3 @@
+template: demo_txt
+fields:
+  prompt: "a short demo prompt"

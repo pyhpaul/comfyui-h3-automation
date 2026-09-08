@@ -1,0 +1,4 @@
+bindings:
+  - field: prompt
+    node_title: 正向提示词
+    input: text

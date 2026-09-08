@@ -1,0 +1,12 @@
+{
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "正向提示词"},
+    "inputs": {"text": "OLD", "clip": ["4", 1]}
+  },
+  "10": {
+    "class_type": "LoadImage",
+    "_meta": {"title": "首帧"},
+    "inputs": {"image": "old.png"}
+  }
+}

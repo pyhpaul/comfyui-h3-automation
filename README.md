@@ -80,3 +80,25 @@ comfy-orch watch --interval 5    # 持续轮询
 ```
 
 成功提交的目录会移到 `inbox/.done/`；失败移到 `inbox/.failed/`。
+
+## 可见反馈 Demo（不装扩展）
+
+1. 浏览器打开 ComfyUI（与 `COMFY_BASE_URL` 同一实例），例如 `http://192.168.5.122:8188`。
+2. 本地产出 mock 资产包并提交：
+
+```bash
+export COMFY_BASE_URL=http://192.168.5.122:8188
+python scripts/mock_produce_assets.py --count 3
+comfy-orch watch --once
+```
+
+3. 网页侧栏/队列应能看到任务；成片在 `outputs/<job-id>/`，状态在 `runs/<job-id>/status.json`。
+4. **能看见：** 队列变化、跑完结果（视前端版本）、本地 outputs。  
+   **看不见：** API 注入不会改画布上 LoadImage/提示词控件。
+5. **可选细进度：** DevTools → Network → `ws` → 复制 `clientId`：
+
+```bash
+export COMFY_CLIENT_ID=<粘贴>
+# 或
+comfy-orch watch --once --client-id <粘贴>
+```

@@ -11,10 +11,10 @@ from comfy_orch.errors import CollectFailed, ConnectionFailed, ExecutionFailed, 
 
 
 class ComfyClient:
-    def __init__(self, base_url: str, timeout: float = 60.0):
+    def __init__(self, base_url: str, timeout: float = 60.0, client_id: str | None = None):
         self.base_url = base_url.rstrip("/")
         self._client = httpx.Client(base_url=self.base_url, timeout=timeout)
-        self.client_id = str(uuid.uuid4())
+        self.client_id = client_id if client_id else str(uuid.uuid4())
 
     def close(self) -> None:
         self._client.close()

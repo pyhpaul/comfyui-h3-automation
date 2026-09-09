@@ -1,3 +1,4 @@
+import json
 import re
 
 import pytest
@@ -45,6 +46,21 @@ def test_queue_prompt(httpx_mock: HTTPXMock):
         assert client.queue_prompt({"1": {}}) == "pid-1"
     finally:
         client.close()
+
+
+def test_queue_prompt_uses_explicit_client_id(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url=f"{BASE}/prompt",
+        method="POST",
+        json={"prompt_id": "pid-x", "number": 1, "node_errors": {}},
+    )
+    client = ComfyClient(BASE, client_id="browser-ws-id-1")
+    assert client.client_id == "browser-ws-id-1"
+    assert client.queue_prompt({"1": {}}) == "pid-x"
+    req = httpx_mock.get_request()
+    body = json.loads(req.content.decode())
+    assert body["client_id"] == "browser-ws-id-1"
+    assert body["prompt"] == {"1": {}}
 
 
 def test_upload_image_http_error(httpx_mock: HTTPXMock, tmp_path):

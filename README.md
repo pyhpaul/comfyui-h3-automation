@@ -20,6 +20,10 @@
 | GPU / H3 | 可无 GPU、不装 H3 | 租 GPU，加载 H3 权重 |
 | 连接 | `COMFY_BASE_URL` 指向 VM 或本机端口 | `COMFY_BASE_URL` 指向租卡（常经 SSH 隧道） |
 
+实环境 SSH/隧道/API 实测与 YZ 导出注意点见：
+
+`docs/ops/2026-09-09-gpu-comfy-api-archive.md`
+
 ## 环境变量
 
 只认一个变量：

@@ -39,6 +39,7 @@ def process_inbox_once(
     base_url: str,
     root: Path,
     submit: Callable[..., str] = submit_job,
+    client_id: str | None = None,
 ) -> list[tuple[Path, str | None, str | None]]:
     """
     Process each ready job once.
@@ -49,7 +50,9 @@ def process_inbox_once(
     failed_dir = inbox_dir / ".failed"
     for job_dir in discover_inbox_jobs(inbox_dir):
         try:
-            job_id = submit(job_dir, base_url=base_url, root=root)
+            job_id = submit(
+                job_dir, base_url=base_url, root=root, client_id=client_id
+            )
             moved = _move_job(job_dir, done_dir)
             results.append((moved, job_id, None))
         except ComfyOrchError as exc:
@@ -66,10 +69,17 @@ def watch_inbox(
     interval: float = 5.0,
     once: bool = False,
     submit: Callable[..., str] = submit_job,
+    client_id: str | None = None,
 ) -> None:
     inbox_dir.mkdir(parents=True, exist_ok=True)
     while True:
-        process_inbox_once(inbox_dir, base_url=base_url, root=root, submit=submit)
+        process_inbox_once(
+            inbox_dir,
+            base_url=base_url,
+            root=root,
+            submit=submit,
+            client_id=client_id,
+        )
         if once:
             return
         time.sleep(interval)

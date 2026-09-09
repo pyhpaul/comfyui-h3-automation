@@ -20,6 +20,13 @@ def _base_url() -> str:
     return url
 
 
+def _client_id(explicit: str | None) -> str | None:
+    if explicit and explicit.strip():
+        return explicit.strip()
+    env = os.environ.get("COMFY_CLIENT_ID", "").strip()
+    return env or None
+
+
 @app.command()
 def doctor() -> None:
     """Check connectivity to ComfyUI via COMFY_BASE_URL."""
@@ -35,10 +42,20 @@ def doctor() -> None:
 
 
 @app.command()
-def submit(job_dir: Path) -> None:
+def submit(
+    job_dir: Path,
+    client_id: str | None = typer.Option(
+        None, "--client-id", help="ComfyUI client_id for WS progress alignment"
+    ),
+) -> None:
     """Validate, run, and collect outputs for a job directory."""
     try:
-        job_id = submit_job(job_dir, base_url=_base_url(), root=project_root())
+        job_id = submit_job(
+            job_dir,
+            base_url=_base_url(),
+            root=project_root(),
+            client_id=_client_id(client_id),
+        )
     except ComfyOrchError as e:
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(1) from e
@@ -64,13 +81,22 @@ def watch(
     ),
     interval: float = typer.Option(5.0, help="Poll interval seconds"),
     once: bool = typer.Option(False, help="Process one scan then exit"),
+    client_id: str | None = typer.Option(
+        None, "--client-id", help="ComfyUI client_id for WS progress alignment"
+    ),
 ) -> None:
     """Watch inbox for jobs; move to inbox/.done or inbox/.failed after submit."""
     root = project_root()
     inbox_path = inbox if inbox.is_absolute() else root / inbox
+    resolved_client_id = _client_id(client_id)
     try:
         if once:
-            results = process_inbox_once(inbox_path, base_url=_base_url(), root=root)
+            results = process_inbox_once(
+                inbox_path,
+                base_url=_base_url(),
+                root=root,
+                client_id=resolved_client_id,
+            )
             for moved, job_id, err in results:
                 if err:
                     typer.secho(f"FAILED {moved.name}: {err}", fg=typer.colors.RED)
@@ -86,6 +112,7 @@ def watch(
                 root=root,
                 interval=interval,
                 once=False,
+                client_id=resolved_client_id,
             )
     except ComfyOrchError as e:
         typer.secho(str(e), fg=typer.colors.RED)

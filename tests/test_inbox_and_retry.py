@@ -75,6 +75,27 @@ def test_discover_and_process_inbox(tmp_path: Path):
     submit.assert_called_once()
 
 
+def test_process_inbox_passes_client_id(tmp_path: Path):
+    inbox = tmp_path / "inbox"
+    job = inbox / "j1"
+    job.mkdir(parents=True)
+    (job / "job.yaml").write_text("template: x\nfields: {}\n", encoding="utf-8")
+    seen: dict = {}
+
+    def fake_submit(job_dir, *, base_url, root, client_id=None):
+        seen["client_id"] = client_id
+        return "abc123"
+
+    process_inbox_once(
+        inbox,
+        base_url="http://comfy.test",
+        root=tmp_path,
+        submit=fake_submit,
+        client_id="from-cli",
+    )
+    assert seen["client_id"] == "from-cli"
+
+
 def test_process_inbox_moves_failed(tmp_path: Path):
     inbox = tmp_path / "inbox"
     job = inbox / "bad"

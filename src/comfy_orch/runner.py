@@ -17,7 +17,13 @@ from comfy_orch.status import JobStatus, write_status
 _lock = threading.Lock()
 
 
-def submit_job(job_dir: Path, *, base_url: str, root: Path) -> str:
+def submit_job(
+    job_dir: Path,
+    *,
+    base_url: str,
+    root: Path,
+    client_id: str | None = None,
+) -> str:
     with _lock:
         job_id = uuid.uuid4().hex[:12]
         status_path = root / "runs" / job_id / "status.json"
@@ -43,7 +49,7 @@ def submit_job(job_dir: Path, *, base_url: str, root: Path) -> str:
             job = load_and_validate_job(job_dir, schema_path=schema_path)
             template_dir = root / "templates" / job.template
 
-            client = ComfyClient(base_url)
+            client = ComfyClient(base_url, client_id=client_id)
             try:
                 client.system_stats()
 

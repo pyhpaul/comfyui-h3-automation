@@ -127,7 +127,3 @@ python scripts/audit_pack_prompts.py
 - **不要提交**密码、`.env`、租卡 SSH 密钥或真实 passfile
 - **`jobs/`、`runs/`、`outputs/`** 已 gitignore（含大媒体；从资产包现场生成）
 - 设计过程稿在 `docs/superpowers/`；日常以 HANDOFF + ops 为准
-
-## License
-
-见仓库内声明文件（若暂无则以贡献者约定为准）。

@@ -1,108 +1,133 @@
 # comfyui-h3-automation
 
-本地编排 + 远程 ComfyUI（见 `docs/superpowers/specs/`）。
+本地编排客户端：把 EP 资产包编成 YZ **MiniMax H3** 任务，经共享入口 **`vm122:8190`** 提交到租卡 ComfyUI，再拉回成片。
 
-## 项目根目录
+适合：多人共用同一台 vm122 隧道、在 WSL/Linux 上跑串行出片的团队。
+
+**新人第一站：** [docs/HANDOFF.md](docs/HANDOFF.md)（拓扑、换卡、模式门禁、坑）
+
+## 拓扑
 
 ```text
-/home/linux_dev/projects/comfyui-h3-automation
+编排机 (WSL / Linux)
+    │  HTTP  COMFY_BASE_URL
+    ▼
+vm122  :8190          ← 全员共用 Comfy 入口（转发跑在 vm122 上）
+    │  SSH tunnel
+    ▼
+租卡 Comfy  127.0.0.1:8188   (H3 / CUDA)
 ```
-
-开发时使用 worktree 时，以当前 checkout 为根；`comfy_orch.paths.project_root()` 解析为包所在仓库根。
-
-## 双环境
-
-开发与出片拆开，框架只认 `COMFY_BASE_URL`，切换环境不改业务代码。
-
-| | VM（调流程） | 租卡（出片） |
-|---|---|---|
-| 用途 | 编辑工作流、导出 API JSON、验证连通 | MiniMax H3 真推理出片 |
-| GPU / H3 | 可无 GPU、不装 H3 | 租 GPU，加载 H3 权重 |
-| 连接 | `COMFY_BASE_URL` 指向 VM 或本机端口 | `COMFY_BASE_URL` 指向租卡（常经 SSH 隧道） |
-
-实环境 SSH/隧道/API 实测与 YZ 导出注意点见：
-
-`docs/ops/2026-09-09-gpu-comfy-api-archive.md`
-
-## 环境变量
-
-只认一个变量：
 
 ```bash
-export COMFY_BASE_URL=http://127.0.0.1:8188
+export COMFY_BASE_URL=http://192.168.5.122:8190
 ```
+
+| 入口 | 用途 |
+|------|------|
+| `http://192.168.5.122:8190` | **唯一**出片 / 浏览器 Load 地址 |
+| ~~`:8188` on vm122~~ | 旧 CPU Comfy，已停用 |
+
+换租卡、重启转发：见 HANDOFF §2 与 [`scripts/ops/`](scripts/ops/)（密码只放 vm122 `/tmp/.comfy_gpu_ssh_pass`，**勿提交**）。
 
 ## 安装
 
 ```bash
-cd /home/linux_dev/projects/comfyui-h3-automation
+git clone https://github.com/pyhpaul/comfyui-h3-automation.git
+cd comfyui-h3-automation
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-## CLI
+需要能访问局域网 `192.168.5.122`（或自建等价隧道后改 `COMFY_BASE_URL`）。
+
+## 开工前硬门禁
+
+提交队列前先确认（默认不要替别人做决定）：
+
+1. **只一采**，还是 **一采 + 二采**（`--second-pass`）？
+2. 跨 U 接力用 **`ref_video`（整片 MP4）**，还是 **`motion_latent`（AV latent）**？
+
+说明：[docs/ops/2026-09-10-render-profiles.md](docs/ops/2026-09-10-render-profiles.md)
+
+## 快速路径
 
 ```bash
-# 检查 ComfyUI 连通性
-comfy-orch doctor
+export COMFY_BASE_URL=http://192.168.5.122:8190
+comfy-orch doctor          # 应看到 CUDA / system_stats
 
-# 提交 job 目录（含 job.yaml），返回 job_id
-comfy-orch submit path/to/job
+# 1) 资产包 → job（jobs/ 不入库，每人本地生成）
+python scripts/ep_pack_to_jobs.py /path/to/PACK -o jobs/ep_units --unit U01
+python scripts/audit_pack_prompts.py    # EP02 wire-only：no_parent + with_parent
 
-# 查看本地 run 状态
+# 2a) 单纯一采（整片接力）
+python scripts/run_ep_units_profiled.py --units U01 U02 --continuity ref_video \
+  --download-dir "$HOME/Downloads/EP-compare-pass1"
+
+# 2b) 因果验收：latent 接力 + 二采
+python scripts/run_ep_units_profiled.py --units U01 U02 \
+  --continuity motion_latent --second-pass \
+  --download-dir "$HOME/Downloads/EP-compare-latent-mc"
+
+# 3) 可选：导出 bound UI（浏览器 8190 Load；不入队）
+python scripts/export_bound_workflow.py jobs/ep_units/<JOB> \
+  --out-ui "$HOME/Downloads/<JOB>-bound-ui.json"
+
+# 单 job
+comfy-orch submit jobs/ep_units/<JOB>
 comfy-orch status <job_id>
 ```
 
-`doctor` / `submit` 需要已设置 `COMFY_BASE_URL`；`status` 只读本地 `runs/<job_id>/status.json`。
+长 H3 任务优先用 `run_ep_units_profiled.py`；隧道抖动时按 `prompt_id` resume，勿盲目重复提交。
 
-## 模板
+## 包类型与模板
+
+| pack kind | 说明 |
+|-----------|------|
+| `ep02_causality` | 提示词 **wire-only**：保留包正文，只换 `<Picture N>` / `<Video 1>` |
+| `h3_latent` | EP01 latent 包 |
+| `seedance_upload` | EP03/EP04 上传包（可走 legacy 六段英文） |
 
 | 模板 | 用途 |
 |------|------|
-| `demo_txt` | 仅提示词字段示例（调 bindings） |
-| `smoke_passthrough` | VM 冒烟：`LoadImage → SaveImage`，无需 checkpoint / H3 |
+| `yz_h3_ep_unit` | YZ MiniMax H3 多参考生视频（主出片） |
+| `smoke_passthrough` | 连通冒烟 |
+| `demo_txt` | bindings 示例 |
 
-## vm122 冒烟（已验证）
+## 数据流
+
+| 方向 | 方式 |
+|------|------|
+| 上传 | `POST {COMFY_BASE_URL}/upload/image` → 租卡 `input/` |
+| 拉片 | `GET /history` + `GET /view` → 本地 `outputs/<job_id>/` |
+| 对比 | 可选复制到本机 Downloads（A/B 模式目录分开） |
+
+正常 EP 流程不需要手工 scp 素材到租卡。
+
+## 验证
 
 ```bash
-# 远端（SSH Host vm122 / 192.168.5.122）
-# ~/ComfyUI: python main.py --listen 0.0.0.0 --port 8188 --cpu
-
-export COMFY_BASE_URL=http://192.168.5.122:8188
 comfy-orch doctor
-
-# 示例 job：template=smoke_passthrough，fields.first_frame 指向本地 png
-comfy-orch submit /path/to/job
+python -m pytest -q
+python scripts/audit_pack_prompts.py
 ```
 
-## inbox 监控
+## 文档地图
 
-```bash
-# 将任务目录放入 inbox/<job-name>/（含 job.yaml）
-comfy-orch watch --once          # 扫一轮后退出
-comfy-orch watch --interval 5    # 持续轮询
-```
+| 路径 | 内容 |
+|------|------|
+| [docs/HANDOFF.md](docs/HANDOFF.md) | **交接总册**（vm122、模式、参数、坑） |
+| [docs/ops/2026-09-10-render-profiles.md](docs/ops/2026-09-10-render-profiles.md) | 一采 vs latent+二采 |
+| [docs/ops/2026-09-09-ep-pack-to-video-pipeline.md](docs/ops/2026-09-09-ep-pack-to-video-pipeline.md) | 端到端阶段门禁 |
+| [docs/ops/2026-09-09-gpu-comfy-api-archive.md](docs/ops/2026-09-09-gpu-comfy-api-archive.md) | 租卡 / API 归档 |
+| [scripts/ops/](scripts/ops/) | vm122 转发示例与重启脚本 |
+| `.cursor/skills/comfy-h3-*` | Agent 分阶段 skills |
 
-成功提交的目录会移到 `inbox/.done/`；失败移到 `inbox/.failed/`。
+## 仓库约定
 
-## 可见反馈 Demo（不装扩展）
+- **不要提交**密码、`.env`、租卡 SSH 密钥或真实 passfile
+- **`jobs/`、`runs/`、`outputs/`** 已 gitignore（含大媒体；从资产包现场生成）
+- 设计过程稿在 `docs/superpowers/`；日常以 HANDOFF + ops 为准
 
-1. 浏览器打开 ComfyUI（与 `COMFY_BASE_URL` 同一实例），例如 `http://192.168.5.122:8188`。
-2. 本地产出 mock 资产包并提交：
+## License
 
-```bash
-export COMFY_BASE_URL=http://192.168.5.122:8188
-python scripts/mock_produce_assets.py --count 3
-comfy-orch watch --once
-```
-
-3. 网页侧栏/队列应能看到任务；成片在 `outputs/<job-id>/`，状态在 `runs/<job-id>/status.json`。
-4. **能看见：** 队列变化、跑完结果（视前端版本）、本地 outputs。  
-   **看不见：** API 注入不会改画布上 LoadImage/提示词控件。
-5. **可选细进度：** DevTools → Network → `ws` → 复制 `clientId`：
-
-```bash
-export COMFY_CLIENT_ID=<粘贴>
-# 或
-comfy-orch watch --once --client-id <粘贴>
-```
+见仓库内声明文件（若暂无则以贡献者约定为准）。

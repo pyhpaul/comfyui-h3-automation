@@ -1,0 +1,16 @@
+---
+description: Before any Comfy H3 / EP queue submit, confirm 一采 vs 二采 and continuity mode
+alwaysApply: true
+---
+
+# H3 render mode gate
+
+Before starting or resuming any ComfyUI H3 EP generate/queue/serial run in this repo, **ask the user first** and wait for an explicit answer:
+
+1. **Passes:** 只一采，还是一采+二采（`--second-pass`）？
+2. **Continuity:** `ref_video`（整片参考）还是 `motion_latent`（AV latent / Motion Context）？
+
+Do **not** assume defaults, do **not** silently enable `--second-pass` or `motion_latent`, and keep download dirs separate for the two modes.
+
+ Canonical doc: `docs/ops/2026-09-10-render-profiles.md`  
+ Runner: `scripts/run_ep_units_profiled.py`

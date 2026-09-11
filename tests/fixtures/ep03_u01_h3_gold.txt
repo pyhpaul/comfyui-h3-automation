@@ -1,0 +1,28 @@
+subject_definitions:
+<Subject 1> is Liam, the male prisoner whose appearance comes from <Picture 2>.
+<Subject 2> is the hazmat heavy-duty guard whose appearance comes from <Picture 3>.
+<Subject 3> is the Number Nine death-cell toxic pool environment whose look comes from <Picture 4>.
+<Picture 1> is a storyboard / director-control reference for [Shot 1], [Shot 2], and [Shot 3], defining dry-stone ledge, toxic pool, north gate, spear line, facing, and spatial boundaries only — do not render color blocks, arrows, labels, grids, text, or UI from <Picture 1>.
+<Video 1> provides timing, character movement, key prop ownership, and camera path for the target video only — ignore the low-poly / colour-blockout appearance of <Video 1>.
+
+summary:
+The target video is a 10-second live-action dark-fantasy prison sequence in which <Subject 2> forces <Subject 1> back along the dry-stone ledge inside <Subject 3> until <Subject 1> falls into the central toxic pool. Spatial blocking follows <Picture 1>; motion and camera follow <Video 1>.
+
+retention_analysis:
+<Subject 1> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - Liam from <Picture 2>, retained as the prisoner being forced toward the pool.
+<Subject 2> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the hazmat guard from <Picture 3>, retained on the safe gate side with spears; does not cross the dry-stone ledge.
+<Subject 3> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the toxic prison-pool environment from <Picture 4>, wet stone, iron gate, acidic purple-black liquid.
+<Picture 1>: attribute_transfer - blocking, facing, entity boundaries, and spatial relations only; appearance of markers must not appear in the target video.
+<Video 1>: attribute_transfer - three-beat timing, lateral camera path, and movement rhythm only; whitebox look must not appear in the target video.
+
+detailed_description:
+The target video uses late-1880s Victorian industrial dark fantasy, live-action cinematic look, cold grey daylight leaking from above, wet stone, cast-iron gate, acidic purple-black toxin, coal-dust steam, high contrast.
+[Shot 1] A medium-wide lateral tracking shot opens inside <Subject 3>. <Subject 1> from <Picture 2> stands stiff-shouldered on the dry-stone ledge while <Subject 2> from <Picture 3> presses him toward the pool edge with two spears advancing together. The camera trucks left with medium amplitude at moderate speed, matching the side-shift path from <Video 1>. <Subject 1> stares at the spear tips, then shifts weight onto his rear foot until his heels reach the wet stone rim. Iron boots scrape, masked breathing, and spear shafts grind on stone.
+[Shot 2] At 00:03.000, the shot cuts to a near-medium push-in. <Subject 1> is forced back half a step; his right foot cracks wet stone. He blocks a spear with his left arm, jaw tight, as shards slide toward the pool and he loses his last stable foothold. The camera pushes in with small amplitude at slow speed. <Subject 2> stays on the safe gate side of the ledge.
+[Shot 3] At 00:06.000, the shot cuts to a high near angle looking down. A spear strike hits only <Subject 1>'s shoulder side; he leaves the dry-stone ledge and falls into the central toxic pool, body shifting from resistance to freefall with fingers clawing empty air. On impact, purple toxic mist erupts from the liquid surface and instantly engulfs him. The camera pedestals down with medium amplitude at moderate speed. A muffled impact and acid splash ring out while <Subject 2> stops at the gate line.
+
+overall_soundscape:
+Iron boots and spear shafts scrape wet stone over low prison ambience and masked breathing. Wet stone cracks underfoot, followed by a muffled body impact, acid splash, and hissing purple vapor.
+
+non_diegetic_music:
+N/A

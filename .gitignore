@@ -7,6 +7,7 @@ __pycache__/
 runs/
 outputs/
 inbox/
+jobs/
 .env
 .superpowers/
 dist/
@@ -14,3 +15,6 @@ dist/
 .worktrees/
 worktrees/
 .scratch/
+*.safetensors
+*.mp4
+!tests/fixtures/**

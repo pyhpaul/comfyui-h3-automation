@@ -63,6 +63,8 @@ def submit_job(
                     ) from exc
                 values = dict(job.fields)
                 for field in list_media_fields(bindings_yaml):
+                    if field not in job.fields:
+                        continue
                     remote_name = client.upload_image(job.resolve_path(field))
                     values[field] = remote_name
 
@@ -79,6 +81,10 @@ def submit_job(
                     bindings_yaml=bindings_yaml,
                     values=values,
                 )
+                if job.template == "yz_h3_ep_unit":
+                    from comfy_orch.ui_bind import prune_unused_api_ref_images
+
+                    bound = prune_unused_api_ref_images(bound, values=values)
                 prompt_id = client.queue_prompt(bound)
                 write_status(
                     status_path,

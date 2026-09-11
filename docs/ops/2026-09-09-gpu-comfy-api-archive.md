@@ -8,13 +8,15 @@
 
 | 项 | 值 |
 |----|-----|
-| SSH | `ssh root@6878e7cbc1ff48a985ce96ed85c8c25371.gz14.chenyu.cn -p 21017` |
-| 容器/主机名（当时） | `d75b34b391d2` |
+| SSH | `ssh root@6d6f8fd977eb4c58ba2856d5982c68ae71.gz14.chenyu.cn -p 26301` |
+| 容器/主机名（当时） | `8a080cb76b9a` |
 | GPU | NVIDIA GeForce RTX 5090 |
 | ComfyUI 路径 | `/root/ComfyUI`（另有 `/root/autodl-tmp/ComfyUI`） |
-| Comfy 启动（当时） | `python main.py --listen 127.0.0.1 --port 8188 --cuda-device 0 --lowvram --reserve-vram 4 --disable-smart-memory --force-fp16 --disable-cuda-graphs --enable-manager` |
-| Comfy 版本 | `0.34.0`（frontend 约 `1.51.10`） |
-| 监听 | **仅 `127.0.0.1:8188`**（公网不可直连，必须隧道） |
+| Comfy 启动（当时） | 租卡侧已监听（实测 `0.0.0.0:8188`，`python3` pid 见开机后进程） |
+| Comfy 版本 | 约 `0.33.0`（frontend 约 `1.49.6`；以当日 `/system_stats` 为准） |
+| 监听 | 租卡本机 `:8188`（公网仍建议经 vm122 `8190` 隧道访问） |
+
+> **换机提醒：** 租卡每日开机可能换域名/端口。更新 vm122 `/tmp/comfy_ssh_forward.py` 的 `SSH_HOST`/`SSH_PORT` 与 `/tmp/.comfy_gpu_ssh_pass`（权限 600），重启转发后验证 `http://192.168.5.122:8190/system_stats`。**不要把密码写入仓库。**
 
 同机其它常见端口（平台映射，非 Comfy）：`8888` Jupyter、`7860` cyui、`9999` gopeed、`22` sshd。
 
@@ -102,15 +104,15 @@ comfy-orch submit <smoke_passthrough job>
 - `06_prop-001-v4.png`
 - `video_01_U05_motion_reference.mp4`
 
-## 5. 本地 CPU 冒烟机（对照，非出片）
+## 5. 本地 CPU 冒烟机（已停用）
 
 | 项 | 值 |
 |----|-----|
 | Host | `vm122` / `192.168.5.122` |
-| Comfy | `http://192.168.5.122:8188`（`--listen 0.0.0.0 --cpu`） |
-| 用途 | 调流程 / smoke；**无 H3**，YZ 网页会报缺节点/模型 |
+| 原 Comfy | `http://192.168.5.122:8188`（`--listen 0.0.0.0 --cpu`） |
+| 状态 | **2026-09-10 已停掉进程并清理**；无 systemd/supervisor 常驻单元。后续统一走 `:8190` 租卡。 |
 
-与租卡区分：CPU=`8188`，租卡隧道=`8190`。
+与租卡区分（历史）：CPU=`8188`（已停），租卡隧道=`8190`（现行）。
 
 ## 6. 前端可见性（方案 B）
 

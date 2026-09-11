@@ -1,0 +1,15 @@
+required_fields:
+  - prompt
+  - duration_seconds
+  - aspect_ratio
+  - megapixels
+required_files:
+  - ref_image_0
+# ref_video_0 optional (H3 latent packs have no previz); when present must exist on disk
+optional_files:
+  - ref_video_0
+  - ref_image_1
+  - ref_image_2
+  - ref_image_3
+  - ref_image_4
+  - ref_image_5

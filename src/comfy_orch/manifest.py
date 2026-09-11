@@ -53,4 +53,13 @@ def load_and_validate_job(job_dir: Path, schema_path: Path) -> JobSpec:
         if not path.is_file():
             raise ValidationError(f"missing file for {key}: {fields[key]}")
 
+    for key in schema.get("optional_files") or []:
+        if key not in fields or fields[key] in (None, ""):
+            continue
+        path = (job_dir / str(fields[key])).resolve()
+        if not path.is_relative_to(job_dir):
+            raise ValidationError(f"path for {key} escapes job_dir: {fields[key]}")
+        if not path.is_file():
+            raise ValidationError(f"missing file for {key}: {fields[key]}")
+
     return JobSpec(template=str(template), fields=dict(fields), job_dir=job_dir)

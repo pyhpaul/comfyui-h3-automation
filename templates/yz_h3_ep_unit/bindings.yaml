@@ -1,0 +1,48 @@
+bindings:
+  - field: ref_image_0
+    node_title: YZ控制图
+    input: image
+    media: true
+  - field: ref_image_1
+    node_title: YZ参考图1
+    input: image
+    media: true
+  - field: ref_image_2
+    node_title: YZ参考图2
+    input: image
+    media: true
+  - field: ref_image_3
+    node_title: YZ参考图3
+    input: image
+    media: true
+  - field: ref_image_4
+    node_title: YZ参考图4
+    input: image
+    media: true
+  - field: ref_image_5
+    node_title: YZ参考图5
+    input: image
+    media: true
+  - field: ref_video_0
+    node_title: YZ参考视频
+    input: video
+    media: true
+  - field: prompt
+    node_title: YZ提示词
+    input: text
+  - field: duration_seconds
+    node_title: 视频时长（秒）
+    input: value
+  - field: aspect_ratio
+    node_title: 分辨率选择器
+    input: aspect_ratio
+  - field: megapixels
+    node_title: 分辨率选择器
+    input: megapixels
+  - field: filename_prefix
+    node_title: YZ成片输出
+    input: filename_prefix
+  # MysticXXX_MMH3-V1 (node 128). Optional; omit to keep template default 0.2.
+  - field: mystic_lora_strength
+    node_id: "128"
+    input: strength_model

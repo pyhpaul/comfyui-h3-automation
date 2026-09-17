@@ -4,7 +4,8 @@
 
 ## 固化流程（推荐）
 
-详见 `docs/ops/2026-09-17-comfy-h3-canonical-start.md`。
+详见 `docs/ops/2026-09-17-comfy-h3-canonical-start.md`。  
+出片默认参数：`docs/ops/2026-09-17-h3-manual-call-run-defaults.md`。
 
 | 脚本 | 在哪跑 | 作用 |
 |------|--------|------|
@@ -14,7 +15,8 @@
 | `remote_comfy_h3.sh` | WSL | SSH 上租卡执行 status/stop/start/restart |
 | `switch_gpu_tunnel.sh` | WSL | 把 vm122:8190 指到当前租卡 |
 | `comfy_ssh_forward.example.py` | 部署到 vm122 `/tmp` | 8190→8188 转发 |
-| `restart_comfy_tunnel.sh` | vm122 | 仅重启已配置好的转发 |
+| `run_ep_manual_call_defaults.sh` | WSL | 锁定 `motion_latent` + 无二采 + `gpu-profile auto` |
+| `h3_manual_call_run_defaults.env.example` | WSL | 上述默认的环境变量样例 |
 
 ```bash
 export COMFY_GPU_SSH_HOST=….chenyu.cn COMFY_GPU_SSH_PORT=….

@@ -229,12 +229,15 @@ def _copy_into_job(src: Path, job_dir: Path, dest_name: str) -> str:
 def build_unit_job(pack_root: Path, unit_id: str, out_root: Path) -> Path:
     from comfy_orch.causality_pack import is_ep02_causality_pack, plan_causality_unit
     from comfy_orch.latent_pack import is_h3_latent_pack, plan_latent_unit
+    from comfy_orch.manual_call_pack import is_h3_manual_call_pack, plan_manual_unit
 
     pack_root = pack_root.resolve()
     if is_ep02_causality_pack(pack_root):
         plan = plan_causality_unit(pack_root, unit_id)
     elif is_h3_latent_pack(pack_root):
         plan = plan_latent_unit(pack_root, unit_id)
+    elif is_h3_manual_call_pack(pack_root):
+        plan = plan_manual_unit(pack_root, unit_id)
     else:
         plan = plan_unit(pack_root, unit_id)
     episode = pack_root.name
@@ -279,6 +282,16 @@ def build_unit_job(pack_root: Path, unit_id: str, out_root: Path) -> Path:
         if violations:
             raise ValidationError("prompt wiring audit failed: " + "; ".join(violations))
         prompt_h3 = prompt_wired
+    elif plan.pack_kind == "h3_manual_call":
+        from comfy_orch.errors import ValidationError
+        from comfy_orch.manual_call_pack import build_manual_prompts
+        from comfy_orch.prompt_wire import audit_pack_prompt_wiring
+
+        prompt_source, prompt_wired = build_manual_prompts(pack_root, plan.unit_id)
+        violations = audit_pack_prompt_wiring(prompt_source, prompt_wired, field_paths)
+        if violations:
+            raise ValidationError("prompt wiring audit failed: " + "; ".join(violations))
+        prompt_h3 = prompt_wired
     elif plan.pack_kind == "h3_latent":
         from comfy_orch.h3_prompt import build_h3_r2v_prompt_latent
 
@@ -301,6 +314,26 @@ def build_unit_job(pack_root: Path, unit_id: str, out_root: Path) -> Path:
             + "\n",
             encoding="utf-8",
         )
+    elif plan.pack_kind == "h3_manual_call":
+        (assets_dir / "prompt_audit.json").write_text(
+            __import__("json").dumps(
+                {
+                    "ok": True,
+                    "mode": "manual_call_drop_ctrl_wire_at_picture",
+                    "violations": [],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+    if plan.pack_kind == "h3_manual_call":
+        # Unit ids are already unique (ep01-s01-c1); keep them as VHS prefix.
+        fname_prefix = plan.unit_id
+    else:
+        fname_prefix = default_filename_prefix(episode, plan.unit_id)
 
     payload = {
         "template": TEMPLATE_NAME,
@@ -313,7 +346,7 @@ def build_unit_job(pack_root: Path, unit_id: str, out_root: Path) -> Path:
             "duration_seconds": plan.duration_seconds,
             "aspect_ratio": "9:16 (Portrait Widescreen)",
             "megapixels": 1.0,
-            "filename_prefix": default_filename_prefix(episode, plan.unit_id),
+            "filename_prefix": fname_prefix,
         },
     }
     (job_dir / "job.yaml").write_text(
@@ -326,12 +359,15 @@ def build_unit_job(pack_root: Path, unit_id: str, out_root: Path) -> Path:
 def list_unit_ids(pack_root: Path) -> list[str]:
     from comfy_orch.causality_pack import is_ep02_causality_pack, list_causality_unit_ids
     from comfy_orch.latent_pack import is_h3_latent_pack, list_latent_unit_ids
+    from comfy_orch.manual_call_pack import is_h3_manual_call_pack, list_manual_unit_ids
 
     pack_root = pack_root.resolve()
     if is_ep02_causality_pack(pack_root):
         return list_causality_unit_ids(pack_root)
     if is_h3_latent_pack(pack_root):
         return list_latent_unit_ids(pack_root)
+    if is_h3_manual_call_pack(pack_root):
+        return list_manual_unit_ids(pack_root)
     units = _load_manifest(pack_root).get("units") or []
     return [str(u["unit_id"]) for u in units if u.get("unit_id")]
 

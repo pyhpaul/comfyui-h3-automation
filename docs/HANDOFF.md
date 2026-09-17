@@ -70,6 +70,10 @@ curl -sS http://192.168.5.122:8190/system_stats | head
 
 未确认不得提交。详见 `docs/ops/2026-09-10-render-profiles.md`、规则 `.cursor/rules/h3-render-mode-gate.mdc`。
 
+**Manual-call 日常默认（已固化）：** `motion_latent` + **无二采** + `gpu-profile auto` — 见 `docs/ops/2026-09-17-h3-manual-call-run-defaults.md` 与 `scripts/ops/run_ep_manual_call_defaults.sh`。
+
+工程加强（无脸检测暂缓）：`comfy_orch.named_assets_bind` 剧名绑定标签 + 按集 latent 前缀 `h3_context/epXX_uYY`；审核列 `inject=`/`reorder=`/`unbound=`；刷新已有 job：`python scripts/ops/refresh_manual_call_bind_labels.py --glob '…-U*'`。
+
 | 模式 | 命令要点 | 产物目录建议分开 |
 |------|----------|------------------|
 | A 单纯一采 | `--continuity ref_video`（不要 `--second-pass`） | 如 `…-rewire` |

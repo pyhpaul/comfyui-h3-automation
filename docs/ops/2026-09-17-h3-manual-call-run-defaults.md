@@ -15,6 +15,7 @@
 | aspect_ratio | `9:16 (Portrait Widescreen)` | job 字段 |
 | megapixels | `1.0` | job 字段 |
 | COMFY_BASE_URL | `http://192.168.5.122:8190` | 经 vm122 |
+| latent 前缀 | `h3_context/epXX_uYY` | 由 job `episode`+`unit` 生成（非写死 ep02） |
 
 对应命令（或 `scripts/ops/run_ep_manual_call_defaults.sh`）：
 
@@ -34,12 +35,36 @@ python scripts/run_ep_units_profiled.py \
 ## 审核门禁（入队前）
 
 1. 包 → job 后 `scripts/audit_pack_prompts.py --glob '…-U*'` 全 PASS  
-2. 提示词：wire-only（`@`→`<Picture N>`）；「沿用」单元可补 `绑定资产` 行，**镜头正文不得改**  
-3. 参考图：上传清单 `asset_id` 与 staged `idN-*` 文件名对应；无缺文件 / unbound（文内「不绑定」除外）
+2. 提示词：wire-only（`@`→`<Picture N>`）；「沿用」单元可补 `绑定资产` 行（**剧名标签**，`comfy_orch.named_assets_bind`），**镜头正文不得改**  
+3. 参考图：上传清单 `asset_id` 与 staged `idN-*` 文件名对应；无缺文件 / unbound（文内「不绑定」除外）  
+4. 审核行附带工程列：`inject=` / `reorder=` / `unbound=`（**不含**无脸检测）
+
+刷新已有 job 绑定剧名：
+
+```bash
+python scripts/ops/refresh_manual_call_bind_labels.py --glob 'EP04-H3-manual-v16-U*'
+```
+
+## Latent 路径与续跑
+
+批内串行会自动把上一 U 的 AV latent 交给下一 U。Save 示例：
+
+`h3_context/ep04_u06_00006.safetensors`
+
+从中间 U 续跑（U06 已成功 → 从 U07）：
+
+```bash
+bash scripts/ops/run_ep_manual_call_defaults.sh \
+  --job-glob 'EP04-H3-manual-v16-{unit}' \
+  --units U07 U08 U09 \
+  --download-dir /mnt/c/Users/lxy/Downloads/EP04-manual-v16-U01-U09-latent-mc \
+  --batch-log runs/ep04_manual_v16_u07_plus.json \
+  --parent-latent h3_context/ep04_u06_00006.safetensors
+```
+
+`--parent-latent` 为 Comfy **output 相对路径**（与 SUCCESS 日志 `latent=` 一致）。若该批仍是旧前缀 `h3_context/ep02_u06_…`，填实际文件名。
 
 ## 环境变量备忘
-
-可放本机（勿提交密码）：
 
 ```bash
 # scripts/ops/h3_manual_call_run_defaults.env.example

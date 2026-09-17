@@ -17,6 +17,7 @@
 | `comfy_ssh_forward.example.py` | 部署到 vm122 `/tmp` | 8190→8188 转发 |
 | `run_ep_manual_call_defaults.sh` | WSL | 锁定 `motion_latent` + 无二采 + `gpu-profile auto` |
 | `h3_manual_call_run_defaults.env.example` | WSL | 上述默认的环境变量样例 |
+| `refresh_manual_call_bind_labels.py` | WSL | 刷新 job「绑定资产」剧名标签（工程加强，不改正文） |
 
 ```bash
 export COMFY_GPU_SSH_HOST=….chenyu.cn COMFY_GPU_SSH_PORT=….

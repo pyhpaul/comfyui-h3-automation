@@ -29,6 +29,8 @@ from comfy_orch.client import ComfyClient
 from comfy_orch.manifest import load_and_validate_job
 from comfy_orch.paths import project_root
 from comfy_orch.prompt_wire import audit_pack_prompt_wiring, wire_pack_prompt
+from comfy_orch.gpu_adapt import apply_gpu_profile, resolve_gpu_profile
+from comfy_orch.named_assets_bind import motion_latent_prefix
 from comfy_orch.render_profile import (
     RenderProfile,
     apply_render_profile,
@@ -89,6 +91,11 @@ def main() -> int:
         default=Path("/mnt/c/Users/lxy/Downloads/EP02-H3-profiled"),
     )
     ap.add_argument("--batch-log", type=Path, default=None)
+    ap.add_argument(
+        "--gpu-profile",
+        default=os.environ.get("COMFY_GPU_PROFILE", "auto"),
+        help="Attention/VRAM adaptation: auto|rtx5090|rtx4080 (or COMFY_GPU_PROFILE)",
+    )
     args = ap.parse_args()
 
     root = project_root()
@@ -102,10 +109,13 @@ def main() -> int:
     parent_latent: str | None = args.parent_latent
     client = ComfyClient(base, timeout=180.0)
     try:
+        device_name = (client.system_stats().get("devices") or [{}])[0].get("name") or ""
+        gpu_profile = resolve_gpu_profile(args.gpu_profile, device_name=device_name)
         print(
             "doctor",
-            (client.system_stats().get("devices") or [{}])[0].get("name"),
+            device_name,
             f"continuity={args.continuity} second_pass={args.second_pass}",
+            f"gpu_profile={gpu_profile.id}({gpu_profile.attention})",
             flush=True,
         )
         for idx, unit in enumerate(args.units):
@@ -147,10 +157,14 @@ def main() -> int:
             template_dir = root / "templates" / job.template
             bindings_yaml = (template_dir / "bindings.yaml").read_text(encoding="utf-8")
             values = dict(job.fields)
+            if gpu_profile.megapixels is not None:
+                values["megapixels"] = float(gpu_profile.megapixels)
             for field in list_media_fields(bindings_yaml):
                 if field in job.fields:
                     values[field] = client.upload_image(job.resolve_path(field))
 
+            episode = str(raw.get("episode") or "")
+            latent_prefix = motion_latent_prefix(episode, unit)
             profile = RenderProfile(
                 continuity=args.continuity,
                 second_pass=bool(args.second_pass),
@@ -162,15 +176,16 @@ def main() -> int:
                     else 0
                 ),
                 motion_latent_path=parent_latent,
-                latent_filename_prefix=f"h3_context/ep02_{unit.lower()}",
+                latent_filename_prefix=latent_prefix,
             )
-            unit_name = values.get("filename_prefix") or f"EP02-{unit}"
+            unit_name = values.get("filename_prefix") or f"{episode or 'EP'}-{unit}"
             workflow = json.loads((template_dir / "workflow_api.json").read_text(encoding="utf-8"))
             bound = prune_unused_api_ref_images(
                 apply_bindings(workflow, bindings_yaml=bindings_yaml, values=values),
                 values=values,
             )
             bound = apply_render_profile(bound, profile, filename_prefix=unit_name)
+            bound = apply_gpu_profile(bound, gpu_profile)
 
             job_id = uuid.uuid4().hex[:12]
             prompt_id = client.queue_prompt(bound)
@@ -181,6 +196,7 @@ def main() -> int:
             print(
                 f"START {unit_name} job={job_id} prompt={prompt_id} "
                 f"continuity={args.continuity} second_pass={args.second_pass} "
+                f"gpu_profile={gpu_profile.id} latent_prefix={latent_prefix} "
                 f"parent_latent={parent_latent!r} parent_mp4={parent_mp4.name if parent_mp4 else None}",
                 flush=True,
             )
@@ -190,6 +206,9 @@ def main() -> int:
                 "prompt_id": prompt_id,
                 "continuity": args.continuity,
                 "second_pass": bool(args.second_pass),
+                "gpu_profile": gpu_profile.id,
+                "attention": gpu_profile.attention,
+                "latent_prefix": latent_prefix,
                 "parent_latent": parent_latent,
                 "state": "running",
             }

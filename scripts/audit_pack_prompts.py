@@ -5,6 +5,9 @@ Disk ``prompt_audit.json`` only covers the no-parent build path. Serial U02+
 bind ``ref_video_0`` at submit time — this script always exercises that path
 unless ``--no-parent-sim`` is set.
 
+Also prints engineering columns from ``assets/prompt_audit.json`` when present:
+inject / reorder / unbound (no-face metrics are intentionally omitted).
+
 Exit 0 only when every selected job passes both gates.
 """
 from __future__ import annotations
@@ -16,6 +19,25 @@ from pathlib import Path
 
 from comfy_orch.paths import project_root
 from comfy_orch.prompt_wire import preflight_job_dir
+
+
+def _eng_flags(job_dir: Path) -> str:
+    path = job_dir / "assets" / "prompt_audit.json"
+    if not path.is_file():
+        return ""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return ""
+    inject = "inject=1" if data.get("bind_line_injected") else "inject=0"
+    if data.get("bind_labels_refreshed"):
+        inject += "+labels"
+    reorder = "reorder=1" if data.get("reordered") else "reorder=0"
+    unbound = data.get("unbound_at_tokens") or []
+    ub = f"unbound={len(unbound)}"
+    if unbound:
+        ub += f"({','.join(unbound[:4])})"
+    return f" {inject} {reorder} {ub}"
 
 
 def main() -> int:
@@ -59,14 +81,14 @@ def main() -> int:
         for key in ("no_parent", "with_parent"):
             block = rep.get(key) or {}
             warn_n += len(block.get("warnings") or [])
-        print(f"{status} {unit} warnings={warn_n}", flush=True)
+        print(f"{status} {unit} warnings={warn_n}{_eng_flags(job_dir)}", flush=True)
         if not rep["ok"]:
             failed += 1
             for key in ("no_parent", "with_parent"):
                 block = rep.get(key) or {}
                 for v in block.get("violations") or []:
                     print(f"  [{key}] {v}", flush=True)
-        elif warn_n:
+        if warn_n:
             for key in ("no_parent", "with_parent"):
                 block = rep.get(key) or {}
                 for w in block.get("warnings") or []:

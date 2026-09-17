@@ -5750,8 +5750,8 @@
       "color": "#222",
       "widgets_values": [
         "beta",
-        12,
-        1
+        16,
+        1.0
       ],
       "inputs": [
         {
@@ -5830,7 +5830,7 @@
       ],
       "color": "#432",
       "widgets_values": [
-        8
+        12
       ],
       "inputs": [
         {

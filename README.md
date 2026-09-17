@@ -27,7 +27,7 @@ export COMFY_BASE_URL=http://192.168.5.122:8190
 | `http://192.168.5.122:8190` | **唯一**出片 / 浏览器 Load 地址 |
 | ~~`:8188` on vm122~~ | 旧 CPU Comfy，已停用 |
 
-换租卡、重启转发：见 HANDOFF §2 与 [`scripts/ops/`](scripts/ops/)（密码只放 vm122 `/tmp/.comfy_gpu_ssh_pass`，**勿提交**）。
+换租卡、正式启动 Comfy、重启转发：见 HANDOFF §2、[`docs/ops/2026-09-17-comfy-h3-canonical-start.md`](docs/ops/2026-09-17-comfy-h3-canonical-start.md) 与 [`scripts/ops/`](scripts/ops/)（密码只放 vm122 `/tmp/.comfy_gpu_ssh_pass`，**勿提交**）。
 
 ## 安装
 
@@ -119,7 +119,7 @@ python scripts/audit_pack_prompts.py
 | [docs/ops/2026-09-10-render-profiles.md](docs/ops/2026-09-10-render-profiles.md) | 一采 vs latent+二采 |
 | [docs/ops/2026-09-09-ep-pack-to-video-pipeline.md](docs/ops/2026-09-09-ep-pack-to-video-pipeline.md) | 端到端阶段门禁 |
 | [docs/ops/2026-09-09-gpu-comfy-api-archive.md](docs/ops/2026-09-09-gpu-comfy-api-archive.md) | 租卡 / API 归档 |
-| [scripts/ops/](scripts/ops/) | vm122 转发示例与重启脚本 |
+| [scripts/ops/](scripts/ops/) | 租卡启停 + vm122 转发（canonical H3） |
 | `.cursor/skills/comfy-h3-*` | Agent 分阶段 skills |
 
 ## 仓库约定

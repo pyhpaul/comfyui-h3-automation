@@ -23,7 +23,10 @@ vm122  0.0.0.0:8190   ← 所有人共用的 Comfy 入口
 | vm122 SSH（示例） | `Host vm122` → `192.168.5.122`（本机 `~/.ssh/config`） |
 | 租卡 SSH | 每日可能变；见当日平台；**不要写进仓库** |
 
-## 2. vm122 端口映射（接手必会）
+## 2. 租卡 Comfy 正式启动 + vm122 映射（接手必会）
+
+**唯一 H3 启动方式**见：`docs/ops/2026-09-17-comfy-h3-canonical-start.md`  
+（`127.0.0.1:8188` + lowvram/fp16…；**不用**平台 `/root/restart.sh`。）
 
 转发跑在 **vm122** 上，不是 WSL：
 
@@ -34,32 +37,29 @@ vm122  0.0.0.0:8190   ← 所有人共用的 Comfy 入口
 | `/tmp/comfy-fwd-venv` | 含 `paramiko` 的 venv |
 | `/tmp/comfy_ssh_forward.log` | 日志 |
 
-仓库内示例（可拷到 vm122 `/tmp` 后改 host/port）：
+仓库脚本：
 
-- `scripts/ops/comfy_ssh_forward.example.py`
-- `scripts/ops/restart_comfy_tunnel.sh`
+- `scripts/ops/comfy_gpu_{status,stop,start}.sh` — 租卡侧
+- `scripts/ops/remote_comfy_h3.sh` — WSL 远程启停
+- `scripts/ops/switch_gpu_tunnel.sh` — WSL 切 vm122:8190
+- `scripts/ops/comfy_ssh_forward.example.py` / `restart_comfy_tunnel.sh`
 
 ### 换租卡（每天常见）
 
-在 **能 SSH 到 vm122** 的机器上：
+在 **WSL**（能 `ssh vm122`）上：
 
 ```bash
-ssh vm122
-# 1) 更新密码文件（勿 echo 进 shell 历史更佳）
-printf '%s\n' '<NEW_PASSWORD>' > /tmp/.comfy_gpu_ssh_pass
-chmod 600 /tmp/.comfy_gpu_ssh_pass
+cd /home/linux_dev/projects/comfyui-h3-automation
+export COMFY_GPU_SSH_HOST='<host>.chenyu.cn'
+export COMFY_GPU_SSH_PORT='<port>'
+export COMFY_GPU_SSH_PASS='<password>'   # 勿提交 git；可用 PASSFILE
 
-# 2) 改脚本里 SSH_HOST / SSH_PORT（或用示例脚本的环境变量）
-# 3) 重启
-pkill -f /tmp/comfy_ssh_forward.py || true
-nohup /tmp/comfy-fwd-venv/bin/python /tmp/comfy_ssh_forward.py 8190 /tmp/.comfy_gpu_ssh_pass \
-  >>/tmp/comfy_ssh_forward.log 2>&1 &
-
-# 4) 验证（在 WSL 亦可）
+bash scripts/ops/remote_comfy_h3.sh restart
+bash scripts/ops/switch_gpu_tunnel.sh
 curl -sS http://192.168.5.122:8190/system_stats | head
 ```
 
-期望：JSON 里有 `devices` / CUDA（如 RTX 5090）。`Connection reset` → 转发未起或租卡 SSH 不通。
+期望：JSON 里有 `devices` / CUDA。`Connection reset` → 转发未起、租卡 SSH 不通、或 Comfy 未按正式参数监听 `127.0.0.1:8188`。
 
 ## 3. 开工硬门禁（先问再跑）
 

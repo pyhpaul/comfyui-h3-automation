@@ -26,4 +26,4 @@
 
 ## Validation status
 
-The package, Drive SHA, parent Drive SHA, manifest, and host no-pay dry-run were checked on 2026-09-27. The new Colab chain path, new source-controlled restore path, sequential continuity and two-hour timing have **not** been tested on a paid G4 assignment. Dry-run readiness is not evidence of U03-U05 successful output.
+The package, Drive SHA, parent Drive SHA, manifest, and host no-pay dry-run were checked on 2026-09-27. An offline extraction of the frozen runner and U03-U05 job tar constructed all three runtime graphs; each passed the frozen SageAttention, 12-step, output and parent-latent graph gate. The new Colab chain path, new source-controlled restore path, sequential continuity and two-hour timing have **not** been tested on a paid G4 assignment. Dry-run readiness is not evidence of U03-U05 successful output.

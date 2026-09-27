@@ -96,7 +96,7 @@ def verify_unit(remote: str, session: str, unit: str, manifest_sha: str) -> dict
 
 
 def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
-            safety_hours: float) -> None:
+            safety_hours: float, max_cu: float) -> None:
     logdir = BACKUP / "g4-chain" / session
     logdir.mkdir(parents=True, exist_ok=False)
     chain_remote = f"{REMOTE_ROOT}/chain/{session}"
@@ -109,7 +109,7 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
     (logdir / "trial-inputs.json").write_text(json.dumps({
         "session": session, "chain_remote": chain_remote, "units": list(PARENTS),
         "manifest_sha256": manifest_sha, "wheel_sha256": wheel_sha,
-        "safety_hours": safety_hours, "before": before,
+        "safety_hours": safety_hours, "max_cu": max_cu, "before": before,
     }, indent=2) + "\n")
     created = False
     watcher = None
@@ -122,6 +122,8 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
         assigned = snapshot(snapshots, "assigned")
         if assigned["active"] != 1 or assigned["rate"] <= 0:
             raise RuntimeError("G4 paid assignment was not confirmed")
+        if assigned["rate"] * safety_hours > max_cu:
+            raise RuntimeError("G4 rate exceeds the frozen CU safety budget")
         with (logdir / "watchdog.log").open("w") as stream:
             watcher = subprocess.Popen(
                 ["bash", str(SCRIPTS / "colab_h3_paid_watchdog.sh"),
@@ -202,17 +204,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--execute-paid", action="store_true")
     parser.add_argument("--safety-hours", type=float, default=2.0)
+    parser.add_argument("--max-cu", type=float, default=20.0)
     args = parser.parse_args()
     if not 2 <= args.safety_hours <= 8:
         raise ValueError("safety deadline must be between two and eight hours")
+    if args.max_cu <= 0:
+        raise ValueError("CU safety budget must be positive")
     wheel, wheel_sha, manifest = local_inputs()
     session = "h3-g4-chain-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     if not args.execute_paid:
         print(json.dumps({"ready": True, "paid_started": False, "session": session,
                           "units": list(PARENTS), "manifest_sha256": sha256(MANIFEST),
-                          "wheel_sha256": wheel_sha, "safety_hours": args.safety_hours}, indent=2))
+                          "wheel_sha256": wheel_sha, "safety_hours": args.safety_hours,
+                          "max_cu": args.max_cu}, indent=2))
         return
-    execute(session, wheel, wheel_sha, manifest, args.safety_hours)
+    execute(session, wheel, wheel_sha, manifest, args.safety_hours, args.max_cu)
 
 
 if __name__ == "__main__":

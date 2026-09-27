@@ -92,11 +92,23 @@ Code path:
 2. 用剧本 N/E/S/W 那一行里的地标给每一格命名。地标不在这一格里，就不能叫这个方向。
 3. `摄影机观察侧` 是机位站哪一侧。`向西北拍` 是镜头朝哪看。留下的是镜头朝向的那一格，不是机位身后的那一格。
 4. 只有一格对得上才裁。审核记下：单元、观察侧、留下的格、对上的地标。
-5. 没裁不等于四格都有用。没裁是定不出唯一一格，或者这一镜同时要两个方向（向东北：北台和东侧门都在轴上）。
+5. 没裁不等于四格都有用。没裁是定不出唯一一格，或者这一镜同时要两个方向（向东北：北台和东侧门都在轴上）。同时要两个方向时，按下面「同一镜两个机位」处理，不能原样入队。
 6. 需要的朝向不在四格里（要看北墙售货机，唯一内景却朝南门），不要裁成反方向的那格。
 7. 同一张 1672×941 白十字，裂开的成片和完整的成片都用过。尺寸、白缝、四格彼此像不像，都不是会不会上下分屏的分界。不要因此把每张四格都裁掉。
 8. 裁完后，把 `四格参考只用于锁定空间方位，视频画面不出现四格拼版。` 改成按这一张单幅的朝向。整张备份放在 job 的 `assets/` 外面，runner 只上传 `ref_image_*`。
 9. 已经出好的成片不回头裁。用户没说入队，先交审核。
+
+## 同一镜两个机位（上下分屏）
+
+一条镜头的剧本如果同时要用两个地方或两个朝向，而成片把它们叠成上下两截，这是剧本和场景图一起造成的。只裁图、不改剧本，解决不了。
+
+入队前核对每一条的「空间轴」和「摄影机观察侧」：
+
+- 同一条只允许一个机位。场景图只留对应该机位的那一格。
+- 剧本里另一个地方改成画外，或拆成下一条镜头。不要在同一条里要求第二个完整画面。
+- 人在同一机位里转头，仍是一条。从店内切到门外，是两条。
+- 只拍一个地方的四格可以不裂。会裂的是一条剧本同时用了四格里的两格，例如店内收银台和门外折叠桌。
+- 已经裂开的成片，它的 motion latent 不能再接给下一条。下一条必须断开重跑，否则分屏会带过去。裁下一条的场景图去不掉上一条已经写进 latent 的分屏。
 
 ## 常见误判
 
@@ -106,10 +118,11 @@ Code path:
 | 左上固定是北 | 先对地标。顺序不在包里 |
 | 四格格式变了所以才裂 | 裂的和没裂的都是同一拼法 |
 | 上下两半色差能预测会不会裂 | 色差接近的片子有的裂、有的不裂 |
+| 只裁场景图就能消掉分屏 | 剧本仍要求两个机位，或上一条 latent 已经是分屏，裁图不够 |
 
 ## Fail
 
-Any body edit beyond media labels, parent path audit failure, a scene crop without a locked quadrant, or `FAIL latent-scene` → **stop submit**. A scene-number change is fixed by starting a new motion-latent chain at the first unit of the new place, then re-run preflight.
+Any body edit beyond media labels, parent path audit failure, a scene crop without a locked quadrant, one unit whose script asks for two camera directions, a chain that parents a split-frame latent, or `FAIL latent-scene` → **stop submit**. A scene-number change is fixed by starting a new motion-latent chain at the first unit of the new place, then re-run preflight.
 
 ## Related
 

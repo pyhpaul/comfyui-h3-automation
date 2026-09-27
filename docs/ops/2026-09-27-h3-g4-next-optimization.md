@@ -31,6 +31,12 @@ At the observed 8.90 CU/hour, the first-run 627 s restore represents about
 restore across five similarly sized units could reduce the modeled fixed
 cost per unit substantially, but the actual five-unit rate, cache behavior,
 failure handling and CU settlement must be measured in one authorized batch.
+At 8.90 CU/hour the measured restore stage is equivalent to about 10.45
+minutes of idle G4 time; this is a rough warm-session keep/stop break-even,
+not an implemented scheduler policy. The first phase exceeded Comfy server
+wall by only about 21 seconds, which includes startup, validation and backup;
+deferring every output to a final batch upload is unlikely to recover the
+10-minute model restore and would increase ephemeral-output loss risk.
 
 ### 2. Profile the G4 sampler before changing kernels
 

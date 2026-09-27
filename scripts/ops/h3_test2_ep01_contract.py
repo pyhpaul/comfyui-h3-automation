@@ -75,7 +75,11 @@ def validate_graph(graph: dict, unit: str, parent_path: str | None) -> None:
         or graph["401"]["inputs"]
         != {"latent_path": parent_path, "clip_index": int(expected_parent[1:])}
         or graph.get("402", {}).get("class_type") != "MiniMaxH3MotionContext"
+        or graph["402"]["inputs"].get("context_length") != "22"
+        or graph["402"]["inputs"].get("audio_context_length") != 24
         or graph.get("403", {}).get("class_type") != "MiniMaxH3MotionContextTrim"
+        or graph["403"]["inputs"].get("fps") != 24.0
+        or graph["403"]["inputs"].get("match_tail") is not True
         or graph["264"]["inputs"].get("images") != ["403", 0]
         or graph["264"]["inputs"].get("audio") != ["403", 1]
     ):

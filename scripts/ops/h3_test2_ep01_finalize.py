@@ -10,9 +10,11 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
 from colab_h3_test2_ep01_host import (
-    BACKUP, CONFIG, MANIFEST, REMOTE_ROOT, sha256, unit_remote, verify_unit,
+    BACKUP, CONFIG, MANIFEST, RECOVERY_MANIFEST, REMOTE_ROOT, sha256,
+    unit_remote, verify_recovery, verify_unit,
 )
 from h3_test2_ep01_contract import PARENTS, UNITS
+from h3_test2_ep01_recovery import validate_recovery_manifest, verify_recovery_sources
 
 
 def run(command: list[str], timeout: int = 600, cwd: Path | None = None) -> str:
@@ -70,7 +72,7 @@ def concat_mp4(directory: Path, names: list[str], final: Path) -> None:
          "-movflags", "+faststart", str(final)], timeout=900)
 
 
-def finalize(session: str) -> dict:
+def finalize(session: str, resume_u01: bool = False) -> dict:
     if not session.startswith("h3-test2-ep01-"):
         raise ValueError("unexpected Test2 EP01 session identifier")
     started = time.monotonic()
@@ -78,14 +80,24 @@ def finalize(session: str) -> dict:
     directory.mkdir(parents=True, exist_ok=True)
     remote = f"{REMOTE_ROOT}/{session}"
     manifest_sha = sha256(MANIFEST)
+    recovery = None
+    if resume_u01:
+        recovery = json.loads(RECOVERY_MANIFEST.read_text(encoding="utf-8"))
+        validate_recovery_manifest(recovery, manifest_sha)
+        verify_recovery_sources(recovery, "rclone", str(CONFIG))
+        verify_recovery(remote, recovery)
     entries = []
     parent = None
     for unit in UNITS:
         if PARENTS[unit] is None:
             parent = None
-        unit_path = unit_remote(remote, unit)
-        validation = verify_unit(unit_path, session, unit, parent, manifest_sha)
-        source = f"{unit_path}/TEST2_{unit}/run/{video_source(unit, validation)}"
+        if unit == "U01" and recovery:
+            validation = recovery["validation"]
+            source = recovery["video_remote"]
+        else:
+            unit_path = unit_remote(remote, unit)
+            validation = verify_unit(unit_path, session, unit, parent, manifest_sha)
+            source = f"{unit_path}/TEST2_{unit}/run/{video_source(unit, validation)}"
         expected = validation["video"]
         actual = remote_stat(source)
         if (actual.get("Size") != expected["bytes"]
@@ -135,6 +147,7 @@ def finalize(session: str) -> dict:
     receipt = {"state": "assembled_and_uploaded", "session": session,
                "created_at_utc": datetime.now(timezone.utc).isoformat(),
                "input_manifest_sha256": manifest_sha, "units": entries,
+               "u01_recovery_manifest_sha256": sha256(RECOVERY_MANIFEST) if recovery else None,
                "assembly": "ffmpeg concat demuxer, stream copy, no second trim",
                "final": {**result, "local": str(final), "remote": destination,
                          "bytes": final.stat().st_size, "sha256": final_sha},
@@ -149,8 +162,9 @@ def finalize(session: str) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--session", required=True)
+    parser.add_argument("--resume-u01", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(finalize(args.session), indent=2), flush=True)
+    print(json.dumps(finalize(args.session, args.resume_u01), indent=2), flush=True)
 
 
 if __name__ == "__main__":

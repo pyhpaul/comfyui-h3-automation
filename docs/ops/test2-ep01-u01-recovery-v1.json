@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "unit": "U01",
+  "source_session": "h3-test2-ep01-20260927-103745",
+  "input_manifest_sha256": "2c4f0272f62946c194975e91895fba72f926c4ec62da55abc93fa0ff926f89fb",
+  "source_phase_remote": "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/runs/test2-20260925/ep01/h3-test2-ep01-20260927-103745/u01/TEST2_U01/phase.json",
+  "source_history_remote": "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/runs/test2-20260925/ep01/h3-test2-ep01-20260927-103745/u01/TEST2_U01/run/history.json",
+  "latent_remote": "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/runs/test2-20260925/ep01/h3-test2-ep01-20260927-103745/u01/TEST2_U01/run/downloads/EP01-U01-test2/ep01_u01_00001.safetensors",
+  "video_remote": "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/runs/test2-20260925/ep01/h3-test2-ep01-20260927-103745/u01/TEST2_U01/run/downloads/EP01-U01-test2/EP01-U01-test2-pass1_00001-audio.mp4",
+  "source_phase_state": "failed_after_generation_during_obsolete_latent_shape_gate",
+  "visual_review": {
+    "decision": "continue_with_caveat",
+    "basis": "15.083-second local MP4 contact sheet and frame at 14.5 seconds",
+    "caveat": "Sean's lead foot is already on the first step at the tail rather than both feet in the puddle; inspect U02 handoff. No four-grid output or identity collapse observed.",
+    "evidence": [
+      {
+        "remote": "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/runs/test2-20260925/ep01/h3-test2-ep01-20260927-103745/recovery/U01-contact-sheet.jpg",
+        "sha256": "294c5ff917229cb20d61a99cc4340b88e0043d9af1d822bde004b126dd0dc657"
+      },
+      {
+        "remote": "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/runs/test2-20260925/ep01/h3-test2-ep01-20260927-103745/recovery/U01-last-frame.jpg",
+        "sha256": "6f187f525aa7aa29df78cea005a41539ebaa90cfcd8c41d3f6154758a4e6a294"
+      }
+    ]
+  },
+  "validation": {
+    "unit": "U01",
+    "gpu_profile": "rtx5090",
+    "prompt_id": "c453ab91-26c5-4a93-bdb8-af9b5aace7e8",
+    "server_wall_s": 568.714,
+    "latent_output_relative": "h3_context/ep01_u01_00001.safetensors",
+    "latent": {
+      "path": "/content/h3-test2-ep01/U01/run/downloads/EP01-U01-test2/ep01_u01_00001.safetensors",
+      "bytes": 42557400,
+      "sha256": "690314ad24cceb4c9f3b58fdc692e463c63f9b9f0351056ac8aecb8107e9404b",
+      "tensors": [
+        {"name": "audio", "shape": [1, 32, 2, 603], "dtype": "torch.float32", "finite": true},
+        {"name": "video", "shape": [1, 24, 107, 86, 48], "dtype": "torch.float32", "finite": true}
+      ]
+    },
+    "video": {
+      "path": "/content/h3-test2-ep01/U01/run/downloads/EP01-U01-test2/EP01-U01-test2-pass1_00001-audio.mp4",
+      "bytes": 11012947,
+      "sha256": "831785d54d4fc874f6fd8b0f8d1fefa616115c08d0815d4428615fa4b2b1f454",
+      "probe": {
+        "format": {"duration": "15.083333"},
+        "streams": [
+          {"codec_type": "video", "codec_name": "h264", "width": 768, "height": 1376, "r_frame_rate": "24/1", "start_time": "0.000000", "duration": "15.083333", "nb_frames": "362"},
+          {"codec_type": "audio", "codec_name": "aac", "start_time": "0.000000", "duration": "15.072000", "nb_frames": "472"}
+        ]
+      },
+      "audio_max_db": 0.0,
+      "decoded_video_sha256": "d2472ba0ce795ed7611f2efcc4975eabb04a096a264f57702f10be6cfeaa7527",
+      "decoded_audio_sha256": "ccf52ab1856eb83fca1814e3921054a391ae8139a0c81304c20e8966593eda9d"
+    }
+  }
+}

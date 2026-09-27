@@ -19,15 +19,18 @@ from colab_h3_g4_u02_host import (
 )
 from h3_test2_ep01_contract import PARENTS, UNITS
 from h3_test2_ep01_inputs import archive_members
+from h3_test2_ep01_recovery import validate_recovery_manifest, verify_recovery_sources
 from h3_test2_ep01_transport import WHEEL_REMOTE
 
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "docs/ops/drive-test2-ep01-v1.json"
+RECOVERY_MANIFEST = ROOT / "docs/ops/test2-ep01-u01-recovery-v1.json"
 LOCAL_ARCHIVE = BACKUP / "test2-ep01/inputs/test2-ep01-jobs-v1.tar"
 REMOTE_ROOT = "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/runs/test2-20260925/ep01"
 EXTRA_UPLOADS = (
     (MANIFEST, "/content/test2-ep01-input-manifest.json"),
+    (RECOVERY_MANIFEST, "/content/test2-ep01-u01-recovery.json"),
     (SCRIPTS / "h3_test2_ep01_contract.py", "/content/h3_test2_ep01_contract.py"),
     (SCRIPTS / "h3_test2_ep01_media.py", "/content/h3_test2_ep01_media.py"),
     (SCRIPTS / "h3_test2_ep01_child.py", "/content/h3_test2_ep01_child.py"),
@@ -60,7 +63,7 @@ def remote_file_matches(record: dict) -> bool:
     )
 
 
-def local_inputs() -> tuple[Path, str, dict]:
+def local_inputs(resume_u01: bool = False) -> tuple[Path, str, dict]:
     wheel, wheel_sha = local_preflight()
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     archive = manifest["job_archive"]
@@ -84,6 +87,7 @@ def local_inputs() -> tuple[Path, str, dict]:
     required.extend(SCRIPTS / name for name in (
         "h3_test2_ep01_transport.py",
         "h3_test2_ep01_inputs.py", "h3_test2_ep01_phase.py",
+        "h3_test2_ep01_recovery.py",
         "h3_a100_ab_contract.py", "h3_a100_ab_phase.py",
         "h3_a100_phase_receipt.py",
         "colab_h3_paid_watchdog.sh",
@@ -100,11 +104,16 @@ def local_inputs() -> tuple[Path, str, dict]:
         str(ROOT / path) for path in ("src", "scripts", "scripts/ops")
     )
     imported = subprocess.run(
-        [sys.executable, "-c", "import h3_test2_ep01_phase, h3_test2_ep01_child"],
+        [sys.executable, "-c",
+         "import h3_test2_ep01_phase, h3_test2_ep01_child, h3_test2_ep01_recovery"],
         env=environment, capture_output=True, text=True, timeout=15,
     )
     if imported.returncode:
         raise RuntimeError(f"Test2 phase import preflight failed: {imported.stderr}")
+    if resume_u01:
+        recovery = json.loads(RECOVERY_MANIFEST.read_text(encoding="utf-8"))
+        validate_recovery_manifest(recovery, sha256(MANIFEST))
+        verify_recovery_sources(recovery, "rclone", str(CONFIG))
     return wheel, wheel_sha, manifest
 
 
@@ -117,6 +126,22 @@ def verify_inputs(remote: str, manifest: dict) -> None:
         or report.get("source_zip_sha256") != manifest["source_zip_sha256"]
     ):
         raise RuntimeError("remote Test2 input admission failed")
+
+
+def verify_recovery(remote: str, record: dict) -> None:
+    report = remote_json(f"{remote}/recovery-u01.json")
+    validation = record["validation"]
+    if (
+        report.get("state") != "ready"
+        or report.get("unit") != "U01"
+        or report.get("source_session") != record["source_session"]
+        or report.get("prompt_id") != validation["prompt_id"]
+        or report.get("latent_output_relative") != validation["latent_output_relative"]
+        or report.get("latent_sha256") != validation["latent"]["sha256"]
+        or report.get("video_sha256") != validation["video"]["sha256"]
+        or report.get("recovery_manifest_sha256") != sha256(RECOVERY_MANIFEST)
+    ):
+        raise RuntimeError("remote U01 recovery did not match frozen source")
 
 
 def unit_remote(session_remote: str, unit: str) -> str:
@@ -180,7 +205,7 @@ def await_review(remote: str, logdir: Path, unit: str, validation: dict) -> None
 
 
 def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
-            safety_hours: float, max_cu: float) -> None:
+            safety_hours: float, max_cu: float, recovery: dict | None) -> None:
     logdir = BACKUP / "test2-ep01" / "sessions" / session
     logdir.mkdir(parents=True, exist_ok=False)
     session_remote = f"{REMOTE_ROOT}/{session}"
@@ -192,7 +217,9 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
         raise RuntimeError("Colab is not idle or balance is below the 40-CU safety cap")
     manifest_sha = sha256(MANIFEST)
     (logdir / "trial-inputs.json").write_text(json.dumps({
-        "session": session, "remote": session_remote, "units": list(UNITS),
+        "session": session, "remote": session_remote,
+        "units": list(UNITS[1:] if recovery else UNITS),
+        "recovery_manifest_sha256": sha256(RECOVERY_MANIFEST) if recovery else None,
         "manifest_sha256": manifest_sha, "wheel_sha256": wheel_sha,
         "safety_hours": safety_hours, "max_cu": max_cu, "before": before,
     }, indent=2) + "\n", encoding="utf-8")
@@ -223,7 +250,7 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
         for source, destination in SMALL_UPLOADS:
             run(["colab", "upload", "--session", session, str(source), destination],
                 logdir / ("upload-" + source.name + ".log"), timeout=90)
-        stages = (
+        stages = [
             ("identity", SCRIPTS / "h3_g4_identity.py", 60, {}),
             ("transport", SCRIPTS / "h3_test2_ep01_transport.py", 600,
              {"H3_G4_WHEEL_SHA256": wheel_sha}),
@@ -236,12 +263,17 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
               "H3_GPU_ADAPT_EXPECTED_SHA256": RESTORED_GPU_ADAPT_SHA256}),
             ("inputs", SCRIPTS / "h3_test2_ep01_inputs.py", 600,
              {"H3_TEST2_REMOTE": session_remote}),
-        )
+        ]
+        if recovery:
+            stages.append(("recover_u01", SCRIPTS / "h3_test2_ep01_recovery.py", 900,
+                           {"H3_TEST2_REMOTE": session_remote}))
         for name, path, timeout, env in stages:
             began = time.monotonic()
             exec_file(session, path, timeout, logdir / f"{name}.log", **env)
             if name == "inputs":
                 marker = "TEST2_EP01_INPUTS_READY"
+            elif name == "recover_u01":
+                marker = "TEST2_U01_RECOVERED"
             elif name == "transport":
                 marker = "TEST2_TRANSPORT_READY"
             else:
@@ -252,14 +284,18 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
                 verify_preflight(session_remote)
             if name == "inputs":
                 verify_inputs(session_remote, manifest)
+            if name == "recover_u01":
+                verify_recovery(session_remote, recovery)
             state = snapshot(snapshots, name)
             with (logdir / "stage-timing.jsonl").open("a") as stream:
                 stream.write(json.dumps({
                     "stage": name, "elapsed_s": round(time.monotonic() - began, 2),
                     "rate_cu_per_hour": state["rate"], "balance_cu": state["balance"],
                 }) + "\n")
-        parent_path: str | None = None
-        for unit in UNITS:
+        parent_path: str | None = (
+            recovery["validation"]["latent_output_relative"] if recovery else None
+        )
+        for unit in (UNITS[1:] if recovery else UNITS):
             if PARENTS[unit] is None:
                 parent_path = None
             state = snapshot(snapshots, f"before_{unit}")
@@ -304,20 +340,26 @@ def main() -> None:
     parser.add_argument("--execute-paid", action="store_true")
     parser.add_argument("--safety-hours", type=float, default=4.0)
     parser.add_argument("--max-cu", type=float, default=40.0)
+    parser.add_argument("--resume-u01", action="store_true")
     args = parser.parse_args()
     if args.safety_hours != 4.0 or args.max_cu != 40.0:
         raise ValueError("first Test2 EP01 session is authorized for 4 hours / 40 CU only")
-    wheel, wheel_sha, manifest = local_inputs()
+    wheel, wheel_sha, manifest = local_inputs(args.resume_u01)
+    recovery = (json.loads(RECOVERY_MANIFEST.read_text(encoding="utf-8"))
+                if args.resume_u01 else None)
     session = "h3-test2-ep01-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     if not args.execute_paid:
         print(json.dumps({
             "ready": True, "paid_started": False, "session": session,
             "units": list(UNITS), "review_units": sorted(REVIEW_UNITS),
+            "run_units": list(UNITS[1:] if recovery else UNITS),
+            "resume_u01": bool(recovery),
             "manifest_sha256": sha256(MANIFEST), "wheel_sha256": wheel_sha,
             "safety_hours": args.safety_hours, "max_cu": args.max_cu,
         }, indent=2))
         return
-    execute(session, wheel, wheel_sha, manifest, args.safety_hours, args.max_cu)
+    execute(session, wheel, wheel_sha, manifest, args.safety_hours, args.max_cu,
+            recovery)
 
 
 if __name__ == "__main__":

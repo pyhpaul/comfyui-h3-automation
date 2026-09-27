@@ -40,7 +40,7 @@ def verify_local_parent(unit: str, parent_path: str | None) -> None:
     receipt = json.loads((previous / "phase.json").read_text(encoding="utf-8"))
     validation = json.loads((previous / "run/validation.json").read_text(encoding="utf-8"))
     if (
-        receipt.get("state") != "success"
+        receipt.get("state") not in {"success", "recovered"}
         or receipt.get("archive_state") != "verified"
         or validation.get("latent_output_relative") != parent_path
         or not validation.get("latent", {}).get("sha256")
@@ -131,7 +131,7 @@ def main() -> int:
         "server_wall_s": server_wall_seconds(history[prompt_id]),
         "latent_output_relative": records[0]["latent_path"],
         "latent": inspect_latent(latents[0], expected_temporal),
-        "video": inspect_video(videos[0]),
+        "video": inspect_video(videos[0], unit),
     }
     (output / "validation.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     make_review_frames(videos[0], output)

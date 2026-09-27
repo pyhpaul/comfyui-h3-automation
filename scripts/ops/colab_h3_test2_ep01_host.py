@@ -17,6 +17,7 @@ from colab_h3_g4_u02_host import (
 )
 from h3_test2_ep01_contract import PARENTS, UNITS
 from h3_test2_ep01_inputs import archive_members
+from h3_test2_ep01_transport import WHEEL_REMOTE
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,6 +30,10 @@ EXTRA_UPLOADS = (
     (SCRIPTS / "h3_test2_ep01_contract.py", "/content/h3_test2_ep01_contract.py"),
     (SCRIPTS / "h3_test2_ep01_media.py", "/content/h3_test2_ep01_media.py"),
     (SCRIPTS / "h3_test2_ep01_child.py", "/content/h3_test2_ep01_child.py"),
+)
+SMALL_UPLOADS = tuple(
+    (source, destination) for source, destination in (*UPLOADS, *EXTRA_UPLOADS)
+    if source.name != "colab-h3-rclone.gz"
 )
 REVIEW_UNITS = frozenset({"U01", "U04", "U05"})
 
@@ -69,8 +74,14 @@ def local_inputs() -> tuple[Path, str, dict]:
     ):
         raise RuntimeError("local or Drive Test2 inputs differ from frozen manifest")
     archive_members(LOCAL_ARCHIVE)
+    if not remote_file_matches({
+        "remote": WHEEL_REMOTE, "bytes": wheel.stat().st_size,
+        "sha256": wheel_sha,
+    }):
+        raise RuntimeError("Drive G4 wheel differs from local verified wheel")
     required = [path for path, _ in EXTRA_UPLOADS]
     required.extend(SCRIPTS / name for name in (
+        "h3_test2_ep01_transport.py",
         "h3_test2_ep01_inputs.py", "h3_test2_ep01_phase.py",
         "h3_a100_ab_contract.py", "h3_a100_ab_phase.py",
         "h3_a100_phase_receipt.py", "h3_g4_u02_phase.py",
@@ -79,6 +90,9 @@ def local_inputs() -> tuple[Path, str, dict]:
     missing = [str(path) for path in required if not path.is_file()]
     if missing:
         raise RuntimeError(f"missing Test2 G4 scripts: {missing}")
+    large = [str(path) for path, _ in SMALL_UPLOADS if path.stat().st_size > 256 * 1024]
+    if large:
+        raise RuntimeError(f"Colab CLI uploads must stay below 256 KiB: {large}")
     return wheel, wheel_sha, manifest
 
 
@@ -194,12 +208,13 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
         if watcher.poll() is not None:
             raise RuntimeError("paid-session watchdog exited before setup")
         print("TEST2_G4_SESSION", session, "deadline", deadline.isoformat(), flush=True)
-        for source, destination in (*UPLOADS, *EXTRA_UPLOADS,
-                                    (wheel, "/content/" + wheel.name)):
+        for source, destination in SMALL_UPLOADS:
             run(["colab", "upload", "--session", session, str(source), destination],
-                logdir / ("upload-" + source.name + ".log"), timeout=300)
+                logdir / ("upload-" + source.name + ".log"), timeout=90)
         stages = (
             ("identity", SCRIPTS / "h3_g4_identity.py", 60, {}),
+            ("transport", SCRIPTS / "h3_test2_ep01_transport.py", 600,
+             {"H3_G4_WHEEL_SHA256": wheel_sha}),
             ("preinstall", SCRIPTS / "colab_h3_preinstall_torch.py", 720, {}),
             ("restore", SCRIPTS / "colab_h3_restore.py", 2400, {}),
             ("setup", SCRIPTS / "h3_g4_setup.py", 900,
@@ -213,7 +228,12 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
         for name, path, timeout, env in stages:
             began = time.monotonic()
             exec_file(session, path, timeout, logdir / f"{name}.log", **env)
-            marker = "TEST2_EP01_INPUTS_READY" if name == "inputs" else STAGE_MARKERS[name]
+            if name == "inputs":
+                marker = "TEST2_EP01_INPUTS_READY"
+            elif name == "transport":
+                marker = "TEST2_TRANSPORT_READY"
+            else:
+                marker = STAGE_MARKERS[name]
             if marker not in (logdir / f"{name}.log").read_text(errors="replace"):
                 raise RuntimeError(f"{name} stage has no success marker")
             if name == "preflight":

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "kind": "h3_colab_restore_snapshot",
+  "snapshot_id": "rental-20260924-5090",
+  "drive_root": "comfyui-h3-colab-dedicated",
+  "legacy_prefix": "rental-20260924-5090",
+  "status": "immutable_tested_restore_source",
+  "source_archive": {
+    "path": "rental-20260924-5090/source-only.tar",
+    "bytes": 439848960,
+    "sha256": "db6e20a71fe6ac87c7a4a981f08ae0685db7c0229d3db5bdd5b51f0832ab1fc7"
+  },
+  "runner_archive": {
+    "path": "rental-20260924-5090/colab-stage2-runner.tar",
+    "bytes": 10147840,
+    "sha256": "8ac917e997722abcb5b11a6f1068a260fdc2dc092b243075d524dadb151b1f5a"
+  },
+  "parent_latent": {
+    "path": "rental-20260924-5090/parent/h3_context/ep04_u01_00001.safetensors",
+    "bytes": 34602712,
+    "sha256": "6def89c01d367a64be354a93dfb7e96806d236211eb0fdfcbf4bfe493a95946a"
+  },
+  "model_total_bytes": 41651185023,
+  "model_part_bytes": 536870912,
+  "models": [
+    {
+      "relative_path": "vae/minimax_h3_video_vae_int8_convrot.safetensors",
+      "storage": "model-parts",
+      "bytes": 3171670912,
+      "sha256": "9bb2d96f218c76babd85e0611b85ca8fb330a90546c01a0005e8a58a59593410"
+    },
+    {
+      "relative_path": "vae/minimax_h3_audio_vae_fp32.safetensors",
+      "storage": "models",
+      "bytes": 605254808,
+      "sha256": "8e505d95dd1561d47abd43d4238fd40d9bb1ae9e147ed0a4cba778d76ae4db48"
+    },
+    {
+      "relative_path": "text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "storage": "model-parts",
+      "bytes": 15687142551,
+      "sha256": "35a88d51044231fe332301d7a62aa81e3f2cba62febeb446e2c1e3e0ef76f2c6"
+    },
+    {
+      "relative_path": "diffusion_models/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors",
+      "storage": "model-parts",
+      "bytes": 20970379632,
+      "sha256": "a629cfea8d89a071b140c6e1935dc9a23e72de6badc18975a2bb9e6d1423d76d"
+    },
+    {
+      "relative_path": "loras/MysticXXX_MMH3-V1.safetensors",
+      "storage": "models",
+      "bytes": 596451528,
+      "sha256": "7dd837f4c5420d4ec59f3ff1757b3f9d264a6c0f120d65d9c4f59c77584dd0be"
+    },
+    {
+      "relative_path": "loras/minimax_h3_turbo_v4_step600_ema_pruned_comfyui.safetensors",
+      "storage": "models",
+      "bytes": 620285592,
+      "sha256": "7098acf3ee75028fd9fcd948f50fcc8d995057fabb76f86bd3ca2c0ffc58e409"
+    }
+  ],
+  "g4_wheel": {
+    "path": "standard-v1/runtime/g4-sm120/sageattention-2.2.0-cp313-cp313-linux_x86_64.whl",
+    "sha256": "1cdc658e69315ce4cd7d18d91d55dba42466261607e024ebec17b25c7c4ffbe9"
+  }
+}

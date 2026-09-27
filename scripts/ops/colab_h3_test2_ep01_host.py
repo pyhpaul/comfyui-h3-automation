@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
+import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -26,7 +28,6 @@ LOCAL_ARCHIVE = BACKUP / "test2-ep01/inputs/test2-ep01-jobs-v1.tar"
 REMOTE_ROOT = "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/runs/test2-20260925/ep01"
 EXTRA_UPLOADS = (
     (MANIFEST, "/content/test2-ep01-input-manifest.json"),
-    (SCRIPTS / "h3_g4_u02_phase.py", "/content/h3_g4_u02_phase.py"),
     (SCRIPTS / "h3_test2_ep01_contract.py", "/content/h3_test2_ep01_contract.py"),
     (SCRIPTS / "h3_test2_ep01_media.py", "/content/h3_test2_ep01_media.py"),
     (SCRIPTS / "h3_test2_ep01_child.py", "/content/h3_test2_ep01_child.py"),
@@ -84,7 +85,7 @@ def local_inputs() -> tuple[Path, str, dict]:
         "h3_test2_ep01_transport.py",
         "h3_test2_ep01_inputs.py", "h3_test2_ep01_phase.py",
         "h3_a100_ab_contract.py", "h3_a100_ab_phase.py",
-        "h3_a100_phase_receipt.py", "h3_g4_u02_phase.py",
+        "h3_a100_phase_receipt.py",
         "colab_h3_paid_watchdog.sh",
     ))
     missing = [str(path) for path in required if not path.is_file()]
@@ -93,6 +94,17 @@ def local_inputs() -> tuple[Path, str, dict]:
     large = [str(path) for path, _ in SMALL_UPLOADS if path.stat().st_size > 256 * 1024]
     if large:
         raise RuntimeError(f"Colab CLI uploads must stay below 256 KiB: {large}")
+    environment = os.environ.copy()
+    environment.pop("H3_G4_REMOTE", None)
+    environment["PYTHONPATH"] = os.pathsep.join(
+        str(ROOT / path) for path in ("src", "scripts", "scripts/ops")
+    )
+    imported = subprocess.run(
+        [sys.executable, "-c", "import h3_test2_ep01_phase, h3_test2_ep01_child"],
+        env=environment, capture_output=True, text=True, timeout=15,
+    )
+    if imported.returncode:
+        raise RuntimeError(f"Test2 phase import preflight failed: {imported.stderr}")
     return wheel, wheel_sha, manifest
 
 

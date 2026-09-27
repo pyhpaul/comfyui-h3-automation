@@ -12,12 +12,12 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.request import urlopen
 
 sys.path.insert(0, "/content")
 from h3_a100_ab_contract import parse_step_timing
 from h3_a100_ab_phase import monitor_progress, start_telemetry, stop_comfy
 from h3_a100_phase_receipt import identity_from_environment, publish_verified
-from h3_g4_u02_phase import start_comfy
 from h3_test2_ep01_contract import PARENTS
 
 
@@ -28,6 +28,28 @@ OUTPUT_ROOT = CONTENT / "h3-test2-ep01"
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+
+
+def start_comfy(log: Path) -> None:
+    env = os.environ.copy()
+    env["COMFY_ROOT"] = str(COMFY)
+    env["COMFY_H3_LOG"] = str(log)
+    start = Path("/content/h3-runner/scripts/ops/comfy_gpu_start.sh")
+    process = subprocess.Popen(["bash", str(start)], env=env,
+                               stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL, start_new_session=True)
+    for _ in range(90):
+        if process.poll() is not None:
+            raise RuntimeError(f"ComfyUI exited during startup: {process.returncode}")
+        try:
+            with urlopen("http://127.0.0.1:8188/system_stats", timeout=3) as response:
+                stats = json.load(response)
+            if "RTX PRO 6000" not in stats["devices"][0]["name"]:
+                raise RuntimeError("ComfyUI did not start on the G4 GPU")
+            return
+        except (OSError, KeyError, IndexError, ValueError):
+            time.sleep(2)
+    raise RuntimeError("ComfyUI did not become ready")
 
 
 def check_parent(unit: str, parent_path: str | None) -> None:

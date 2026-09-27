@@ -18,9 +18,16 @@ sys.path[:0] = [str(RUNNER / "src"), str(RUNNER / "scripts"), "/content"]
 
 import run_ep_units_profiled as runner
 from comfy_orch.client import ComfyClient
-from h3_a100_ab_child import server_wall_seconds
 from h3_test2_ep01_contract import PARENTS, job_name, validate_graph, validate_job
 from h3_test2_ep01_media import inspect_latent, inspect_video
+
+
+def server_wall_seconds(entry: dict) -> float:
+    stamps = {name: details["timestamp"] for name, details in entry["status"]["messages"]
+              if name in {"execution_start", "execution_success"}}
+    if set(stamps) != {"execution_start", "execution_success"}:
+        raise RuntimeError("missing ComfyUI execution start/success timestamps")
+    return round((stamps["execution_success"] - stamps["execution_start"]) / 1000, 3)
 
 
 def verify_local_parent(unit: str, parent_path: str | None) -> None:

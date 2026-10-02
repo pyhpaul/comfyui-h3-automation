@@ -38,6 +38,9 @@ def main() -> None:
     system_rclone = Path(shutil.which("rclone") or "")
     if not system_rclone.is_file():
         raise RuntimeError("apt rclone is not available")
+    rclone_version = subprocess.run([str(system_rclone), "version"],
+                                   capture_output=True, text=True, check=True,
+                                   timeout=10).stdout.splitlines()[0]
     os.chmod(CONFIG, 0o600)
     subprocess.run([str(system_rclone), "about", "h3drive_h3:",
                     "--config", str(CONFIG)], check=True, timeout=40)
@@ -51,6 +54,7 @@ def main() -> None:
     print("TEST2_TRANSPORT_READY", {
         "wheel_sha256": expected_wheel,
         "rclone_path": str(system_rclone),
+        "rclone_version": rclone_version,
         "rclone_gz_bytes": RCLONE_GZ.stat().st_size,
         "seconds": round(time.monotonic() - started, 2),
     }, flush=True)

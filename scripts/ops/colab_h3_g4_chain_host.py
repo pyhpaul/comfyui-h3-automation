@@ -13,7 +13,7 @@ from pathlib import Path
 from colab_h3_a100_ab_host import exec_file, run, snapshot, stop_and_verify
 from colab_h3_g4_u02_host import (
     BACKUP, CONFIG, SCRIPTS, UPLOADS, STAGE_MARKERS, WHEEL_DIR,
-    RESTORED_GPU_ADAPT_SHA256, local_preflight, remote_json, verify_preflight,
+    local_preflight, remote_json, setup_stages, verify_preflight,
 )
 
 
@@ -95,8 +95,15 @@ def verify_unit(remote: str, session: str, unit: str, manifest_sha: str) -> dict
     return receipt
 
 
+def chain_setup_stages(wheel_sha: str, remote: str, restore_workers: int
+                       ) -> tuple[tuple[str, Path, int, dict[str, str]], ...]:
+    return (*setup_stages(wheel_sha, remote, restore_workers),
+            ("chain_inputs", SCRIPTS / "h3_g4_chain_inputs.py", 600,
+             {"H3_G4_REMOTE": remote}))
+
+
 def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
-            safety_hours: float, max_cu: float) -> None:
+            safety_hours: float, max_cu: float, restore_workers: int = 4) -> None:
     logdir = BACKUP / "g4-chain" / session
     logdir.mkdir(parents=True, exist_ok=False)
     chain_remote = f"{REMOTE_ROOT}/chain/{session}"
@@ -110,6 +117,7 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
         "session": session, "chain_remote": chain_remote, "units": list(PARENTS),
         "manifest_sha256": manifest_sha, "wheel_sha256": wheel_sha,
         "safety_hours": safety_hours, "max_cu": max_cu, "before": before,
+        "restore_workers": restore_workers,
     }, indent=2) + "\n")
     created = False
     watcher = None
@@ -137,17 +145,7 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
                                     (wheel, "/content/" + wheel.name)):
             run(["colab", "upload", "--session", session, str(source), destination],
                 logdir / ("upload-" + source.name + ".log"), timeout=300)
-        stages = (
-            ("identity", SCRIPTS / "h3_g4_identity.py", 60, {}),
-            ("preinstall", SCRIPTS / "colab_h3_preinstall_torch.py", 720, {}),
-            ("restore", SCRIPTS / "colab_h3_restore.py", 2400, {}),
-            ("setup", SCRIPTS / "h3_g4_setup.py", 900, {"H3_G4_WHEEL_SHA256": wheel_sha}),
-            ("preflight", SCRIPTS / "h3_a100_ab_preflight.py", 600,
-             {"H3_AB_PREFLIGHT_REMOTE": chain_remote,
-              "H3_GPU_ADAPT_EXPECTED_SHA256": RESTORED_GPU_ADAPT_SHA256}),
-            ("chain_inputs", SCRIPTS / "h3_g4_chain_inputs.py", 600,
-             {"H3_G4_REMOTE": chain_remote}),
-        )
+        stages = chain_setup_stages(wheel_sha, chain_remote, restore_workers)
         for name, path, timeout, env in stages:
             began = time.monotonic()
             exec_file(session, path, timeout, logdir / f"{name}.log", **env)
@@ -205,6 +203,8 @@ def main() -> None:
     parser.add_argument("--execute-paid", action="store_true")
     parser.add_argument("--safety-hours", type=float, default=2.0)
     parser.add_argument("--max-cu", type=float, default=20.0)
+    parser.add_argument("--restore-workers", type=int, choices=(1, 4), default=4,
+                        help="four-worker restore, or explicit original serial rollback")
     args = parser.parse_args()
     if not 2 <= args.safety_hours <= 8:
         raise ValueError("safety deadline must be between two and eight hours")
@@ -216,9 +216,10 @@ def main() -> None:
         print(json.dumps({"ready": True, "paid_started": False, "session": session,
                           "units": list(PARENTS), "manifest_sha256": sha256(MANIFEST),
                           "wheel_sha256": wheel_sha, "safety_hours": args.safety_hours,
-                          "max_cu": args.max_cu}, indent=2))
+                          "max_cu": args.max_cu, "restore_workers": args.restore_workers}, indent=2))
         return
-    execute(session, wheel, wheel_sha, manifest, args.safety_hours, args.max_cu)
+    execute(session, wheel, wheel_sha, manifest, args.safety_hours, args.max_cu,
+            args.restore_workers)
 
 
 if __name__ == "__main__":

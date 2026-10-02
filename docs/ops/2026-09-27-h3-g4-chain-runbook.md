@@ -1,5 +1,11 @@
 # G4 EP04 U03-U05 continuation gate
 
+Mainline integration note (2026-10-02): the continuation host now shares
+the pinned Drive bootstrap and four-worker restore stage with G4 U02.
+`--restore-workers 1` selects original serial model transfer. Offline stage
+routing tests pass; this note does not establish a new paid chain result.
+The original execution and validation record below is historical.
+
 ## Frozen scope
 
 - One Colab G4 assignment, serial `U03 -> U04 -> U05`; one prompt per unit, no retry on uncertain state.

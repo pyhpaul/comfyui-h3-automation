@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import subprocess
+import tempfile
 from pathlib import Path
 
 from h3_test2_ep01_media import validate_latent_shapes, validate_video_metadata
@@ -81,20 +82,6 @@ def validate_recovery_manifest(record: dict, input_manifest_sha: str) -> None:
 
 def verify_recovery_sources(record: dict, rclone: str, config: str) -> None:
     validation = record["validation"]
-    for name in ("latent", "video"):
-        expected = validation[name]
-        remote = rclone_json(
-            ["lsjson", record[f"{name}_remote"], "--stat", "--hash"],
-            rclone, config,
-        )
-        if (remote.get("Size") != expected["bytes"]
-                or remote.get("Hashes", {}).get("sha256") != expected["sha256"]):
-            raise RuntimeError(f"U01 source {name} hash or size changed")
-    for item in record["visual_review"]["evidence"]:
-        remote = rclone_json(["lsjson", item["remote"], "--stat", "--hash"],
-                              rclone, config)
-        if remote.get("Hashes", {}).get("sha256") != item["sha256"]:
-            raise RuntimeError("U01 visual review evidence changed")
     phase = rclone_json(["cat", record["source_phase_remote"]], rclone, config)
     if (phase.get("session_id") != record["source_session"]
             or phase.get("state") != "failed"
@@ -106,6 +93,42 @@ def verify_recovery_sources(record: dict, rclone: str, config: str) -> None:
     entry = history.get(validation["prompt_id"], {})
     if entry.get("status", {}).get("status_str") != "success":
         raise RuntimeError("U01 original ComfyUI history does not confirm success")
+    with tempfile.TemporaryDirectory(prefix="h3-u01-recovery-") as temporary:
+        for name in ("latent", "video"):
+            expected = validation[name]
+            source = record[f"{name}_remote"]
+            remote = rclone_json(["lsjson", source, "--stat", "--hash"],
+                                  rclone, config)
+            hashes = remote.get("Hashes") or {}
+            if (remote.get("Size") != expected["bytes"]
+                    or ("sha256" in hashes and hashes["sha256"] != expected["sha256"])):
+                raise RuntimeError(f"U01 source {name} hash or size changed")
+            print("U01_SOURCE_METADATA", name, "size", remote.get("Size"),
+                  "hash_algorithms", sorted(hashes), flush=True)
+            if name == "video" and "sha256" not in hashes:
+                verify_downloaded_source(source, expected["sha256"],
+                                         Path(temporary) / "video", rclone, config)
+        for index, item in enumerate(record["visual_review"]["evidence"]):
+            source = item["remote"]
+            remote = rclone_json(["lsjson", source, "--stat", "--hash"],
+                                  rclone, config)
+            hashes = remote.get("Hashes") or {}
+            if "sha256" in hashes:
+                if hashes["sha256"] != item["sha256"]:
+                    raise RuntimeError("U01 visual review evidence changed")
+            else:
+                verify_downloaded_source(source, item["sha256"],
+                                         Path(temporary) / f"evidence-{index}",
+                                         rclone, config)
+
+
+def verify_downloaded_source(source: str, expected_sha256: str, destination: Path,
+                             rclone: str, config: str) -> None:
+    subprocess.run([rclone, "copyto", source, str(destination), "--config", config],
+                   check=True, timeout=120)
+    if sha256(destination) != expected_sha256:
+        raise RuntimeError(f"U01 source {source} downloaded SHA-256 changed")
+    print("U01_SOURCE_HASH_VERIFIED", destination.name, expected_sha256, flush=True)
 
 
 def main() -> None:

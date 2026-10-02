@@ -300,6 +300,8 @@ def prune_unused_api_ref_images(
         key = f"ref_images.ref_image_{i}"
         if field not in values and key in inputs:
             del inputs[key]
+            if i >= 6:
+                out.pop(str(401 + i), None)
     for i in range(0, 3):
         field = f"ref_video_{i}"
         key = f"ref_videos.ref_video_{i}"

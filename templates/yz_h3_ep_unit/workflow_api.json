@@ -392,6 +392,18 @@
         "23",
         0
       ],
+      "ref_images.ref_image_6": [
+        "407",
+        0
+      ],
+      "ref_images.ref_image_7": [
+        "408",
+        0
+      ],
+      "ref_images.ref_image_8": [
+        "409",
+        0
+      ],
       "ref_videos.ref_video_0": [
         "27",
         0
@@ -436,6 +448,33 @@
     "class_type": "KSampler",
     "_meta": {
       "title": "K采样器"
+    }
+  },
+  "407": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "YZ参考图6"
+    }
+  },
+  "408": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "YZ参考图7"
+    }
+  },
+  "409": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "YZ参考图8"
     }
   }
 }

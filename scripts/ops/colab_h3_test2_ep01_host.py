@@ -12,7 +12,9 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from colab_h3_a100_ab_host import admit_next, exec_file, run, snapshot, stop_and_verify
+from colab_h3_a100_ab_host import (
+    ColabTransportLost, admit_next, exec_file, run, snapshot, stop_and_verify,
+)
 from colab_h3_g4_u02_host import (
     BACKUP, CONFIG, SCRIPTS, UPLOADS, STAGE_MARKERS, RESTORED_GPU_ADAPT_SHA256,
     local_preflight, remote_json, verify_preflight,
@@ -204,6 +206,24 @@ def await_review(remote: str, logdir: Path, unit: str, validation: dict) -> None
     raise TimeoutError(f"{unit} review timed out; stop paid assignment")
 
 
+def exec_stage(session: str, path: Path, timeout: int, log: Path,
+               **environ: str) -> None:
+    try:
+        exec_file(session, path, timeout, log, **environ)
+    except ColabTransportLost:
+        output = log.read_text(errors="replace")
+        if ("runtime.execute_code(" not in output
+                or "os.chdir('/content')" not in output
+                or "RuntimeError: Connection was lost." not in output
+                or "RUN " in output):
+            raise
+        first_log = log.with_name(f"{log.stem}-preexec-lost.log")
+        log.rename(first_log)
+        print("TEST2_STAGE_PREEXEC_RECONNECT", path.name, str(first_log), flush=True)
+        time.sleep(10)
+        exec_file(session, path, timeout, log, **environ)
+
+
 def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
             safety_hours: float, max_cu: float, recovery: dict | None) -> None:
     logdir = BACKUP / "test2-ep01" / "sessions" / session
@@ -269,7 +289,7 @@ def execute(session: str, wheel: Path, wheel_sha: str, manifest: dict,
                            {"H3_TEST2_REMOTE": session_remote}))
         for name, path, timeout, env in stages:
             began = time.monotonic()
-            exec_file(session, path, timeout, logdir / f"{name}.log", **env)
+            exec_stage(session, path, timeout, logdir / f"{name}.log", **env)
             if name == "inputs":
                 marker = "TEST2_EP01_INPUTS_READY"
             elif name == "recover_u01":

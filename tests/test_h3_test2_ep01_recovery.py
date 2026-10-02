@@ -10,7 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/ops"))
 import h3_test2_ep01_recovery as module
-from h3_test2_ep01_recovery import validate_recovery_manifest
+from h3_test2_ep01_recovery import validate_recovery_manifest, verify_recovery_sources
 
 
 def recovery() -> dict:
@@ -38,6 +38,76 @@ def test_recovery_rejects_old_latent_shape_assumption() -> None:
     changed["validation"]["latent"]["tensors"][1]["shape"][2] = 122
     with pytest.raises(RuntimeError, match="latent shape"):
         validate_recovery_manifest(changed, manifest_sha())
+
+
+def test_recovery_verifies_downloads_when_rclone_omits_sha256(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    record = recovery()
+    sources = {}
+    for name in ("latent", "video"):
+        source = tmp_path / name
+        source.write_bytes(name.encode())
+        sources[record[f"{name}_remote"]] = source
+        record["validation"][name]["bytes"] = source.stat().st_size
+        record["validation"][name]["sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
+    for index, item in enumerate(record["visual_review"]["evidence"]):
+        source = tmp_path / f"evidence-{index}"
+        source.write_bytes(f"evidence-{index}".encode())
+        sources[item["remote"]] = source
+        item["sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
+
+    def fake_rclone_json(arguments: list[str], *_: str) -> dict:
+        if arguments[0] == "cat" and arguments[1] == record["source_phase_remote"]:
+            return {"session_id": record["source_session"], "state": "failed",
+                    "archive_state": "verified",
+                    "input_manifest_sha256": record["input_manifest_sha256"], "unit": "U01"}
+        if arguments[0] == "cat" and arguments[1] == record["source_history_remote"]:
+            return {record["validation"]["prompt_id"]:
+                    {"status": {"status_str": "success"}}}
+        return {"Size": sources[arguments[1]].stat().st_size,
+                "Hashes": {"md5": "old-rclone-has-no-sha256"}}
+
+    copied = []
+
+    def fake_run(command: list[str], **_: object) -> None:
+        copied.append(command[2])
+        shutil.copyfile(sources[command[2]], command[3])
+
+    monkeypatch.setattr(module, "rclone_json", fake_rclone_json)
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    verify_recovery_sources(record, "rclone", "config")
+    assert record["latent_remote"] not in copied
+    assert copied == [record["video_remote"],
+                      *(item["remote"] for item in record["visual_review"]["evidence"])]
+
+
+def test_recovery_rejects_changed_download_without_remote_sha256(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    record = recovery()
+    source = tmp_path / "changed-video"
+    source.write_bytes(b"changed-video")
+
+    def fake_rclone_json(arguments: list[str], *_: str) -> dict:
+        if arguments[0] == "cat" and arguments[1] == record["source_phase_remote"]:
+            return {"session_id": record["source_session"], "state": "failed",
+                    "archive_state": "verified",
+                    "input_manifest_sha256": record["input_manifest_sha256"], "unit": "U01"}
+        if arguments[0] == "cat" and arguments[1] == record["source_history_remote"]:
+            return {record["validation"]["prompt_id"]:
+                    {"status": {"status_str": "success"}}}
+        if arguments[1] == record["latent_remote"]:
+            return {"Size": record["validation"]["latent"]["bytes"], "Hashes": {}}
+        return {"Size": record["validation"]["video"]["bytes"], "Hashes": {}}
+
+    def fake_run(command: list[str], **_: object) -> None:
+        shutil.copyfile(source, command[3])
+
+    monkeypatch.setattr(module, "rclone_json", fake_rclone_json)
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError, match="downloaded SHA-256 changed"):
+        verify_recovery_sources(record, "rclone", "config")
 
 
 def test_recovery_stage_installs_parent_without_resubmitting_prompt(

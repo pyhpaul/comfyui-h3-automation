@@ -17,13 +17,19 @@ export CUDA_VISIBLE_DEVICES=0
 export PYTHONUTF8=1
 export PYTHONIOENCODING=utf-8
 
+case "${H3_DISABLE_SMART_MEMORY:-1}" in
+  1) memory_flag=(--disable-smart-memory) ;;
+  0) memory_flag=() ;;
+  *) echo "H3_DISABLE_SMART_MEMORY must be 0 or 1" >&2; exit 2 ;;
+esac
+
 exec python main.py \
   --listen 127.0.0.1 \
   --port 8188 \
   --cuda-device 0 \
   --lowvram \
   --reserve-vram 4 \
-  --disable-smart-memory \
+  "${memory_flag[@]}" \
   --force-fp16 \
   --disable-cuda-graphs \
   --enable-manager \

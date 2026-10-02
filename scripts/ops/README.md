@@ -35,3 +35,19 @@ bash scripts/ops/switch_gpu_tunnel.sh
 5. `bash restart_comfy_tunnel.sh`
 
 Full handoff: `docs/HANDOFF.md` §2。
+
+## Colab 操作与归档
+
+统一索引：`docs/ops/2026-10-02-colab-mainline-archive.md`。
+
+- G4 单 U02：`colab_h3_g4_u02_host.py`，默认四并发恢复，
+  `--restore-workers 1` 显式回退串行。
+- G4 连续 U03-U05：`colab_h3_g4_chain_host.py`，复用上述恢复入口与回退选项。
+- Test2 EP01：`colab_h3_test2_ep01_host.py`；EP02/EP03 的合约、phase 和
+  finalizer 位于 `h3_test2_ep23_*.py`。历史 Test2 入口仍保留串行恢复。
+- 恢复性能实测：`colab_h3_restore_benchmark_host.py`，默认仅 dry-run。
+- Drive 引导下载使用固定版本与双层 SHA-256；账号配置和 token 不入库。
+- 付费运行必须另行授权，不从归档或历史测试授权推断运行许可。
+- Gate 0 WebSocket 观测器需要 `pip install -e '.[ops]'`；本地回归使用
+  `pip install -e '.[dev]'`。Colab CLI、rclone、ffmpeg 和运行时 GPU 依赖
+  仍按对应 runbook 单独准备。

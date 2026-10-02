@@ -41,7 +41,7 @@ def _bare_name(path: str) -> str:
 
 def _image_slots(field_paths: dict[str, str]) -> list[tuple[int, str]]:
     out: list[tuple[int, str]] = []
-    for i in range(0, 8):
+    for i in range(0, 9):
         key = f"ref_image_{i}"
         if key in field_paths:
             out.append((i, field_paths[key]))

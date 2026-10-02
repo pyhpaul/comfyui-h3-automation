@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "job": "EP04-U02-v16",
+  "continuity": "motion_latent",
+  "passes": 1,
+  "reference_profile": "a100_sage_sm80",
+  "reference_preflight_sha256": "fed67e6176201f725022188a22b3a96e622f776c23d999b385e2795222417478",
+  "reference_graph_sha256": "c248b91d087d089986b2e688284643bc2b6ad93e4ed1b0ee446f8438f4091225",
+  "parent": {
+    "graph_path": "h3_context/ep04_u01_00001.safetensors",
+    "sha256": "6def89c01d367a64be354a93dfb7e96806d236211eb0fdfcbf4bfe493a95946a",
+    "bytes": 34602712
+  },
+  "graph_contract": {
+    "sage_node_id": "58",
+    "sampler_node_id": "226",
+    "parent_node_id": "401",
+    "seed": 1012014866441350,
+    "sampler": "euler",
+    "scheduler": "beta",
+    "scheduler_steps": 16,
+    "split_step": 12,
+    "executed_steps": 12,
+    "resolution": "768x1376",
+    "video_fps": 24,
+    "video_format": "video/h264-mp4",
+    "video_pix_fmt": "yuv420p",
+    "video_crf": 19
+  },
+  "reference_runtime": {
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "python": "3.13.15",
+    "torch": "2.14.0+cu130",
+    "comfyui": "0.34.0",
+    "smart_memory": "disabled (observed in C1 server log)",
+    "exact_startup_command": "unknown_from_archived_C1_log",
+    "sage_wheel_sha256": "36fb6b6febdcd71aa171fa207291b40696a5f4384451100348a1ebdfec8a8238"
+  },
+  "assets": [
+    {"kind": "source", "path": "ComfyUI/custom_nodes/ComfyUI-KJNodes/nodes/ltxv_nodes.py", "bytes": 122787, "sha256": "11286583c56e653dbd57f5e8eda6902c84b759f16b359b3bf0c895b43e6b5364"},
+    {"kind": "model", "path": "ComfyUI/models/diffusion_models/minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors", "bytes": 20970379632, "sha256": "a629cfea8d89a071b140c6e1935dc9a23e72de6badc18975a2bb9e6d1423d76d"},
+    {"kind": "model", "path": "ComfyUI/models/loras/MysticXXX_MMH3-V1.safetensors", "bytes": 596451528, "sha256": "7dd837f4c5420d4ec59f3ff1757b3f9d264a6c0f120d65d9c4f59c77584dd0be"},
+    {"kind": "model", "path": "ComfyUI/models/loras/minimax_h3_turbo_v4_step600_ema_pruned_comfyui.safetensors", "bytes": 620285592, "sha256": "7098acf3ee75028fd9fcd948f50fcc8d995057fabb76f86bd3ca2c0ffc58e409"},
+    {"kind": "model", "path": "ComfyUI/models/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors", "bytes": 15687142551, "sha256": "35a88d51044231fe332301d7a62aa81e3f2cba62febeb446e2c1e3e0ef76f2c6"},
+    {"kind": "model", "path": "ComfyUI/models/vae/minimax_h3_audio_vae_fp32.safetensors", "bytes": 605254808, "sha256": "8e505d95dd1561d47abd43d4238fd40d9bb1ae9e147ed0a4cba778d76ae4db48"},
+    {"kind": "model", "path": "ComfyUI/models/vae/minimax_h3_video_vae_int8_convrot.safetensors", "bytes": 3171670912, "sha256": "9bb2d96f218c76babd85e0611b85ca8fb330a90546c01a0005e8a58a59593410"},
+    {"kind": "reference", "path": "runner/jobs/ep_units/EP04-H3-manual-v16-U02/assets/id0-char-001.png", "bytes": 1950095, "sha256": "34361d08d64c11663840e3d3085f72359f70c6082a9b6b39031c035876e82c67"},
+    {"kind": "reference", "path": "runner/jobs/ep_units/EP04-H3-manual-v16-U02/assets/id1-char-012-overseer-gorke-v4-right-eye-patch.png", "bytes": 2405034, "sha256": "34eb810dd71d39d44cc4964fabbbd244a18b834852d31402820a93b128edec3d"},
+    {"kind": "reference", "path": "runner/jobs/ep_units/EP04-H3-manual-v16-U02/assets/id2-scene-013.png", "bytes": 2836561, "sha256": "63859afe287249d9d867e756b3de48897e9d10647d4ffce065be39ba8586c4b7"},
+    {"kind": "reference", "path": "runner/jobs/ep_units/EP04-H3-manual-v16-U02/assets/id3-prop-016-barbed-steel-whip-v2.png", "bytes": 1738800, "sha256": "63bda7a744753b3754430193647f9b2425c9ffad7477514c2d90e3769b3dd52b"},
+    {"kind": "prompt", "path": "runner/jobs/ep_units/EP04-H3-manual-v16-U02/assets/prompt_source.txt", "bytes": 2764, "sha256": "14f083a4b95b47125bd0226a38de182216a8a75750c84ae0ba23232cd71b6f11"},
+    {"kind": "source", "path": "runner/src/comfy_orch/gpu_adapt.py", "bytes": 4871, "sha256": "138218e54c2df112b88eea10035faf564fd8111ef6cc79ecdd8c2ae53a4cb2bf"}
+  ]
+}

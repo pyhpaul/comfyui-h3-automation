@@ -11,7 +11,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-httpx>=0.30"]
+dev = ["pytest>=8.0", "pytest-httpx>=0.30", "aiohttp>=3.10"]
+ops = ["aiohttp>=3.10"]
 
 [project.scripts]
 comfy-orch = "comfy_orch.cli:app"

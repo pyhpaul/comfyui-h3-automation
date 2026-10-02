@@ -1,12 +1,14 @@
 """GPU / attention adaptations for YZ H3 workflows.
 
-Two stock profiles:
+Three profiles:
 
 - ``rtx5090`` (primary): keep template ``MiniMaxH3MemoryEfficientSageAttentionPatch``
   (FP8 sage path used on the 5090 node).
 - ``rtx4080`` (backup): remove the MiniMax FP8 Sage patch and wire UNET→LoRA
   directly (``bypass``). Ada boxes often lack FA2/FA3 and FP8 sage kernels;
   override to ``sage_fp16`` / ``flash`` when those deps exist.
+- ``a100_sage_sm80`` (experimental): opt into the same MiniMax H3-specific
+  Sage patch, using its SM80 kernel after a separate runtime preflight.
 
 ``auto`` resolves from Comfy ``/system_stats`` device name; unknown GPUs fall
 back to the safer ``rtx4080`` profile.
@@ -18,8 +20,8 @@ import os
 from dataclasses import dataclass
 from typing import Any, Literal
 
-GpuProfileId = Literal["rtx5090", "rtx4080"]
-AttentionMode = Literal["minimax_sage_fp8", "sage_fp16", "flash", "bypass"]
+GpuProfileId = Literal["rtx5090", "rtx4080", "a100_sage_sm80"]
+AttentionMode = Literal["minimax_sage_fp8", "minimax_sage_sm80", "sage_fp16", "flash", "bypass"]
 
 NODE_SAGE = "58"
 NODE_UNET = "192"
@@ -53,6 +55,11 @@ PROFILES: dict[GpuProfileId, GpuProfile] = {
         label="backup RTX 4080 SUPER",
         attention="bypass",
     ),
+    "a100_sage_sm80": GpuProfile(
+        id="a100_sage_sm80",
+        label="experimental A100 SM80 Sage",
+        attention="minimax_sage_sm80",
+    ),
 }
 
 
@@ -71,7 +78,7 @@ def resolve_gpu_profile(
     *,
     device_name: str | None = None,
 ) -> GpuProfile:
-    """Resolve profile from CLI/env (``auto|rtx5090|rtx4080``) + optional doctor name."""
+    """Resolve profile from CLI/env, keeping A100 Sage explicit-only."""
     raw = (requested if requested is not None else os.environ.get("COMFY_GPU_PROFILE", "auto")) or "auto"
     key = raw.strip().casefold()
     if key in {"auto", ""}:
@@ -80,8 +87,12 @@ def resolve_gpu_profile(
         return GpuProfile.by_id("rtx5090")
     if key in {"rtx4080", "4080", "backup"}:
         return GpuProfile.by_id("rtx4080")
+    if key == "a100_sage_sm80":
+        if "a100" not in (device_name or "").casefold():
+            raise ValueError("a100_sage_sm80 requires a detected A100 device")
+        return GpuProfile.by_id("a100_sage_sm80")
     raise ValueError(
-        f"unknown gpu profile {raw!r}; expected auto|rtx5090|rtx4080"
+        f"unknown gpu profile {raw!r}; expected auto|rtx5090|rtx4080|a100_sage_sm80"
     )
 
 
@@ -91,7 +102,7 @@ def apply_gpu_profile(
 ) -> dict[str, Any]:
     """Return a copy of ``workflow`` with attention nodes adapted for ``profile``."""
     out = copy.deepcopy(workflow)
-    if profile.attention == "minimax_sage_fp8":
+    if profile.attention in {"minimax_sage_fp8", "minimax_sage_sm80"}:
         out[NODE_SAGE] = {
             "class_type": "MiniMaxH3MemoryEfficientSageAttentionPatch",
             "inputs": {"model": [NODE_UNET, 0]},

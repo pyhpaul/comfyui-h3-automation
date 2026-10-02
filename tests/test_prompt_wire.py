@@ -172,6 +172,17 @@ def test_wire_at_asset_tokens_ep07_style():
     assert audit_pack_prompt_wiring(src, wired, fields) == []
 
 
+def test_wire_ninth_image_slot():
+    fields = {f"ref_image_{i}": f"assets/id{i}-char-{i:03d}.png" for i in range(9)}
+    src = "\n".join(f"identity @char-{i:03d}" for i in range(9)) + "\n"
+
+    wired = wire_pack_prompt(src, fields)
+
+    assert "<Picture 9>" in wired
+    assert "@char-008" not in wired
+    assert audit_pack_prompt_wiring(src, wired, fields) == []
+
+
 
 def test_build_u01_keeps_chinese_body(tmp_path: Path):
     job = build_unit_job(PACK, "U01", tmp_path)

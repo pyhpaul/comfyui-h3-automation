@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from colab_h3_a100_ab_host import exec_file, run, snapshot, stop_and_verify
+from colab_h3_restore_bootstrap_host import check_drive_bootstrap
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -25,9 +26,11 @@ REFERENCE = BACKUP / "a100-perf-pilot/h3-a100-ab-20260925-163222/evidence/C1/sub
 CONFIG = Path.home() / ".config/rclone-h3/rclone.conf"
 WHEEL_DIR = BACKUP / "g4-u02/wheels"
 REMOTE_BASE = "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/runs/ep04/u02"
+BOOTSTRAP_METADATA = ROOT / "docs/ops/drive-rclone-bootstrap-v1.json"
 RESTORED_GPU_ADAPT_SHA256 = "a2333220eafb3a90d333312883a5e1875a5b95cf991e994e0ec27bf8bfa4efaa"
 STAGE_MARKERS = {
     "identity": "G4_IDENTITY_OK",
+    "bootstrap": "RCLONE_BOOTSTRAP_OK",
     "preinstall": '"probe_exit": 0',
     "restore": "restore_ready",
     "setup": "comfy_ready",
@@ -35,7 +38,10 @@ STAGE_MARKERS = {
 }
 UPLOADS = (
     (CONFIG, "/content/rclone.conf"),
-    (RESTORE / "colab-h3-rclone.gz", "/content/rclone.gz"),
+    (BOOTSTRAP_METADATA, "/content/rclone-bootstrap.json"),
+    (SCRIPTS / "colab_h3_restore.py", "/content/colab_h3_restore.py"),
+    (SCRIPTS / "colab_h3_restore_fast.py", "/content/colab_h3_restore_fast.py"),
+    (SCRIPTS / "colab_h3_restore_entry.py", "/content/colab_h3_restore_entry.py"),
     (REFERENCE, "/content/g4-c1-reference-graph.json"),
     (SCRIPTS / "h3_a100_ab_contract.py", "/content/h3_a100_ab_contract.py"),
     (SCRIPTS / "h3_a100_ab_child.py", "/content/h3_a100_ab_child.py"),
@@ -48,7 +54,7 @@ UPLOADS = (
 
 def local_preflight() -> tuple[Path, str]:
     required = [path for path, _ in UPLOADS] + [
-        SCRIPTS / "colab_h3_restore.py", SCRIPTS / "colab_h3_preinstall_torch.py",
+        SCRIPTS / "colab_h3_restore_bootstrap.py", SCRIPTS / "colab_h3_preinstall_torch.py",
         SCRIPTS / "h3_a100_ab_preflight.py", SCRIPTS / "h3_g4_identity.py",
         SCRIPTS / "h3_g4_setup.py", SCRIPTS / "h3_g4_u02_phase.py",
         SCRIPTS / "colab_h3_paid_watchdog.sh",
@@ -72,8 +78,7 @@ def local_preflight() -> tuple[Path, str]:
     ).stdout
     if hashlib.sha256(archived).hexdigest() != RESTORED_GPU_ADAPT_SHA256:
         raise RuntimeError("Drive runner archive no longer matches the G4 preflight hash")
-    subprocess.run(["rclone", "about", "h3drive_h3:", "--config", str(CONFIG)],
-                   check=True, timeout=30)
+    check_drive_bootstrap(CONFIG, BOOTSTRAP_METADATA, ROOT / "runs")
     return wheel, digest
 
 
@@ -120,10 +125,27 @@ def verify_phase(remote: str, session: str, log: Path) -> dict:
     return receipt
 
 
+def setup_stages(wheel_sha: str, remote: str, restore_workers: int
+                 ) -> tuple[tuple[str, Path, int, dict[str, str]], ...]:
+    return (
+        ("identity", SCRIPTS / "h3_g4_identity.py", 60, {}),
+        ("bootstrap", SCRIPTS / "colab_h3_restore_bootstrap.py", 120, {}),
+        ("preinstall", SCRIPTS / "colab_h3_preinstall_torch.py", 720, {}),
+        ("restore", SCRIPTS / "colab_h3_restore_entry.py", 2400,
+         {"H3_RESTORE_WORKERS": str(restore_workers)}),
+        ("setup", SCRIPTS / "h3_g4_setup.py", 900, {"H3_G4_WHEEL_SHA256": wheel_sha}),
+        ("preflight", SCRIPTS / "h3_a100_ab_preflight.py", 600,
+         {"H3_AB_PREFLIGHT_REMOTE": remote,
+          "H3_GPU_ADAPT_EXPECTED_SHA256": RESTORED_GPU_ADAPT_SHA256}),
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--execute-paid", action="store_true")
     parser.add_argument("--safety-hours", type=float, default=4.0)
+    parser.add_argument("--restore-workers", type=int, choices=(1, 4), default=4,
+                        help="four-worker restore, or explicit original serial rollback")
     args = parser.parse_args()
     if not 2 <= args.safety_hours <= 8:
         raise ValueError("safety deadline must be between two and eight hours")
@@ -133,7 +155,7 @@ def main() -> None:
     if not args.execute_paid:
         print(json.dumps({"ready": True, "paid_started": False, "wheel": str(wheel),
                           "wheel_sha256": wheel_sha, "reference_graph": str(REFERENCE),
-                          "remote_prefix": remote}, indent=2))
+                          "remote_prefix": remote, "restore_workers": args.restore_workers}, indent=2))
         return
     logdir = BACKUP / "g4-u02" / session
     logdir.mkdir(parents=True, exist_ok=False)
@@ -146,6 +168,11 @@ def main() -> None:
         "session": session, "remote": remote, "wheel_sha256": wheel_sha,
         "reference_graph_sha256": hashlib.sha256(REFERENCE.read_bytes()).hexdigest(),
         "safety_hours": args.safety_hours, "before": before,
+        "restore_workers": args.restore_workers,
+        "restore_script_hashes": {name: hashlib.sha256((SCRIPTS / name).read_bytes()).hexdigest()
+                                  for name in ("colab_h3_restore.py", "colab_h3_restore_fast.py",
+                                               "colab_h3_restore_entry.py", "colab_h3_restore_bootstrap.py")},
+        "bootstrap_metadata_sha256": hashlib.sha256(BOOTSTRAP_METADATA.read_bytes()).hexdigest(),
     }, indent=2) + "\n")
     created = False
     watcher = None
@@ -175,15 +202,7 @@ def main() -> None:
         for source, destination in (*UPLOADS, (wheel, "/content/" + wheel.name)):
             run(["colab", "upload", "--session", session, str(source), destination],
                 logdir / ("upload-" + source.name + ".log"), timeout=300)
-        stages = (
-            ("identity", SCRIPTS / "h3_g4_identity.py", 60, {}),
-            ("preinstall", SCRIPTS / "colab_h3_preinstall_torch.py", 720, {}),
-            ("restore", SCRIPTS / "colab_h3_restore.py", 2400, {}),
-            ("setup", SCRIPTS / "h3_g4_setup.py", 900, {"H3_G4_WHEEL_SHA256": wheel_sha}),
-            ("preflight", SCRIPTS / "h3_a100_ab_preflight.py", 600,
-             {"H3_AB_PREFLIGHT_REMOTE": remote,
-              "H3_GPU_ADAPT_EXPECTED_SHA256": RESTORED_GPU_ADAPT_SHA256}),
-        )
+        stages = setup_stages(wheel_sha, remote, args.restore_workers)
         for name, path, timeout, env in stages:
             began = time.monotonic()
             exec_file(session, path, timeout, logdir / f"{name}.log", **env)

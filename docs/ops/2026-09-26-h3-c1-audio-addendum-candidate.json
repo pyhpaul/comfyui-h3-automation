@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "base_manifest_sha256": "9a5f0d43b7e93a0fc5a3226c1970f79e88db03550cfc57dbbdcb502c5beb4609",
+  "c1_validation_sha256": "8e4bad0f05c15f062180f5cf990a1b75277b07d86be94b27ac134ea4eb6d5ee4",
+  "c1_video_sha256": "f7d9898aa135548bc5448524daf6fe893398c80411fe42db7bfe72153a8a4971",
+  "c1_video_bytes": 9947111,
+  "primary_evidence_sha256": "c1235fa6115b0076dc9d2fd9bcc814ef90b27af8773721cb940f9be2a3e83f12",
+  "audio_contract": {
+    "codec": "aac",
+    "sample_rate": 32000,
+    "channels": 2
+  },
+  "scope": "technical_media_format_only_not_visual_or_audio_quality_acceptance",
+  "review_id": "astra-a3-c1-audio-20260926"
+}

@@ -1,7 +1,7 @@
 # Colab mainline archive
 
-Status: Colab scope consolidated and isolated verification passed;
-hosted PR merge and closeout pending.
+Status: Colab functionality merged into main through PR #8;
+isolated verification and operational-archive closeout complete.
 
 ## Task checklist
 
@@ -11,8 +11,8 @@ hosted PR merge and closeout pending.
 - [x] Resolve the scope of the separate G4 chain and Test2 production work.
 - [x] Review diffs, required dependencies, artifacts and sensitive-data exposure.
 - [x] Verify the selected snapshot in isolation, without paid GPU operations.
-- [ ] Commit, push a feature branch, create a PR and verify GitHub checks.
-- [ ] Merge through the PR, synchronize main safely and reconcile old PRs.
+- [x] Commit, push a feature branch, create a PR and verify GitHub checks.
+- [x] Merge through the PR, synchronize main safely and reconcile old PRs.
 
 ## Current scope
 
@@ -123,4 +123,26 @@ pytest -q tests/test_colab_h3_*.py tests/test_h3_a100_*.py \
 
 No paid Colab allocation, inference, model transfer or live Drive check was
 performed for this shipping task. No release tag is requested or created.
-Hosted merge evidence will be recorded in closeout.
+
+## Hosted closeout
+
+- Consolidated PR: <https://github.com/pyhpaul/comfyui-h3-automation/pull/8>,
+  merged at `2026-10-02T10:23:08Z` by squash through GitHub, not a direct
+  push to main.
+- Reviewed/tested head: `dc040851cd7beaa2f56e6153edbb332bcb4f055e`.
+  Mainline merge: `d286198d497d9cf2e57b6e78174023c2762448ed`.
+  A full-tree diff between these two revisions was empty after fetching main.
+- GitHub reported `MERGEABLE` / `CLEAN` and an empty status-check list.
+  `gh pr checks` confirmed no CI checks were reported. No remote CI pass
+  is claimed; the isolated local verification above is the validation record.
+- PRs #4 (G4 baseline) and #5 (continuation) were closed as superseded by
+  the merged consolidation. They were not separately squash-merged again.
+  Their original branches and dirty worktrees remain available.
+- Local main was fast-forwarded in `.worktrees/colab-archive`. The original
+  main workspace stays on its original feature branch with all dirty files
+  preserved; the original Test2 worktree was likewise not switched or cleaned.
+- Two stale Git worktree registrations for absent `/tmp` directories were
+  pruned after a dry-run; no existing worktree files or branches were removed.
+
+This closeout document is delivered through a separate documentation-only
+PR; it does not modify or revalidate the historical paid-run artifacts.

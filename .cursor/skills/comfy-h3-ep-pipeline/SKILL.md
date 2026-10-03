@@ -65,6 +65,7 @@ EP pipeline:
 | Phase | Skill path |
 |-------|------------|
 | 0 | `.cursor/skills/comfy-h3-env/SKILL.md` |
+| NAS | `.cursor/skills/comfy-h3-feiniu/SKILL.md` |
 | 1 | `.cursor/skills/comfy-h3-ep-pack-jobs/SKILL.md` |
 | 1b | `.cursor/skills/comfy-h3-pack-prompt-audit/SKILL.md` |
 | 2 | `.cursor/skills/comfy-h3-bound-export/SKILL.md` |

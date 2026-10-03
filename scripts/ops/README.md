@@ -45,6 +45,9 @@ Full handoff: `docs/HANDOFF.md` §2。
 - G4 连续 U03-U05：`colab_h3_g4_chain_host.py`，复用上述恢复入口与回退选项。
 - Test2 EP01：`colab_h3_test2_ep01_host.py`；EP02/EP03 的合约、phase 和
   finalizer 位于 `h3_test2_ep23_*.py`。历史 Test2 入口仍保留串行恢复。
+- 奶茶 EP01：`colab_h3_cup_ep01_host.py`。启动失败、尾帧和续跑见
+  `docs/ops/2026-10-03-colab-cup-ep01-startup.md`。成片进飞牛
+  `H3_comfyUI_5090/archive/这杯奶茶你请不起（10.3）/EP01/<单元>/`，不打 zip。
 - 恢复性能实测：`colab_h3_restore_benchmark_host.py`，默认仅 dry-run。
 - Drive 引导下载使用固定版本与双层 SHA-256；账号配置和 token 不入库。
 - 付费运行必须另行授权，不从归档或历史测试授权推断运行许可。

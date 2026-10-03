@@ -173,6 +173,7 @@ python scripts/audit_pack_prompts.py
 | history 无 latent 路径 | 槽位文件仍可能在 `h3_context/*_0000N.safetensors`；用 `--parent-latent` 续跑 |
 | OOM | 先保一采+latent；二采降 `--pass2-scale` 或拆开跑 |
 | 画布空白 | 需要 bound UI Load，不是只 queue |
+| Colab 奶茶 EP01 启动把付费会话拆掉 | `docs/ops/2026-10-03-colab-cup-ep01-startup.md` |
 
 ## 11. 相关文档
 
@@ -180,3 +181,4 @@ python scripts/audit_pack_prompts.py
 - 租卡 API 归档：`docs/ops/2026-09-09-gpu-comfy-api-archive.md`
 - 端到端（偏 EP 包）：`docs/ops/2026-09-09-ep-pack-to-video-pipeline.md`
 - EP03/EP04 包字段：`docs/ops/2026-09-09-ep03-ep04-yz-pack.md`
+- Colab 奶茶 EP01 启动记录：`docs/ops/2026-10-03-colab-cup-ep01-startup.md`

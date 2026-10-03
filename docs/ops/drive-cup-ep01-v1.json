@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "episode": "EP01-奶茶-v1",
+  "source_zip_sha256": "1d16842a9748d0b1f6011b34a243be5921475cc320c58da62daca9e38a9f85e7",
+  "units": [
+    "U01",
+    "U02",
+    "U03",
+    "U04",
+    "U05",
+    "U06",
+    "U07",
+    "U08",
+    "U09"
+  ],
+  "independent_starts": [
+    "U01",
+    "U02",
+    "U03",
+    "U05",
+    "U06",
+    "U07",
+    "U08",
+    "U09"
+  ],
+  "continuity": "motion_latent",
+  "second_pass": false,
+  "job_archive": {
+    "remote": "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/inputs/cup-20261003/ep01/cup-ep01-jobs-v1.tar",
+    "bytes": 30576640,
+    "sha256": "3ab91ccf1728fc9f3586f56caae6de37a7be6f27a78b82bf147e26ecbddd66eb"
+  }
+}

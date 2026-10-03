@@ -146,6 +146,7 @@ python scripts/export_bound_workflow.py jobs/ep_units/<JOB> \
 |-------|------|
 | `comfy-h3-ep-pipeline` | 总控 + 模式门禁 |
 | `comfy-h3-env` | 端口 / doctor |
+| `comfy-h3-feiniu` | 飞牛 NAS：inbox 资产包、archive 成片 |
 | `comfy-h3-ep-pack-jobs` | 包 → job |
 | `comfy-h3-pack-prompt-audit` | EP02 wire-only 审核 |
 | `comfy-h3-bound-export` | 画布可见导出 |

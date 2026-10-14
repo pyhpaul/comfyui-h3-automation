@@ -9,7 +9,7 @@ alwaysApply: true
 
 场景连续时都用 `motion_latent`。不要问接力方式。只有这次明确说整片参考，才用 `ref_video`。
 
-场景连续指下一条还在同一地点，并且 `start_mode` 不是 `independent`。这种才接上一条的 AV latent。换场号要断开。`start_mode=independent`（时间跳过、闪前、换机位）也断开，即使场景号相同。
+场景连续指下一条还在同一地点，并且 `start_mode` 不是 `independent`。这种才接上一条的 AV latent。换场号要断开。`start_mode=independent`（时间跳过、闪前、换机位）也断开，即使场景号相同。上一条成片已经是上下分屏时也断开，见 `h3-queue-run.mdc`。
 
 成片放飞牛，不留本地下载目录。见 `h3-feiniu-archive-only.mdc`。入队接力见 `h3-queue-run.mdc`。拆包见 `h3-pack-prep.mdc`。
 

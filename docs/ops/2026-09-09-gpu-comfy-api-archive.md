@@ -16,30 +16,32 @@
 | ComfyUI 路径 | `/root/ComfyUI`（另有 `/root/autodl-tmp/ComfyUI`） |
 | Comfy 启动（当时） | 租卡侧已监听（实测 `0.0.0.0:8188`，`python3` pid 见开机后进程） |
 | Comfy 版本 | 约 `0.33.0`（frontend 约 `1.49.6`；以当日 `/system_stats` 为准） |
-| 监听 | 租卡本机 `:8188`（公网仍建议经 vm122 `8190` 隧道访问） |
+| 监听 | 租卡本机 `:8188`（现行经 vm106 `8190` 隧道访问） |
 
-> **换机提醒：** 租卡每日开机可能换域名/端口。更新 vm122 `/tmp/comfy_ssh_forward.py` 的 `SSH_HOST`/`SSH_PORT` 与 `/tmp/.comfy_gpu_ssh_pass`（权限 600），重启转发后验证 `http://192.168.5.122:8190/system_stats`。**不要把密码写入仓库。**
+> **换机提醒（现行）：** 租卡每次开机可能换域名/端口。在 WSL 设好 `COMFY_GPU_SSH_HOST` / `COMFY_GPU_SSH_PORT` / `COMFY_GPU_SSH_PASSFILE`，`VM122_SSH=vm106`，跑 `remote_comfy_h3.sh restart` 与 `switch_gpu_tunnel.sh`，再验证 `http://192.168.50.106:8190/system_stats`。密码只放本机 passfile，**不要写入仓库**。见 `.cursor/rules/h3-gpu-vm106.mdc`。
 
 同机其它常见端口（平台映射，非 Comfy）：`8888` Jupyter、`7860` cyui、`9999` gopeed、`22` sshd。
 
-## 2. 经 vm122 的端口映射（当前推荐访问方式）
+## 2. 经 vm106 的端口映射（现行）
 
 | 项 | 值 |
 |----|-----|
-| 对外 URL | `http://192.168.5.122:8190` |
-| 含义 | vm122 `0.0.0.0:8190` → SSH 隧道 → 租卡 `127.0.0.1:8188` |
-| 编排变量 | `export COMFY_BASE_URL=http://192.168.5.122:8190` |
+| 对外 URL | `http://192.168.50.106:8190` |
+| 含义 | vm106 `0.0.0.0:8190` → SSH 隧道 → 租卡 `127.0.0.1:8188` |
+| 编排变量 | `export COMFY_BASE_URL=http://192.168.50.106:8190` |
+
+2026-09-09 当时走的是 vm122 `http://192.168.5.122:8190`，已停用。
 
 ### 转发进程（运维备忘）
 
-曾在 **vm122** 上用用户态脚本常驻转发：
+现行在 **vm106** 上用用户态脚本常驻转发（当时曾在 vm122）：
 
 - 脚本：`/tmp/comfy_ssh_forward.py`
 - venv：`/tmp/comfy-fwd-venv`
 - 密码文件（权限 600，勿提交仓库）：`/tmp/.comfy_gpu_ssh_pass`
 - 日志：`/tmp/comfy_ssh_forward.log`
 
-进程掉线后需在 vm122 上重新拉起；长期应改为 **SSH 公钥** + `systemd`/`autossh`，不要把密码放进 argv。
+进程掉线后需在 **vm106** 上重新拉起（`VM122_SSH=vm106 bash scripts/ops/switch_gpu_tunnel.sh`）；长期应改为 **SSH 公钥** + `systemd`/`autossh`，不要把密码放进 argv。
 
 本机 WSL 也可另开：`ssh -L 127.0.0.1:8190:127.0.0.1:8188 -p 21017 root@<host>`（需交互或密钥）。
 
@@ -67,7 +69,7 @@
 
 ## 4. 实机 API 实测（2026-09-09）
 
-目标：`COMFY_BASE_URL=http://192.168.5.122:8190`
+当时目标：`COMFY_BASE_URL=http://192.168.5.122:8190`（vm122，已停用）。现行用 `http://192.168.50.106:8190`。
 
 ### 4.1 内置 HTTP（16/16 PASS）
 
@@ -90,6 +92,7 @@
 ### 4.2 comfy-orch 闭环
 
 ```bash
+# 当时记录；现行改为 http://192.168.50.106:8190
 export COMFY_BASE_URL=http://192.168.5.122:8190
 comfy-orch doctor          # OK
 comfy-orch submit <smoke_passthrough job>

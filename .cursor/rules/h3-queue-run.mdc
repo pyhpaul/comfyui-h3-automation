@@ -7,6 +7,8 @@ alwaysApply: true
 
 `motion_latent` 下，history 里已经有 GPU latent 路径就打印 `HANDOFF`，马上入下一条。下载和飞牛上传在后台。不要等日志里的 `FEINIU` 或 `SUCCESS` 再 `queue_prompt`。下一条要的是租卡上的 `h3_context/*.safetensors`，不是飞牛上的拷贝。
 
+已经裂开成上下分屏的成片，它的 motion latent 不能接给下一条。下一条必须断开，当作新链头重跑。只裁下一条的场景图去不掉上一条已经写进 latent 的分屏。
+
 `ref_video` 仍要先拿到上一条成片，再提交下一条。
 
 后台归档已经失败时，不要再入下一条。`BATCH_DONE` 之前要等所有归档线程结束。有失败就不要报整批成功。

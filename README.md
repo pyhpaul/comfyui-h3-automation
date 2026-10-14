@@ -42,39 +42,33 @@ pip install -e ".[dev]"
 
 ## 开工前硬门禁
 
-提交队列前不用再问模式。采数默认 **只一采**，没有明确说二采就不要加 `--second-pass`。场景连续时用 **`motion_latent`**。换场或 `start_mode=independent` 不接 latent。只有明确说整片参考才用 `ref_video`。
+提交队列前不用再问模式。采数默认 **只一采**，没有明确说二采就不要加 `--second-pass`。场景连续时用 **`motion_latent`**。换场、`start_mode=independent`、或上一条已经是上下分屏，都不接 latent。只有明确说整片参考才用 `ref_video`。成片进飞牛。
 
-说明：[docs/ops/2026-09-10-render-profiles.md](docs/ops/2026-09-10-render-profiles.md)
+说明：[docs/ops/2026-09-10-render-profiles.md](docs/ops/2026-09-10-render-profiles.md)、[`.cursor/rules/`](.cursor/rules/)
 
 ## 快速路径
 
 ```bash
 export COMFY_BASE_URL=http://192.168.50.106:8190
+export PYTHONPATH=src
+source .worktrees/feat-orch/.venv/bin/activate
 comfy-orch doctor          # 应看到 CUDA / system_stats
 
 # 1) 资产包 → job（jobs/ 不入库，每人本地生成）
 python scripts/ep_pack_to_jobs.py /path/to/PACK -o jobs/ep_units --unit U01
-python scripts/audit_pack_prompts.py    # EP02 wire-only：no_parent + with_parent
+python scripts/audit_pack_prompts.py    # no_parent + with_parent；FAIL latent-scene 不准入队
 
-# 2a) 单纯一采（整片接力）
-python scripts/run_ep_units_profiled.py --units U01 U02 --continuity ref_video \
-  --download-dir "$HOME/Downloads/EP-compare-pass1"
-
-# 2b) 因果验收：latent 接力 + 二采
+# 2) 日常出片：只一采 + motion_latent + 飞牛
 python scripts/run_ep_units_profiled.py --units U01 U02 \
-  --continuity motion_latent --second-pass \
-  --download-dir "$HOME/Downloads/EP-compare-latent-mc"
+  --continuity motion_latent \
+  --feiniu-batch '<批次>'
 
 # 3) 可选：导出 bound UI（浏览器 8190 Load；不入队）
 python scripts/export_bound_workflow.py jobs/ep_units/<JOB> \
   --out-ui "$HOME/Downloads/<JOB>-bound-ui.json"
-
-# 单 job
-comfy-orch submit jobs/ep_units/<JOB>
-comfy-orch status <job_id>
 ```
 
-长 H3 任务优先用 `run_ep_units_profiled.py`；隧道抖动时按 `prompt_id` resume，勿盲目重复提交。
+长 H3 任务优先用 `run_ep_units_profiled.py`。`motion_latent` 在 latent 路径出来后马上入下一条。隧道抖动时按 `prompt_id` resume，勿盲目重复提交。只有这次明确说整片参考才用 `ref_video`；只有这次明确说二采才加 `--second-pass`。不要传 `--download-dir`。
 
 ## 包类型与模板
 

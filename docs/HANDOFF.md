@@ -72,9 +72,9 @@ python3 scripts/ops/chenyu_shutdown.py <ssh-host>
 
 只点文字正好是 `关机` 的按钮，确认 `关机确认` 后点 `确定`。不要点 `重启`、`另存储为镜像并关机`、`关机并销毁`。成功打印 `OFF`。细节见 `.cursor/rules/h3-gpu-vm106.mdc`。
 
-## 3. 开工硬门禁（先问再跑）
+## 3. 开工硬门禁（不用再问）
 
-每次开跑 / 续跑前不用再问模式。采数默认 **只一采**。没有明确说二采，不要加 `--second-pass`。场景连续时用 **`motion_latent`**。换场或 `start_mode=independent` 不接上一条的 latent。只有明确说整片参考才用 `ref_video`。详见 `docs/ops/2026-09-10-render-profiles.md`、规则 `.cursor/rules/h3-render-mode-gate.mdc`。
+每次开跑 / 续跑前不用再问模式。采数默认 **只一采**。没有明确说二采，不要加 `--second-pass`。场景连续时用 **`motion_latent`**。换场、`start_mode=independent`、或上一条已经是上下分屏，都不接上一条的 latent。只有明确说整片参考才用 `ref_video`。详见 `docs/ops/2026-09-10-render-profiles.md`、规则 `.cursor/rules/h3-render-mode-gate.mdc`、`.cursor/rules/h3-queue-run.mdc`。
 
 **Manual-call 日常默认（已固化）：** `motion_latent` + **无二采** + `gpu-profile auto` — 见 `docs/ops/2026-09-17-h3-manual-call-run-defaults.md` 与 `scripts/ops/run_ep_manual_call_defaults.sh`。
 

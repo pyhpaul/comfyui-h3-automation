@@ -1,0 +1,18 @@
+---
+description: H3 motion-latent queues the next unit at HANDOFF, and a finished unit is never re-queued
+alwaysApply: true
+---
+
+# H3 入队与接力
+
+`motion_latent` 下，history 里已经有 GPU latent 路径就打印 `HANDOFF`，马上入下一条。下载和飞牛上传在后台。不要等日志里的 `FEINIU` 或 `SUCCESS` 再 `queue_prompt`。下一条要的是租卡上的 `h3_context/*.safetensors`，不是飞牛上的拷贝。
+
+`ref_video` 仍要先拿到上一条成片，再提交下一条。
+
+后台归档已经失败时，不要再入下一条。`BATCH_DONE` 之前要等所有归档线程结束。有失败就不要报整批成功。
+
+`/queue` 为空，而本地日志还停在 `queue=running`，或正在下载、上传，不是暂停。不要因此杀掉入队进程，也不要重入队。history 已经 `success`，或飞牛上该单元四个文件已经齐，都不要重入队。
+
+隧道断开时按已有 `prompt_id` 续等。队列里没有、history 里也没有，先报告丢失，不要直接再交一次。
+
+编排用 `.worktrees/feat-orch/.venv`，并设 `PYTHONPATH=src`，这样用的是本仓库的 `comfy_orch`。系统 python 经常缺 paramiko 和 impacket。

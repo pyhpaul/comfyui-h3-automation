@@ -1,0 +1,23 @@
+---
+description: H3 成片只放飞牛 archive，不留在本地 Downloads 或 outputs
+alwaysApply: true
+---
+
+# H3 成片只放飞牛
+
+成片是 mp4、latent、`prompt_h3.txt`、`run_meta.json`。入队后只放到飞牛，不留在本机。
+
+- 用 `--feiniu-batch '<批次>'`。批次名向用户要，不要沿用上一次的批次。不要传 `--download-dir`。
+- 新资产在 `H3_comfyUI_5090/inbox/<批次>/`。成片在 `H3_comfyUI_5090/archive/<批次>/<集>/<单元>/`。不打 zip。集目录用 `EP\d+`，例如 `EP01`。
+- 上传成功后删除 `outputs/<job_id>/` 里的成片。不要复制到 `/mnt/c/Users/lxy/Downloads/`。
+- `runs/<job_id>/status.json` 可以留在本地。那是运行记录，不是成片。
+- SMB：`192.168.60.103:445`，共享 `ai短剧同步文件夹`，用户 `ai`。密码只在 `/home/linux_dev/.config/fnos/ai.pass`（600）。用 `.worktrees/feat-orch/.venv` 里的 impacket `SMBConnection`。不要打印密码，不要写进 git。
+
+```bash
+export COMFY_BASE_URL=http://192.168.50.106:8190
+python scripts/run_ep_units_profiled.py --units U01 \
+  --continuity motion_latent \
+  --feiniu-batch '<批次>'
+```
+
+场景连续时用 `motion_latent` 接上一条的 latent。换场，或 `start_mode=independent`，都不接。

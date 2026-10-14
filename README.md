@@ -1,8 +1,8 @@
 # comfyui-h3-automation
 
-本地编排客户端：把 EP 资产包编成 YZ **MiniMax H3** 任务，经共享入口 **`vm122:8190`** 提交到租卡 ComfyUI，再拉回成片。
+本地编排客户端：把 EP 资产包编成 YZ **MiniMax H3** 任务，经 **vm106:8190** 提交到租卡 ComfyUI。成片进飞牛。
 
-适合：多人共用同一台 vm122 隧道、在 WSL/Linux 上跑串行出片的团队。
+适合：在 WSL/Linux 上跑串行出片。
 
 **新人第一站：** [docs/HANDOFF.md](docs/HANDOFF.md)（拓扑、换卡、模式门禁、坑）
 
@@ -12,22 +12,22 @@
 编排机 (WSL / Linux)
     │  HTTP  COMFY_BASE_URL
     ▼
-vm122  :8190          ← 全员共用 Comfy 入口（转发跑在 vm122 上）
+vm106  192.168.50.106:8190   ← Comfy 入口（转发跑在 vm106 上）
     │  SSH tunnel
     ▼
 租卡 Comfy  127.0.0.1:8188   (H3 / CUDA)
 ```
 
 ```bash
-export COMFY_BASE_URL=http://192.168.5.122:8190
+export COMFY_BASE_URL=http://192.168.50.106:8190
 ```
 
 | 入口 | 用途 |
 |------|------|
-| `http://192.168.5.122:8190` | **唯一**出片 / 浏览器 Load 地址 |
-| ~~`:8188` on vm122~~ | 旧 CPU Comfy，已停用 |
+| `http://192.168.50.106:8190` | 出片 / 浏览器 Load 地址 |
+| ~~vm122:8190 / `:8188`~~ | 旧入口，已停用 |
 
-换租卡、正式启动 Comfy、重启转发：见 HANDOFF §2、[`docs/ops/2026-09-17-comfy-h3-canonical-start.md`](docs/ops/2026-09-17-comfy-h3-canonical-start.md) 与 [`scripts/ops/`](scripts/ops/)（密码只放 vm122 `/tmp/.comfy_gpu_ssh_pass`，**勿提交**）。
+换租卡、正式启动 Comfy、重启转发、关机：见 [`.cursor/rules/h3-gpu-vm106.mdc`](.cursor/rules/h3-gpu-vm106.mdc)。密码只放本机 `/home/linux_dev/.config/fnos/.chenyu-gpu.pass`，**勿提交**。
 
 ## 安装
 
@@ -38,21 +38,18 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-需要能访问局域网 `192.168.5.122`（或自建等价隧道后改 `COMFY_BASE_URL`）。
+需要能访问局域网 `192.168.50.106`（或自建等价隧道后改 `COMFY_BASE_URL`）。
 
 ## 开工前硬门禁
 
-提交队列前先确认（默认不要替别人做决定）：
-
-1. **只一采**，还是 **一采 + 二采**（`--second-pass`）？
-2. 跨 U 接力用 **`ref_video`（整片 MP4）**，还是 **`motion_latent`（AV latent）**？
+提交队列前不用再问模式。采数默认 **只一采**，没有明确说二采就不要加 `--second-pass`。场景连续时用 **`motion_latent`**。换场或 `start_mode=independent` 不接 latent。只有明确说整片参考才用 `ref_video`。
 
 说明：[docs/ops/2026-09-10-render-profiles.md](docs/ops/2026-09-10-render-profiles.md)
 
 ## 快速路径
 
 ```bash
-export COMFY_BASE_URL=http://192.168.5.122:8190
+export COMFY_BASE_URL=http://192.168.50.106:8190
 comfy-orch doctor          # 应看到 CUDA / system_stats
 
 # 1) 资产包 → job（jobs/ 不入库，每人本地生成）
@@ -115,15 +112,16 @@ python scripts/audit_pack_prompts.py
 
 | 路径 | 内容 |
 |------|------|
-| [docs/HANDOFF.md](docs/HANDOFF.md) | **交接总册**（vm122、模式、参数、坑） |
+| [docs/HANDOFF.md](docs/HANDOFF.md) | **交接总册**（vm106、模式、飞牛、坑） |
 | [docs/ops/2026-09-10-render-profiles.md](docs/ops/2026-09-10-render-profiles.md) | 一采 vs latent+二采 |
 | [docs/ops/2026-09-09-ep-pack-to-video-pipeline.md](docs/ops/2026-09-09-ep-pack-to-video-pipeline.md) | 端到端阶段门禁 |
 | [docs/ops/2026-09-09-gpu-comfy-api-archive.md](docs/ops/2026-09-09-gpu-comfy-api-archive.md) | 租卡 / API 归档 |
-| [scripts/ops/](scripts/ops/) | 租卡启停 + vm122 转发（canonical H3） |
+| [scripts/ops/](scripts/ops/) | 租卡启停 + vm106 转发 |
+| `.cursor/rules/h3-*.mdc` | 始终生效的出片约束 |
 | `.cursor/skills/comfy-h3-*` | Agent 分阶段 skills |
 
 ## 仓库约定
 
 - **不要提交**密码、`.env`、租卡 SSH 密钥或真实 passfile
 - **`jobs/`、`runs/`、`outputs/`** 已 gitignore（含大媒体；从资产包现场生成）
-- 设计过程稿在 `docs/superpowers/`；日常以 HANDOFF + ops 为准
+- 设计过程稿在 `docs/superpowers/`；日常以 `.cursor/rules/`、HANDOFF 和 ops 为准

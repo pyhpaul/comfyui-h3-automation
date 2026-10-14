@@ -22,7 +22,7 @@ Produce a **UI-format** JSON the user can **Load** in Comfy to verify media + pr
 ## Commands
 
 ```bash
-export COMFY_BASE_URL=http://192.168.5.122:8190
+export COMFY_BASE_URL=http://192.168.50.106:8190
 cd /home/linux_dev/projects/comfyui-h3-automation
 source .worktrees/feat-orch/.venv/bin/activate
 python scripts/export_bound_workflow.py jobs/ep_units/<EP>-<U> \

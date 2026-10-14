@@ -3,7 +3,7 @@
 **Repo:** `comfyui-h3-automation`  
 **模板:** `yz_h3_ep_unit`  
 **范围:** EP01 latent / **EP02 causality（wire-only）** / EP03–EP04 upload；单卡 5090 串行  
-**交接：** 后续他人也走 **vm122:8190** — 见 `docs/HANDOFF.md`、`scripts/ops/`
+**交接：** 出片入口是 **vm106:8190** — 见 `docs/HANDOFF.md`、`.cursor/rules/h3-gpu-vm106.mdc`、`scripts/ops/`
 
 配套 Agent Skills（可分段监督）：
 
@@ -26,29 +26,25 @@
 ## 阶段 ⓪ — 环境与端口（先于任何上传）
 
 ```text
-WSL/Agent  --HTTP-->  vm122:8190  --SSH隧道-->  租卡 Comfy 127.0.0.1:8188
+WSL/Agent  --HTTP-->  vm106:8190  --SSH隧道-->  租卡 Comfy 127.0.0.1:8188
                          │
-                         └── export COMFY_BASE_URL=http://192.168.5.122:8190
+                         └── export COMFY_BASE_URL=http://192.168.50.106:8190
 ```
 
 | 用途 | URL / 端口 | 说明 |
 |------|------------|------|
-| **H3 出片（编排唯一入口）** | `http://192.168.5.122:8190` | vm122 转发到 GPU `:8188` |
+| **H3 出片入口** | `http://192.168.50.106:8190` | vm106 转发到 GPU `:8188` |
 | GPU 本机 Comfy | `127.0.0.1:8188` | 只听 localhost，外网/局域网不能直连 |
-| ~~vm122 CPU 开发 Comfy~~ | ~~`http://192.168.5.122:8188`~~ | **已停用（2026-09-10）**；勿再起 |
+| ~~vm122:8190 / vm122:8188~~ | ~~`http://192.168.5.122`~~ | **已停用** |
 
 ```bash
-export COMFY_BASE_URL=http://192.168.5.122:8190
+export COMFY_BASE_URL=http://192.168.50.106:8190
 comfy-orch doctor   # 应看到 CUDA / system_stats
 ```
 
-隧道掉线时在 **vm122** 重拉转发（`/tmp/comfy_ssh_forward.py`；仓库示例 `scripts/ops/`）；详见 `docs/HANDOFF.md` 与 GPU 归档。本机也可 `ssh -L 127.0.0.1:8190:127.0.0.1:8188 …` 后改用 `http://127.0.0.1:8190`。
+隧道掉线时在 **vm106** 重拉转发（`/tmp/comfy_ssh_forward.py`；仓库示例 `scripts/ops/`）；详见 `docs/HANDOFF.md`。本机也可 `ssh -L 127.0.0.1:8190:127.0.0.1:8188 …` 后改用 `http://127.0.0.1:8190`。
 
-**开跑前模式门禁（须问用户，勿默认）：**
-
-1. 只一采 vs 一采+二采（`--second-pass`）
-2. `ref_video` vs `motion_latent`  
-成片对比目录按模式分开，见 `docs/ops/2026-09-10-render-profiles.md`。
+**开跑前模式门禁：** 采数默认只一采。没有明确说二采，不要加 `--second-pass`。场景连续时用 `motion_latent`，换场或 `start_mode=independent` 不接 latent。只有明确说整片参考才用 `ref_video`。成片进飞牛，见 `docs/ops/2026-09-10-render-profiles.md`。
 
 ### 数据上传（本地 → Comfy）
 
@@ -160,7 +156,7 @@ jobs/ep_units/EP03-U01/   # 或 EP02-H3-…-U0x/
 **命令**
 
 ```bash
-export COMFY_BASE_URL=http://192.168.5.122:8190   # 隧道 → 租卡 Comfy
+export COMFY_BASE_URL=http://192.168.50.106:8190   # 隧道 → 租卡 Comfy
 python scripts/export_bound_workflow.py jobs/ep_units/EP03-U01 \
   -o "/mnt/c/Users/lxy/Downloads/EP03-U01-yz-bound-api-h3-wiring.json" \
   --out-ui "/mnt/c/Users/lxy/Downloads/EP03-U01-yz-bound-ui-h3-wiring.json"
@@ -185,7 +181,7 @@ python scripts/export_bound_workflow.py jobs/ep_units/EP03-U01 \
 
 **环境**
 
-- `COMFY_BASE_URL` 可达（例：`http://192.168.5.122:8190`）— **多人共用 vm122 隧道**
+- `COMFY_BASE_URL` 可达（例：`http://192.168.50.106:8190`）— **vm106 隧道**
 - 远端已装 YZ 自定义节点 + H3 `ref2va` 权重
 - 单卡串行：可 **enqueue** 多个 pending，不必等空闲再提交
 - 模式须已向用户确认（见文首门禁 / `.cursor/rules/h3-render-mode-gate.mdc`）

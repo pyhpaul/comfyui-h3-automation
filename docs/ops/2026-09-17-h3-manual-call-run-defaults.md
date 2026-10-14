@@ -3,7 +3,7 @@
 **日期：** 2026-09-17  
 **适用范围：** EP04/EP05/EP06 等 `h3_manual_call_ep07_v2_1_layout` + `ep08_v4_6_*` 手动调用包，经 `jobs/ep_units` 串行出片。
 
-与「Comfy 启动 / vm122 隧道」分开：见 `2026-09-17-comfy-h3-canonical-start.md`。
+与「Comfy 启动 / vm106 隧道」分开：见 `2026-09-17-comfy-h3-canonical-start.md`。
 
 ## 默认渲染参数（上次 EP04 成功批）
 
@@ -14,13 +14,13 @@
 | gpu_profile | `auto` | 5090→minimax sage；4080→bypass |
 | aspect_ratio | `9:16 (Portrait Widescreen)` | job 字段 |
 | megapixels | `1.0` | job 字段 |
-| COMFY_BASE_URL | `http://192.168.5.122:8190` | 经 vm122 |
+| COMFY_BASE_URL | `http://192.168.50.106:8190` | 经 vm106 |
 | latent 前缀 | `h3_context/epXX_uYY` | 由 job `episode`+`unit` 生成（非写死 ep02） |
 
 对应命令（或 `scripts/ops/run_ep_manual_call_defaults.sh`）：
 
 ```bash
-export COMFY_BASE_URL=http://192.168.5.122:8190
+export COMFY_BASE_URL=http://192.168.50.106:8190
 python scripts/run_ep_units_profiled.py \
   --units U01 U02 ... \
   --continuity motion_latent \
@@ -38,6 +38,7 @@ python scripts/run_ep_units_profiled.py \
 2. 提示词：wire-only（`@`→`<Picture N>`）；「沿用」单元可补 `绑定资产` 行（**剧名标签**，`comfy_orch.named_assets_bind`），**镜头正文不得改**  
 3. 参考图：上传清单 `asset_id` 与 staged `idN-*` 文件名对应；无缺文件 / unbound（文内「不绑定」除外）  
 4. 审核行附带工程列：`inject=` / `reorder=` / `unbound=`（**不含**无脸检测）
+5. **latent 与场景**：同一 `scene-` 编号（`scene-004-s01` 与 `scene-004-s03` 只是昼夜）可以接着上一条 motion latent。编号变了（废品站 `scene-006` → 小屋 `scene-004`）必须断开，下一条不加载上一条 latent。`audit_pack_prompts.py` 打出 `FAIL latent-scene` 即不准入队。只认绑定的场景参考图，提示词里提到旧场景不算仍在原地。
 
 刷新已有 job 绑定剧名：
 
@@ -68,7 +69,7 @@ bash scripts/ops/run_ep_manual_call_defaults.sh \
 
 ```bash
 # scripts/ops/h3_manual_call_run_defaults.env.example
-export COMFY_BASE_URL=http://192.168.5.122:8190
+export COMFY_BASE_URL=http://192.168.50.106:8190
 export COMFY_GPU_PROFILE=auto
 # run wrapper 固定：CONTINUITY=motion_latent  SECOND_PASS=0
 ```

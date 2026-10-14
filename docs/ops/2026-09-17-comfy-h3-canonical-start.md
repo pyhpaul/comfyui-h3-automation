@@ -1,4 +1,4 @@
-# 租卡 ComfyUI 正式启动 + vm122 映射（固化）
+# 租卡 ComfyUI 正式启动 + vm106 映射（固化）
 
 **日期：** 2026-09-17  
 **原则：** H3 出片只用本文件约定的启动方式；密码/日更 SSH **不上库**。
@@ -6,9 +6,11 @@
 ## 拓扑
 
 ```text
-WSL/Agent  →  http://192.168.5.122:8190  →  (vm122 SSH 隧道)
+WSL/Agent  →  http://192.168.50.106:8190  →  (vm106 SSH 隧道)
                                       →  租卡 127.0.0.1:8188  ComfyUI (H3)
 ```
+
+vm122 不再做隧道。当前步骤以 `.cursor/rules/h3-gpu-vm106.mdc` 为准。
 
 ## 租卡侧（唯一启动方式）
 
@@ -40,22 +42,26 @@ python main.py \
 ```bash
 cd /home/linux_dev/projects/comfyui-h3-automation
 export COMFY_GPU_SSH_HOST='….chenyu.cn'
-export COMFY_GPU_SSH_PORT='23076'
-export COMFY_GPU_SSH_PASS='…'   # 或 PASSFILE，勿提交 git
+export COMFY_GPU_SSH_PORT='<当日端口>'
+export COMFY_GPU_SSH_PASSFILE=/home/linux_dev/.config/fnos/.chenyu-gpu.pass
+export VM122_SSH=vm106
+export PATH="/home/linux_dev/projects/comfyui-h3-automation/.worktrees/feat-orch/.venv/bin:$PATH"
 
 # 1) 租卡：停旧进程 → 正式启动
 bash scripts/ops/remote_comfy_h3.sh restart
 
-# 2) vm122：8190 指到新机
+# 2) vm106：8190 指到新机
 bash scripts/ops/switch_gpu_tunnel.sh
 
 # 3) 验证
-export COMFY_BASE_URL=http://192.168.5.122:8190
+export COMFY_BASE_URL=http://192.168.50.106:8190
 curl -sS "$COMFY_BASE_URL/system_stats" | head
 # 期望：devices 含 RTX 5090（或当日卡型），且队列可用
 ```
 
-## vm122 落点（仍不入库）
+主机和端口每次开机都会变。密码文件权限 600，不要写进命令行或仓库。
+
+## vm106 落点（仍不入库）
 
 | 路径 | 用途 |
 |------|------|
@@ -69,3 +75,13 @@ curl -sS "$COMFY_BASE_URL/system_stats" | head
 - 租卡重启后若平台又跑起 `/root/restart.sh`，需再执行 `remote_comfy_h3.sh restart`。
 - `socat :6006` 与 H3 出片无关；status 里仅作诊断。
 - GPU 注意力双配置见 `docs/ops/2026-09-16-gpu-dual-profile.md`（5090/4080）。
+
+## 关机
+
+成片都在飞牛、`/queue` 为空、没有入队进程，并且用户说了关机，再执行：
+
+```bash
+python3 scripts/ops/chenyu_shutdown.py <ssh-host>
+```
+
+用已经开着的 `https://www.chenyu.cn/console/podExample`，CDP 是 `http://localhost:3456`。只点 `关机`，确认框是 `关机确认`，再点 `确定`。不要点 `重启`、`另存储为镜像并关机`、`关机并销毁`。成功打印 `OFF`，页面出现 `关机中` 或 `已关机`。实例保留并做备份，不销毁。

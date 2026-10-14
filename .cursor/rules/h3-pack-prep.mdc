@@ -1,0 +1,20 @@
+---
+description: H3 unpack keeps the prompt body, crops only a locked scene quadrant, and does not queue until asked
+alwaysApply: true
+---
+
+# H3 拆包与入队前
+
+用户没说入队，就只拆包和审核，不要 `queue_prompt`。
+
+审核必须跑 `scripts/audit_pack_prompts.py`，no_parent 和 with_parent 都过，退出码 0。盘上的 `prompt_audit.json` 不够。`FAIL latent-scene` 不能入队。
+
+镜头、对白、因果正文保持原样。允许的正文改动只有三类：参考图标签换成 `<Picture N>` / `<Video 1>`；场景四格裁成唯一机位后改掉那句四格拼版说明；同一条里第二个机位改成画外。不要改英文单词，不要重写成六段英文。
+
+人物 1×4 设定图不裁。白底产品多视图（四视图、转面）不是场景四格，不裁。只裁中间有白十字的场景四格，而且要先对上唯一机位。一条里同时要两个地方或两个朝向，不能原样入队：场景图只留这一侧，另一个地方改成画外。裁切、地标和画外的写法见 `.cursor/skills/comfy-h3-pack-prompt-audit/SKILL.md`。
+
+对白括号：括号里只有拉丁字母、数字和标点时，改成 `（ text ）`，括号内侧各一个空格。空的 `（）` 不动。括号里有中文的不动。
+
+复用 `scripts/unpack_ep01_dead_v1.py` 的 `write_unit` 时，先把模块级 `_LABEL` 清空。显示名用本包上传块里的名字。不清会绑成旧包角色。改 `prompt_source.txt`。提交时 runner 会用它重写 `prompt_h3.txt`。
+
+整张四格备份放在 job 的 `assets/` 外面。runner 只上传 `ref_image_*`。

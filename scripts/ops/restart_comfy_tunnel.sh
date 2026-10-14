@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Restart Comfy tunnel on vm122. Run ON vm122 (or: ssh vm122 'bash -s' < this file).
+# Restart Comfy tunnel on vm106. Run ON vm106 (or: ssh vm106 'bash -s' < this file).
 # Prerequisites: /tmp/comfy-fwd-venv with paramiko; password file; host/port env or patched script.
 set -euo pipefail
 
@@ -30,4 +30,4 @@ echo "started pid=$! log=$LOG"
 sleep 2
 pgrep -af "$SCRIPT" || { echo "not running"; tail -20 "$LOG" || true; exit 1; }
 ss -lntp | grep ":${LISTEN} " || true
-echo "check from client: curl -sS http://192.168.5.122:${LISTEN}/system_stats | head"
+echo "check from client: curl -sS http://192.168.50.106:${LISTEN}/system_stats | head"

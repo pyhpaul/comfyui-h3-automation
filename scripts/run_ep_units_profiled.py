@@ -9,14 +9,20 @@ Examples:
   python scripts/run_ep_units_profiled.py --units U01 U02 \\
       --continuity motion_latent --second-pass \\
       --download-dir /mnt/c/Users/lxy/Downloads/EP02-H3-causality-v21-latent-mc
+
+  # store the four delivery files on Feiniu and skip the local download dir
+  python scripts/run_ep_units_profiled.py --units U01 \\
+      --continuity motion_latent --feiniu-batch '这杯奶茶你请不起（10.10）'
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -24,12 +30,14 @@ from pathlib import Path
 import yaml
 
 from comfy_orch.artifacts import collect_outputs
+from comfy_orch.feiniu_archive import archive_named_files
 from comfy_orch.binder import apply_bindings, list_media_fields
 from comfy_orch.client import ComfyClient
 from comfy_orch.manifest import load_and_validate_job
 from comfy_orch.paths import project_root
 from comfy_orch.prompt_wire import audit_pack_prompt_wiring, wire_pack_prompt
 from comfy_orch.gpu_adapt import apply_gpu_profile, resolve_gpu_profile
+from comfy_orch.latent_scene import breaks_motion_chain
 from comfy_orch.named_assets_bind import motion_latent_prefix
 from comfy_orch.render_profile import (
     RenderProfile,
@@ -41,10 +49,103 @@ from comfy_orch.status import JobStatus, write_status
 from comfy_orch.ui_bind import prune_unused_api_ref_images
 
 
+_UNIT_NUM = re.compile(r"^U(\d+)", re.I)
+
+
+def handoff_latent_then_archive(latent_path: str, archive):
+    """Return the GPU latent path before ``archive`` finishes.
+
+    The next unit only needs that path. Downloading the film and uploading it
+    to Feiniu can run while the GPU starts the following unit.
+    """
+    if not latent_path:
+        raise RuntimeError("motion_latent mode could not resolve SaveLatent slot path")
+    errors: list[BaseException] = []
+
+    def run() -> None:
+        try:
+            archive()
+        except BaseException as exc:
+            errors.append(exc)
+            print(f"ARCHIVE_FAILED {exc}", flush=True)
+
+    thread = threading.Thread(target=run, name="h3-feiniu-archive")
+    thread.start()
+    return latent_path, thread, errors
+
+
+def _output_rel(path: str) -> str:
+    rel = path.replace("\\", "/")
+    marker = "/output/"
+    if marker in rel:
+        rel = rel.split(marker, 1)[1]
+    return rel
+
+
+def _unit_clip_index(unit: str) -> int:
+    """U03 -> 3, U03A -> 3. Letter suffixes share the number; latent prefix keeps them apart."""
+    m = _UNIT_NUM.match(unit.strip())
+    if not m:
+        raise ValueError(f"cannot parse clip index from unit {unit!r}")
+    return int(m.group(1))
+
+
+_TRANSIENT_MARKERS = (
+    "no route to host",
+    "connection reset",
+    "connection refused",
+    "timed out",
+    "timeout",
+    "temporarily unavailable",
+    "name or service not known",
+    "network is unreachable",
+    "remote end closed",
+    "connection aborted",
+    "broken pipe",
+)
+
+
+def _transient_tunnel(exc: BaseException) -> bool:
+    if isinstance(exc, (TimeoutError, ConnectionError, OSError)):
+        return True
+    text = str(exc).lower()
+    return any(marker in text for marker in _TRANSIENT_MARKERS)
+
+
+def _retry_tunnel(action, label: str, timeout: float = 1800.0):
+    start = time.time()
+    while True:
+        try:
+            return action()
+        except Exception as exc:
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            if not (_transient_tunnel(exc) or status in {502, 503, 504}) or time.time() - start > timeout:
+                raise
+            print(f"  {label} tunnel={type(exc).__name__} elapsed={time.time()-start:.0f}s", flush=True)
+            time.sleep(10)
+
+
+def _get_json(client: ComfyClient, path: str, prompt_id: str, start: float, timeout: float) -> dict:
+    while True:
+        try:
+            response = client._client.get(path)
+            response.raise_for_status()
+            return response.json()
+        except Exception as exc:
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            if not (_transient_tunnel(exc) or status in {502, 503, 504}) or time.time() - start > timeout:
+                raise
+            print(
+                f"  wait {prompt_id[:8]} tunnel={type(exc).__name__} elapsed={time.time()-start:.0f}s",
+                flush=True,
+            )
+            time.sleep(10)
+
+
 def _wait(client: ComfyClient, prompt_id: str, timeout: float = 7200.0) -> dict:
     start = time.time()
     while True:
-        hist = client._client.get(f"/history/{prompt_id}").json()
+        hist = _get_json(client, f"/history/{prompt_id}", prompt_id, start, timeout)
         entry = hist.get(prompt_id)
         if entry:
             st = (entry.get("status") or {}).get("status_str")
@@ -57,7 +158,7 @@ def _wait(client: ComfyClient, prompt_id: str, timeout: float = 7200.0) -> dict:
                 raise RuntimeError(f"failed status={st} interrupted={interrupted}")
             if st == "success" or (entry.get("status") or {}).get("completed") is True:
                 return entry
-        q = client._client.get("/queue").json()
+        q = _get_json(client, "/queue", prompt_id, start, timeout)
         run_ids = [i[1] for i in (q.get("queue_running") or []) if isinstance(i, list) and len(i) > 1]
         pen_ids = [i[1] for i in (q.get("queue_pending") or []) if isinstance(i, list) and len(i) > 1]
         state = "running" if prompt_id in run_ids else ("pending" if prompt_id in pen_ids else "not_in_queue")
@@ -67,6 +168,124 @@ def _wait(client: ComfyClient, prompt_id: str, timeout: float = 7200.0) -> dict:
         if time.time() - start > timeout:
             raise TimeoutError(prompt_id)
         time.sleep(10)
+
+
+def _store_unit_outputs(
+    client,
+    *,
+    entry,
+    root,
+    job_id,
+    profile,
+    continuity,
+    second_pass,
+    job_dir,
+    unit_name,
+    unit,
+    episode,
+    feiniu_batch,
+    dl_root,
+    rec,
+    known_latent: str | None = None,
+):
+    """Download the finished unit and copy it to Feiniu or the local download dir."""
+    from pathlib import PurePosixPath
+
+    out_dir = root / "outputs" / job_id
+    saved = _retry_tunnel(
+        lambda: collect_outputs(
+            client,
+            entry,
+            out_dir,
+            prefer_node_ids=preferred_video_node_ids(profile),
+        ),
+        f"download {unit_name}",
+    )
+    latent_path = known_latent or extract_saved_latent_path(
+        entry,
+        filename_prefix=profile.latent_filename_prefix,
+        clip_index=profile.save_clip_index,
+    )
+    if continuity == "motion_latent":
+        if not latent_path:
+            raise RuntimeError("motion_latent mode could not resolve SaveLatent slot path")
+        rel = _output_rel(latent_path)
+        sub = str(PurePosixPath(rel).parent)
+        name = PurePosixPath(rel).name
+        if sub == ".":
+            sub = ""
+        probe = _retry_tunnel(
+            lambda: client._client.get(
+                "/view",
+                params={"filename": name, "subfolder": sub, "type": "output"},
+            ),
+            f"latent {name}",
+        )
+        if probe.status_code >= 400:
+            raise RuntimeError(f"motion latent slot missing on server: {rel} (HTTP {probe.status_code})")
+        latent_bytes = probe.content
+        latent_file = name
+        latent_path = rel
+    else:
+        latent_bytes = None
+        latent_file = None
+
+    meta = {
+        "continuity": continuity,
+        "second_pass": bool(second_pass),
+        "latent_path": latent_path,
+        "prompt_id": rec["prompt_id"],
+        "job_id": job_id,
+    }
+    meta_text = json.dumps(meta, ensure_ascii=False, indent=2) + "\n"
+    if dl_root is not None:
+        unit_dl = dl_root / unit_name
+        unit_dl.mkdir(parents=True, exist_ok=True)
+        for path in saved:
+            (unit_dl / path.name).write_bytes(path.read_bytes())
+        for filename in ("prompt_h3.txt", "prompt_source.txt", "prompt_audit.json"):
+            src = job_dir / "assets" / filename
+            if src.is_file():
+                (unit_dl / filename).write_bytes(src.read_bytes())
+        if latent_file is not None and latent_bytes is not None:
+            (unit_dl / latent_file).write_bytes(latent_bytes)
+        (unit_dl / "run_meta.json").write_text(meta_text, encoding="utf-8")
+        published = [path.name for path in saved]
+        message = f"profiled {continuity}"
+    else:
+        payloads: dict[str, bytes] = {
+            path.name: path.read_bytes() for path in saved if path.suffix.lower() == ".mp4"
+        }
+        payloads["prompt_h3.txt"] = (job_dir / "assets" / "prompt_h3.txt").read_bytes()
+        payloads["run_meta.json"] = meta_text.encode("utf-8")
+        if latent_file is not None and latent_bytes is not None:
+            payloads[latent_file] = latent_bytes
+        remote = archive_named_files(
+            payloads,
+            batch=feiniu_batch,
+            episode=str(episode),
+            unit=unit,
+        )
+        published = list(payloads)
+        message = f"feiniu {remote}"
+        print(f"FEINIU {unit_name} {remote}", flush=True)
+        if continuity == "motion_latent" and out_dir.is_dir():
+            shutil.rmtree(out_dir)
+    write_status(
+        root / "runs" / job_id / "status.json",
+        JobStatus(
+            job_id=job_id,
+            state="done",
+            prompt_id=rec["prompt_id"],
+            outputs=published,
+            message=message,
+        ),
+    )
+    rec["state"] = "done"
+    rec["outputs"] = published
+    rec["latent_path"] = latent_path
+    print(f"SUCCESS {unit_name} outputs={rec['outputs']} latent={latent_path!r}", flush=True)
+    return saved
 
 
 def main() -> int:
@@ -88,25 +307,37 @@ def main() -> int:
     ap.add_argument(
         "--download-dir",
         type=Path,
-        default=Path("/mnt/c/Users/lxy/Downloads/EP02-H3-profiled"),
+        default=None,
+        help="Local copy of each finished unit. Omit when --feiniu-batch is set.",
+    )
+    ap.add_argument(
+        "--feiniu-batch",
+        default=os.environ.get("H3_FEINIU_BATCH"),
+        help="Upload mp4, latent, prompt_h3.txt, and run_meta.json to this Feiniu archive batch.",
     )
     ap.add_argument("--batch-log", type=Path, default=None)
     ap.add_argument(
         "--gpu-profile",
         default=os.environ.get("COMFY_GPU_PROFILE", "auto"),
-        help="Attention/VRAM adaptation: auto|rtx5090|rtx4080 (or COMFY_GPU_PROFILE)",
+        help="Attention/VRAM adaptation: auto|rtx5090|rtx4080|a100_sage_sm80 (or COMFY_GPU_PROFILE)",
     )
     args = ap.parse_args()
 
     root = project_root()
-    base = os.environ.get("COMFY_BASE_URL", "http://192.168.5.122:8190").rstrip("/")
-    dl_root = args.download_dir
-    dl_root.mkdir(parents=True, exist_ok=True)
+    base = os.environ.get("COMFY_BASE_URL", "http://192.168.50.106:8190").rstrip("/")
+    feiniu_batch = (args.feiniu_batch or "").strip()
+    if feiniu_batch:
+        dl_root = None
+    else:
+        dl_root = args.download_dir or Path("/mnt/c/Users/lxy/Downloads/EP02-H3-profiled")
+        dl_root.mkdir(parents=True, exist_ok=True)
     batch_log = args.batch_log or (root / "runs" / f"profiled_{args.continuity}.json")
     results: list[dict] = []
 
     parent_mp4: Path | None = None
     parent_latent: str | None = args.parent_latent
+    archive_jobs: list[tuple[str, threading.Thread, list]] = []
+    log_lock = threading.Lock()
     client = ComfyClient(base, timeout=180.0)
     try:
         device_name = (client.system_stats().get("devices") or [{}])[0].get("name") or ""
@@ -122,6 +353,9 @@ def main() -> int:
             job_dir = root / "jobs" / "ep_units" / args.job_glob.format(unit=unit)
             raw = yaml.safe_load((job_dir / "job.yaml").read_text(encoding="utf-8"))
             source = (job_dir / "assets" / "prompt_source.txt").read_text(encoding="utf-8")
+            if breaks_motion_chain(raw.get("start_mode")):
+                parent_mp4 = None
+                parent_latent = None
 
             raw["fields"].pop("ref_video_0", None)
             if args.continuity == "ref_video" and parent_mp4 and parent_mp4.is_file():
@@ -165,13 +399,16 @@ def main() -> int:
 
             episode = str(raw.get("episode") or "")
             latent_prefix = motion_latent_prefix(episode, unit)
+            _lat_sfx = os.environ.get("H3_LATENT_SUFFIX", "").strip()
+            if _lat_sfx:
+                latent_prefix = f"{latent_prefix}_{_lat_sfx}"
             profile = RenderProfile(
                 continuity=args.continuity,
                 second_pass=bool(args.second_pass),
                 pass2_scale=float(args.pass2_scale),
-                save_clip_index=int(unit.lstrip("Uu")),
+                save_clip_index=_unit_clip_index(unit),
                 load_clip_index=(
-                    int(unit.lstrip("Uu")) - 1
+                    _unit_clip_index(unit) - 1
                     if args.continuity == "motion_latent" and parent_latent
                     else 0
                 ),
@@ -186,6 +423,13 @@ def main() -> int:
             )
             bound = apply_render_profile(bound, profile, filename_prefix=unit_name)
             bound = apply_gpu_profile(bound, gpu_profile)
+
+            pending_archive = [f"{name}: {errors[0]}" for name, _thread, errors in archive_jobs if errors]
+            if pending_archive:
+                for _name, thread, _errors in archive_jobs:
+                    thread.join()
+                print(f"ARCHIVE_FAILED {pending_archive[0]}", flush=True)
+                return 2
 
             job_id = uuid.uuid4().hex[:12]
             prompt_id = client.queue_prompt(bound)
@@ -214,81 +458,52 @@ def main() -> int:
             }
             try:
                 entry = _wait(client, prompt_id)
-                out_dir = root / "outputs" / job_id
-                saved = collect_outputs(
-                    client,
-                    entry,
-                    out_dir,
-                    prefer_node_ids=preferred_video_node_ids(profile),
-                )
-                unit_dl = dl_root / unit_name
-                unit_dl.mkdir(parents=True, exist_ok=True)
-                for p in saved:
-                    (unit_dl / p.name).write_bytes(p.read_bytes())
-                for name in ("prompt_h3.txt", "prompt_source.txt", "prompt_audit.json"):
-                    src = job_dir / "assets" / name
-                    if src.is_file():
-                        (unit_dl / name).write_bytes(src.read_bytes())
-
-                latent_path = extract_saved_latent_path(
-                    entry,
-                    filename_prefix=profile.latent_filename_prefix,
-                    clip_index=profile.save_clip_index,
+                store_kwargs = dict(
+                    entry=entry,
+                    root=root,
+                    job_id=job_id,
+                    profile=profile,
+                    continuity=args.continuity,
+                    second_pass=bool(args.second_pass),
+                    job_dir=job_dir,
+                    unit_name=unit_name,
+                    unit=unit,
+                    episode=episode,
+                    feiniu_batch=feiniu_batch,
+                    dl_root=dl_root,
+                    rec=rec,
                 )
                 if args.continuity == "motion_latent":
-                    if not latent_path:
-                        raise RuntimeError("motion_latent mode could not resolve SaveLatent slot path")
-                    from pathlib import PurePosixPath
-
-                    rel = latent_path.replace("\\", "/")
-                    # Normalize to output-relative slot path if Save returned absolute.
-                    marker = "/output/"
-                    if marker in rel:
-                        rel = rel.split(marker, 1)[1]
-                    sub = str(PurePosixPath(rel).parent)
-                    name = PurePosixPath(rel).name
-                    if sub == ".":
-                        sub = ""
-                    probe = client._client.get(
-                        "/view",
-                        params={"filename": name, "subfolder": sub, "type": "output"},
+                    latent_path = extract_saved_latent_path(
+                        entry,
+                        filename_prefix=profile.latent_filename_prefix,
+                        clip_index=profile.save_clip_index,
                     )
-                    if probe.status_code >= 400:
-                        raise RuntimeError(
-                            f"motion latent slot missing on server: {rel} (HTTP {probe.status_code})"
-                        )
-                    (unit_dl / name).write_bytes(probe.content)
-                    latent_path = rel
+                    rel = _output_rel(latent_path or "")
 
-                meta = {
-                    "continuity": args.continuity,
-                    "second_pass": bool(args.second_pass),
-                    "latent_path": latent_path,
-                    "prompt_id": prompt_id,
-                    "job_id": job_id,
-                }
-                (unit_dl / "run_meta.json").write_text(
-                    json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-                )
-                write_status(
-                    root / "runs" / job_id / "status.json",
-                    JobStatus(
-                        job_id=job_id,
-                        state="done",
-                        prompt_id=prompt_id,
-                        outputs=[str(p) for p in saved],
-                        message=f"profiled {args.continuity}",
-                    ),
-                )
-                rec["state"] = "done"
-                rec["outputs"] = [p.name for p in saved]
-                rec["latent_path"] = latent_path
-                print(f"SUCCESS {unit_name} outputs={rec['outputs']} latent={latent_path!r}", flush=True)
+                    def archive(
+                        store_kwargs=store_kwargs,
+                        rel=rel,
+                    ) -> None:
+                        archive_client = ComfyClient(base, timeout=180.0)
+                        try:
+                            _store_unit_outputs(archive_client, known_latent=rel, **store_kwargs)
+                            with log_lock:
+                                batch_log.write_text(
+                                    json.dumps(results, ensure_ascii=False, indent=2),
+                                    encoding="utf-8",
+                                )
+                        finally:
+                            archive_client.close()
 
-                if args.continuity == "motion_latent":
-                    parent_latent = latent_path
+                    parent_latent, thread, errors = handoff_latent_then_archive(rel, archive)
+                    archive_jobs.append((unit_name, thread, errors))
                     parent_mp4 = None
+                    print(f"HANDOFF {unit_name} latent={rel!r}", flush=True)
+                    rec["state"] = "handed_off"
+                    rec["latent_path"] = rel
                 else:
+                    saved = _store_unit_outputs(client, **store_kwargs)
                     mp4s = [p for p in saved if p.suffix.lower() == ".mp4"]
                     if not mp4s:
                         raise RuntimeError("no mp4 for parent chain")
@@ -304,11 +519,22 @@ def main() -> int:
                 rec["error"] = str(e)[:500]
                 print(f"FAILED {unit_name} {e}", flush=True)
                 results.append(rec)
-                batch_log.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+                with log_lock:
+                    batch_log.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+                for _name, thread, _errors in archive_jobs:
+                    thread.join()
                 return 2
             results.append(rec)
-            batch_log.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"BATCH_DONE ok={len(results)} dir={dl_root}", flush=True)
+            with log_lock:
+                batch_log.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+        for _name, thread, _errors in archive_jobs:
+            thread.join()
+        failed_archive = [f"{name}: {errors[0]}" for name, _thread, errors in archive_jobs if errors]
+        if failed_archive:
+            print(f"ARCHIVE_FAILED {failed_archive[0]}", flush=True)
+            return 2
+        dest = feiniu_batch or str(dl_root)
+        print(f"BATCH_DONE ok={len(results)} dest={dest}", flush=True)
         return 0
     finally:
         client.close()

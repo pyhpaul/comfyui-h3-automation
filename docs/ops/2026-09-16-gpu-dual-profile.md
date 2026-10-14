@@ -12,7 +12,7 @@
 环境变量：`COMFY_GPU_PROFILE`（默认 `auto`）。
 
 ```bash
-export COMFY_BASE_URL=http://192.168.5.122:8190
+export COMFY_BASE_URL=http://192.168.50.106:8190
 # 自动按 doctor 选卡；也可强制：
 # export COMFY_GPU_PROFILE=rtx4080
 

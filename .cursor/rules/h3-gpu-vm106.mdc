@@ -1,0 +1,39 @@
+---
+description: H3 GPU tunnel is vm106:8190, canonical Comfy on the Chenyu pod, and shutdown is the 关机 button
+alwaysApply: true
+---
+
+# H3 租卡部署与关机
+
+出片入口是 **vm106**，不是 vm122。`COMFY_BASE_URL=http://192.168.50.106:8190`。
+
+```text
+WSL  --HTTP-->  vm106 192.168.50.106:8190  --SSH-->  租卡 127.0.0.1:8188
+```
+
+vm106 SSH：`Host vm106`，`HostName 192.168.50.106`，`User pyh`，`IdentityFile ~/.ssh/id_ed25519_vm122_192_168_5_122`。转发进程在 vm106：`/tmp/comfy_ssh_forward.py`，监听 `0.0.0.0:8190`，密码文件 `/tmp/.comfy_gpu_ssh_pass`（600）。
+
+每次开机都要重新准备环境。平台自带的 `/root/restart.sh` 不能用。正式 Comfy 是 `/root/autodl-tmp/ComfyUI` 加它的 `.venv`，由 `scripts/ops/comfy_gpu_start.sh` 上传成 `/root/start_comfy_h3.sh`。监听只允许 `127.0.0.1:8188`，参数是 `--cuda-device 0 --lowvram --reserve-vram 4 --disable-smart-memory --force-fp16 --disable-cuda-graphs --enable-manager`。
+
+租卡 SSH 主机和端口每次开机都会变，向用户要，不要写进 git。密码只放 `/home/linux_dev/.config/fnos/.chenyu-gpu.pass`（600），不要进命令行、日志或仓库。WSL 上用带 paramiko 的 `.worktrees/feat-orch/.venv`。
+
+```bash
+export COMFY_GPU_SSH_HOST='<id>.gz15.chenyu.cn'
+export COMFY_GPU_SSH_PORT='<port>'
+export COMFY_GPU_SSH_PASSFILE=/home/linux_dev/.config/fnos/.chenyu-gpu.pass
+export VM122_SSH=vm106
+export PATH="/home/linux_dev/projects/comfyui-h3-automation/.worktrees/feat-orch/.venv/bin:$PATH"
+bash scripts/ops/remote_comfy_h3.sh restart
+bash scripts/ops/switch_gpu_tunnel.sh
+curl -sS --max-time 20 http://192.168.50.106:8190/system_stats
+```
+
+`/system_stats` 里要有 CUDA 设备。通过后再入队。
+
+成片都在飞牛、`/queue` 为空、没有入队进程之后，用户说关机再关。用已经开着的晨羽页 `https://www.chenyu.cn/console/podExample`，CDP 是 `http://localhost:3456`。不要新开标签，也不要关掉用户的页。
+
+```bash
+python3 scripts/ops/chenyu_shutdown.py <ssh-host>
+```
+
+页面实例 ID 比 SSH 主机名少一截后缀，按前缀匹配。只点文字正好是 `关机` 的按钮，确认框标题是 `关机确认`，再点主按钮 `确定`。不要点 `重启`、`另存储为镜像并关机`、`关机并销毁`。成功时页面出现 `关机中` 或 `已关机`，脚本打印 `OFF`。GPU 随后停止计费，实例保留并做备份。

@@ -17,6 +17,33 @@
       "title": "YZ参考图5"
     }
   },
+  "61": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "YZ参考图6"
+    }
+  },
+  "62": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "YZ参考图7"
+    }
+  },
+  "63": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "YZ参考图8"
+    }
+  },
   "27": {
     "inputs": {
       "video": "",
@@ -390,6 +417,18 @@
       ],
       "ref_images.ref_image_5": [
         "23",
+        0
+      ],
+      "ref_images.ref_image_6": [
+        "61",
+        0
+      ],
+      "ref_images.ref_image_7": [
+        "62",
+        0
+      ],
+      "ref_images.ref_image_8": [
+        "63",
         0
       ],
       "ref_videos.ref_video_0": [

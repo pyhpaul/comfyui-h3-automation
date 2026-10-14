@@ -23,6 +23,18 @@ bindings:
     node_title: YZ参考图5
     input: image
     media: true
+  - field: ref_image_6
+    node_title: YZ参考图6
+    input: image
+    media: true
+  - field: ref_image_7
+    node_title: YZ参考图7
+    input: image
+    media: true
+  - field: ref_image_8
+    node_title: YZ参考图8
+    input: image
+    media: true
   - field: ref_video_0
     node_title: YZ参考视频
     input: video

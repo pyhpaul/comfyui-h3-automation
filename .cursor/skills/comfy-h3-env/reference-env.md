@@ -83,7 +83,7 @@ Use the Chrome tab the user already has open at `https://www.chenyu.cn/console/p
 python3 scripts/ops/chenyu_shutdown.py <ssh-host>
 ```
 
-Wait until every planned unit is on Feiniu (mp4, latent, `prompt_h3.txt`, `run_meta.json`), no queue runner is alive, and Comfy `/queue` is empty. Then run the script. It refuses to click when the page instance is a different machine. Success prints `OFF`.
+The queue runner does not shut the pod down. When the user asked for shutdown after Feiniu, start `scripts/ops/watch_feiniu_then_shutdown.py` as its own process in the same turn as the queue. It waits for the runner pid. It clicks only after `BATCH_DONE`, an exit marker of `:0`, four files on every planned unit, and an empty `/queue`. Anything short of that prints `HOLD` and leaves the pod running. The page must stay open the whole time. Success prints `OFF`.
 
 The console `实例ID` is the SSH label with a short hex suffix removed. `ee58bde62caf457e810680ba64e7cbe571.gz15.chenyu.cn` is shown as `ee58bde62caf457e810680ba64e7cbe5`. On 2026-10-08 a check for the full hostname returned `WRONG_INSTANCE` and exited before clicking. Do not require `.gzNN.chenyu.cn` or the extra suffix to appear in `innerText`.
 

@@ -38,7 +38,7 @@ Use `.worktrees/feat-orch/.venv`. System python often lacks paramiko and impacke
 
 ## Chenyu shutdown
 
-When the user asked to shut the current pod down after the queue, and the films are already on Feiniu, run `scripts/ops/chenyu_shutdown.py <ssh-host>` against the already-open `podExample` tab. The page instance id omits a short suffix of the SSH hostname. Match that prefix. Click the operate item whose text is exactly `关机`, then the primary button whose text is `确 定`. Do not click `重启`, `另存储为镜像并关机`, or `关机并销毁`. Contract: [reference-env.md](reference-env.md) and `.cursor/rules/h3-gpu-vm106.mdc`.
+When the user asked to shut the current pod down after the queue, start `scripts/ops/watch_feiniu_then_shutdown.py` in its own process at queue start. Do not wait for a later reminder. The watcher waits for the runner pid, then shuts down only after a clean `BATCH_DONE`, exit marker `:0`, four Feiniu files on every planned unit, and an empty `/queue`. `ARCHIVE_FAILED`, missing files, or a busy queue prints `HOLD` and does not click. The `podExample` tab must stay open. The page instance id omits a short suffix of the SSH hostname. The click itself is still `关机` then `确 定`, never `重启`, `另存储为镜像并关机`, or `关机并销毁`. Contract: [reference-env.md](reference-env.md) and `.cursor/rules/h3-gpu-vm106.mdc`.
 
 ## Gate
 

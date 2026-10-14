@@ -64,7 +64,16 @@ curl -sS http://192.168.50.106:8190/system_stats | head
 
 期望：JSON 里有 `devices` / CUDA。`Connection reset` → 转发未起、租卡 SSH 不通、或 Comfy 未按正式参数监听 `127.0.0.1:8188`。
 
-成片都在飞牛、`/queue` 为空、没有入队进程之后，用户说关机再关。用已经开着的晨羽页，不要新开标签：
+成片都在飞牛、`/queue` 为空、没有入队进程之后，用户说关机再关。入队脚本不会自己关机。用户说了跑完再关，入队一开始就要另起等待进程，不要等下一次对话被提醒：
+
+```bash
+PYTHONPATH=src python scripts/ops/watch_feiniu_then_shutdown.py \
+  --pid <入队进程> --log <入队日志> --exit-marker '<EXIT 前缀>' \
+  --ssh-host '<id>.gz15.chenyu.cn' --feiniu-batch '<批次>' \
+  --episode EP01 --units U01 U02
+```
+
+日志不干净、飞牛缺文件或队列不空时，等待进程打印 `HOLD` 并不关机。用已经开着的晨羽页，不要新开标签，页要一直开着。直接点关机仍是：
 
 ```bash
 python3 scripts/ops/chenyu_shutdown.py <ssh-host>

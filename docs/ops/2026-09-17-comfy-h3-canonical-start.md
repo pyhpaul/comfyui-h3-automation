@@ -78,7 +78,7 @@ curl -sS "$COMFY_BASE_URL/system_stats" | head
 
 ## 关机
 
-成片都在飞牛、`/queue` 为空、没有入队进程，并且用户说了关机，再执行：
+成片都在飞牛、`/queue` 为空、没有入队进程，并且用户说了关机，再关。入队脚本不会自己关机。用户说了跑完进飞牛再关机时，入队一开始就另起 `scripts/ops/watch_feiniu_then_shutdown.py`，盯着入队进程；`BATCH_DONE`、退出码 0、每个单元四个文件、队列为空之后才点关机。不齐就 `HOLD`，不关机。晨羽页保持开着。直接点关机：
 
 ```bash
 python3 scripts/ops/chenyu_shutdown.py <ssh-host>

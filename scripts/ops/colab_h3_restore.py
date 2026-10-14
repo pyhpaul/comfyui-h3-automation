@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
+from typing import Callable
 
 
 REMOTE = os.environ.get(
@@ -81,7 +82,7 @@ def restore_split_model(models: Path, relative_path: str, expected_size: int,
         part.unlink(missing_ok=True)
 
 
-def main() -> None:
+def main(*, restore_model: Callable[[Path, str, int, str], None] | None = None) -> None:
     started = time.monotonic()
     with gzip.open(CONTENT / "rclone.gz", "rb") as compressed, RCLONE.open("wb") as binary:
         shutil.copyfileobj(compressed, binary)
@@ -114,7 +115,8 @@ def main() -> None:
     run(str(RCLONE), "check", f"{REMOTE}/models", str(models),
         "--config", str(CONFIG))
     for relative_path, expected_size, expected_sha256 in LARGE_MODELS:
-        restore_split_model(models, relative_path, expected_size, expected_sha256)
+        (restore_model or restore_split_model)(
+            models, relative_path, expected_size, expected_sha256)
     print("model_restore_seconds", round(time.monotonic() - model_start, 2), flush=True)
 
     latent = COMFY_ROOT / "output/h3_context/ep04_u01_00001.safetensors"

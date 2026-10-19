@@ -18,3 +18,5 @@ alwaysApply: true
 复用 `scripts/unpack_ep01_dead_v1.py` 的 `write_unit` 时，先把模块级 `_LABEL` 清空。显示名用本包上传块里的名字。不清会绑成旧包角色。改 `prompt_source.txt`。提交时 runner 会用它重写 `prompt_h3.txt`。
 
 整张四格备份放在 job 的 `assets/` 外面。runner 只上传 `ref_image_*`。
+
+入队默认不带对白门禁。成片进飞牛后，每集抽 1～2 个单元人工复审（金额、短招呼、对白后还有戏、链头/链尾优先），不要默认全量 ASR 门禁。见 `h3-queue-run.mdc`。

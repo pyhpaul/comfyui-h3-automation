@@ -13,5 +13,7 @@ alwaysApply: true
 
 成片放飞牛，不留本地下载目录。见 `h3-feiniu-archive-only.mdc`。入队接力见 `h3-queue-run.mdc`。拆包见 `h3-pack-prep.mdc`。
 
+默认不开对白门禁。飞牛上每集抽 1～2 个 U 人工复审对白与画面，再决定是否对该批或该类单开 `--dialogue-gate`。见 `h3-queue-run.mdc`。
+
  Canonical doc: `docs/ops/2026-09-10-render-profiles.md`  
  Runner: `scripts/run_ep_units_profiled.py`

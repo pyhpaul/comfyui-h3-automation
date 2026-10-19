@@ -66,6 +66,22 @@ Code path:
 - [ ] Warnings (e.g. unbound relative asset like U07 crystal) are acknowledged; do not treat warning-only as PASS for missing Picture slots if the asset is required for the shot
 - [ ] Motion latent stays on one scene number. `scene-004-s01` and `scene-004-s03` are the same place (time of day). `scene-006` → `scene-004` is a cut: **do not queue** that pair on one latent chain. `FAIL latent-scene` is a hard stop. Break the chain at the first unit of the new place (that unit loads no parent latent). A prompt mention of the old scene does not count; only bound `ref_image_*` scene files do. An extra plate that shares the previous scene number (phone-screen scene beside the current room) may stay on the chain.
 
+## What this audit does **not** catch
+
+`audit_pack_prompts.py` is **pre-queue text/asset wiring**. It never listens to the rendered mp4. Extra/garbled speech, silent units that still talk, speaker mismatch, and tail audio junk only show up **after** render.
+
+**Default:** do **not** pass `--dialogue-gate` / `H3_DIALOGUE_GATE`. After films land on Feiniu, spot-check **1–2 units per episode** (prefer money lines, short name greetings, post-dialogue action beats, chain head/tail). Only enable the runner gate when the user asks for this batch, or after spot-check shows clear read-aloud failures.
+
+Optional gate (user-requested only):
+
+```bash
+python scripts/run_ep_units_profiled.py --continuity motion_latent --dialogue-gate \
+  --feiniu-batch '<批次>' --units U01 U02
+# or: export H3_DIALOGUE_GATE=1
+```
+
+Needs `faster-whisper` + `ffmpeg`. On `DIALOGUE_GATE_FAIL` the runner retries the same unit (`--dialogue-gate-retries`, default 2) and only prints `HANDOFF` after a pass. Dirty audio on a `parent_latent` unit can poison the next unit—use the gate selectively when that risk outweighs burn cost.
+
 ## 拆解（现行 light pack）
 
 `scripts/unpack_ep04_ep12_v7.py` 调 `scripts/unpack_ep01_dead_v1.py` 的 `write_unit`。产物在 `jobs/ep_units/`（不入库）。拆解脚本不入队。

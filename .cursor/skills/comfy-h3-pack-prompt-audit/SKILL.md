@@ -68,9 +68,9 @@ Code path:
 
 ## What this audit does **not** catch
 
-`audit_pack_prompts.py` is **pre-queue text/asset wiring**. It never listens to the rendered mp4. Extra/garbled speech, silent units that still talk, speaker mismatch, and tail audio junk only show up **after** render.
+`audit_pack_prompts.py` is **pre-queue text/asset wiring**. It never listens to the rendered mp4. Extra/garbled speech, silent units that still talk, speaker mismatch, both mouths delivering the same line, and tail audio junk only show up **after** render. ASR dialogue gate matches expected `（）` text and usually **misses** two characters repeating one line.
 
-**Default:** do **not** pass `--dialogue-gate` / `H3_DIALOGUE_GATE`. After films land on Feiniu, spot-check **1–2 units per episode** (prefer money lines, short name greetings, post-dialogue action beats, chain head/tail). Only enable the runner gate when the user asks for this batch, or after spot-check shows clear read-aloud failures.
+**Default:** do **not** pass `--dialogue-gate` / `H3_DIALOGUE_GATE`. After films land on Feiniu, spot-check **1–2 units per episode** (prefer money lines, short name greetings, post-dialogue action beats, two-speaker echo of the same line, chain head/tail). Only enable the runner gate when the user asks for this batch, or after spot-check shows clear read-aloud failures.
 
 Optional gate (user-requested only):
 

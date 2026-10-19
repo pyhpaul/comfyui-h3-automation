@@ -70,7 +70,15 @@ Code path:
 
 `audit_pack_prompts.py` is **pre-queue text/asset wiring**. It never listens to the rendered mp4. Extra/garbled speech, silent units that still talk, speaker mismatch, both mouths delivering the same line, and tail audio junk only show up **after** render. ASR dialogue gate matches expected `（）` text and usually **misses** two characters repeating one line.
 
-**Default:** do **not** pass `--dialogue-gate` / `H3_DIALOGUE_GATE`. After films land on Feiniu, spot-check **1–2 units per episode** (prefer money lines, short name greetings, post-dialogue action beats, two-speaker echo of the same line, chain head/tail). Only enable the runner gate when the user asks for this batch, or after spot-check shows clear read-aloud failures.
+### Next review focus: two-speaker echo
+
+**Post-Feiniu spot-check priority #1:** two-shot / depth-other dialogue units — watch mouths and listen for both characters delivering the same line.
+
+Not a duplicated script line: H3 joint AV latent lip-ownership crosstalk. Visible mouths follow the active speech; listeners without an explicit closed-mouth lock often mouth along. Pack risk is high when shots use `口型同步开口` plus `另一人在画面纵深` / name the other person, but never say the listener keeps lips closed / stays silent. Mitigate in `prompt_source`: speaker opens; everyone else in frame stays lips-closed and silent; forbid both mouths on one line. Official-style `(S1)/(S2)` + listener-closed beats are stronger than bare `（）` alone.
+
+Pre-queue: flag dual-dialogue units that lack a listener-closed cue as high risk (warn; do not auto-FAIL wiring audit).
+
+**Default:** do **not** pass `--dialogue-gate` / `H3_DIALOGUE_GATE`. After films land on Feiniu, spot-check **1–2 units per episode** (**two-speaker echo first**, then money lines, short greetings, post-dialogue action, chain head/tail). Only enable the runner gate when the user asks for this batch, or after spot-check shows clear read-aloud failures.
 
 Optional gate (user-requested only):
 

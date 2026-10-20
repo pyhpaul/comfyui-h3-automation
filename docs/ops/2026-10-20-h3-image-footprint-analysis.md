@@ -51,8 +51,30 @@
 其他嫌疑：`/root/ComfyUI` 与 `/root/autodl-tmp/ComfyUI` 双份 ComfyUI、
 `input/` 历史上传残留、pip 缓存。
 
-## 待办
+## 2026-10-20 开机实测与清理记录
 
-开机后跑一次 `du -sh /root/* /root/autodl-tmp/ComfyUI/models/*` 按本表核对，
-确认冗余清单后再谈删/重做精简镜像。本文数字为本地文件实测，
-租卡盘上实际构成以那次 `du` 为准。
+开机盘点（实例 `b5ef7a…gz14:24596`，RTX 5090）：旧 UNET b20-49、
+备用 CLIP uncensored、三个多余 upscaler **均不在租卡盘上**（只在博主
+本地目录）。80G 实际构成：`autodl-tmp` 62G（models 46 + .venv 8.5 +
+output 4.9 + input 1.4）+ `/root/.cache` 5.8G + 平台自带 `/root/ComfyUI`
+1.9G + 系统基础。
+
+经用户确认（全档），已删并验活：
+
+| 删除项 | 省 |
+|---|---|
+| `minimax_h3_video_vae_fp16.safetensors`（两版未引用） | 4.9G |
+| `wushu_spatial_physics_v2` LoRA（未引用） | 0.15G |
+| `/root/.cache`（pip/hf/uv/torch 缓存） | 5.8G |
+| `/root/ComfyUI`（平台自带，我们不用） | 1.9G |
+| `output/` 测试 mp4 ×134 + `h3_context` latent ×108（本地/飞牛有档） | 5.0G |
+| `input/` 历史上传残留（runner 每次重传） | 1.4G |
+| **合计** | **约 19G** |
+
+结果：`autodl-tmp` 62G→50G，models 46G→41G。清理后重启 Comfy，
+vm106:8190 隧道 `/system_stats` 见 CUDA 5090；`/object_info` 核对
+11 个被引用模型文件全部在册、被删两项确实消失
+（`ALL_REFERENCED_PRESENT`）。机器保持开机，未关机。
+
+注：若要在晨羽侧把瘦身后的状态存成新镜像，需在控制台用
+「另存储为镜像」类操作，属页面动作，未代办。

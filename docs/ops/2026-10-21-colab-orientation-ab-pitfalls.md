@@ -5,7 +5,8 @@
 通道瞬断（上传 SSL、exec WebSocket），一次是宿主脚本回执路径拼接 bug（确定性，
 与网络无关）。三个修复均已写进子 agent 的宿主脚本并经第四次会话实测：
 打包上传+重试、exec 瞬断重试、回执路径补会话段。第四次已过 preflight 宿主核验
-并提交 A1。最终 A/B 结论见子 agent 报告 `runs/orientation_ab_colab_ep01u01.md`（待出）。
+并提交 A1。最终结果：B 版（逐镜画面坐标）10/10、A 版（罗盘原文）4/10，
+详见下文「最终结果与成本」；完整报告 `runs/orientation_ab_colab_ep01u01.md`。
 
 > 原始证据在本地 `.cache/orientation_ab/`（未进 git）：`host_run{1,2,3,4}.log`
 > 与每次会话目录 `h3-orient-<session>/`（stop.log、cu-snapshots.jsonl、
@@ -57,6 +58,32 @@
 - 每次失败后均验证 `Active assignments: 0`、计费归零（stop.log /
   sessions-after-stop.log / `colab usage`）才算收尾。
 
+## 最终结果与成本（第四次会话 075620）
+
+- 四条均成功且 `archive_state=verified`：A1 603.8s、B1 598.8s、
+  A2 582.2s、B2 580.1s（同种子配对；768×1376、24fps、362 帧、15.083s）。
+- 预先定死的 5 项方位评分 × 2 种子：A 4/10、B 10/10。B 的增益在两个种子
+  完全复现：第 1 镜 Cole 正脸且道具分居身体两侧、第 3 镜 Wade 舵轮/扶框手
+  方位正确且 Danny 不入画、第 4 镜过肩成立；声呐屏一项 A/B 无差异。
+- 口径注意：原评分表把第 1 镜气瓶/黄绳写成固定画面侧，与按机位推导的
+  画面左右相反。报告按人物解剖学东/西评分；若按字面画面侧，B 为 8/10、
+  A 仍 4/10，排序不变。推广写法时必须先按机位推导画面侧，不能把东/西
+  直接抄成画面右/左。
+- 成本：成功会话 1000.79 → 992.99 CU（约 7.80 CU）；加前三次失败，
+  全程 1003.99 → 992.99，共 11.00 CU。收尾已验 0 active、0.00 CU/hr。
+- 产物：本地 `.cache/orientation_ab/{A,B}/`（mp4+抽帧）；飞牛镜像
+  `H3_comfyUI_5090/inbox/潮缚EP01方位AB-Colab（10.21）/`，39 个文件
+  （4 mp4、24 抽帧、4 validation、报告、A/B prompt、diff、manifest、
+  phase/preflight 回执）已逐个按大小回读验证。
+
+## 坑 4：飞牛镜像脚本的 SMB 方法名与长连接（本地上传守候）
+
+- 自动上传守候先误用 impacket 不存在的 `storeFile`（正解 `putFile` +
+  `feiniu_archive._reader`）；改对后又因单条长连接中途 NetBIOS 断读而退出，
+  当时飞牛一份都没落。
+- 修复：逐文件上传、失败重连、按远端大小跳过已传文件；最终 39 个文件
+  全部回读验大小一致。今后 SMB 批量上传不要假设一条连接活到底。
+
 ## 下次跑 Colab A/B 前的检查单
 
 1. 输入只走单 tar 包上传 + 重试，不要逐文件 `colab upload`。
@@ -72,4 +99,4 @@
       目前只在 `.cache/orientation_ab/scripts/`；待 phase 回执核验通过后回收进
       `scripts/ops/`（注意其中 `ROOT.parents[3]` 与 `.cache` 输入路径的耦合，
       回收时一并改干净），另做一次提交。
-- [ ] 最终报告 `runs/orientation_ab_colab_ep01u01.md` 出后，把 A/B 结论摘要补进本文件。
+- [x] 最终报告 `runs/orientation_ab_colab_ep01u01.md` 出后，把 A/B 结论摘要补进本文件。

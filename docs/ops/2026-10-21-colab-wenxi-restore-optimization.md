@@ -37,7 +37,10 @@ preflight 不过、渲染确定性失败、或重试耗尽。已在
 
 ## 优化项
 
-1. **7 个文戏模型并进主 models 树**：把 Drive
+1. [x] **7 个文戏模型并进主 models 树**（2026-10-21 完成：无同名冲突、
+   server-side copy 合并、主树 10 文件 SHA 全 match、宿主去掉独立 copy
+   阶段、preflight 对 restore 后本地树全 match，见
+   `runs/colab_wenxi_setup.md` 恢复优化一节）：把 Drive
    `comfyui-h3-colab-dedicated/wenxi-extras/` 的 7 个模型
    （loras×5、latent_upscale_models×1、vae_approx×1，清单与 SHA 见
    `runs/wenxi_models_supply.log` 与 `runs/colab_wenxi_setup.md`）
@@ -46,7 +49,10 @@ preflight 不过、渲染确定性失败、或重试耗尽。已在
    一并带下来；删掉独立的 `wenxi_models_copy` 阶段。preflight 的
    KNOWN_SHA 改为对主树核验。注意不要覆盖主树里同名不同版的文件，
    合并前逐个比 SHA，同名不同 SHA 先报告再定。
-2. **分片下载并行化**：76 个 model-parts 从逐片串行 `copyto` 改为
+2. [x] **分片下载并行化**（2026-10-21 完成：`--transfers 8` 整目录并行、
+   `H3_RESTORE_PART_TRANSFERS=1` 可回退串行、拼接 SHA 与现行一致、
+   基线落盘 `runs/colab_wenxi_restore_baseline.json`、restore 727s→292.7s）：
+   76 个 model-parts 从逐片串行 `copyto` 改为
    并行拉取（`rclone copy` 带 `--transfers` 或等价并发），拼接后逐个
    验 SHA 与现行一致。串行是 restore 12 分钟的主要构成。
 3. （可选，视 1+2 效果）做一份 wenxi-ready 的冻结快照，把
@@ -55,14 +61,18 @@ preflight 不过、渲染确定性失败、或重试耗尽。已在
 
 ## 验收
 
-- 优化后完整冷启动一轮：记录 restore 阶段耗时（对比基线 727s）、
+- [x] 优化后完整冷启动一轮：记录 restore 阶段耗时（对比基线 727s）、
   preflight 全 PASS（28 class_type + 全部模型 SHA）、smoke 再出 1 条
   确认无回归，再停会话验零（0 active、0.00/hr）。
-- 结果追加到 `runs/colab_wenxi_setup.md`，本文件勾掉已完成项。
+  （2026-10-21 会话 `h3-wenxi-20261021-131142`：restore 292.7s、
+  preflight 全 PASS 19 项、smoke `fab5644a…` 180.4s 帧检非黑非分屏、
+  停会话验零、本轮 1.84 CU，见 `runs/colab_wenxi_setup.md`。）
+- [x] 结果追加到 `runs/colab_wenxi_setup.md`，本文件勾掉已完成项。
 
 ## 顺带回收
 
-- `.cache/colab_wenxi_setup/scripts/` 的 `wenxi_install.py`、
+- [x] `.cache/colab_wenxi_setup/scripts/` 的 `wenxi_install.py`、
   `wenxi_preflight.py`、`wenxi_host.py` 按第一轮报告建议回收进
-  `scripts/ops/`（`colab_h3_wenxi_*.py`），回收后 `.cache` 按
-  `h3-local-disk-cleanup.mdc` 清理。
+  `scripts/ops/`（`colab_h3_wenxi_*.py`，另含 phase 与无操作版
+  models_copy），宿主默认从 `scripts/ops/` 跑；`.cache` 只留运行数据，
+  未按 `h3-local-disk-cleanup.mdc` 删除（input/vendor/证据仍在用）。

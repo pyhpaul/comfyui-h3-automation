@@ -21,3 +21,13 @@ python scripts/run_ep_units_profiled.py --units U01 \
 ```
 
 场景连续时用 `motion_latent` 接上一条的 latent。换场，或 `start_mode=independent`，都不接。
+
+# 归档后固定动作：对白审核＋词轨归档（与渲染并行）
+
+每集四件套进飞牛后，**立刻并行**做对白审核，不要等整批跑完，更不能卡住下一条/下一集的入队（ASR 是本机 CPU 活，和 GPU 渲染互不影响）。产物齐了才算这一集归档完成：
+
+- 从飞牛拉回该集 mp4，跑 `scripts/ops/batch_dialogue_check.py`（`--emit-srt`），期望台词取各 job 的 `prompt_source.txt` 里 `（）`英文。做法见 `.cursor/skills/comfy-h3-dialogue-check/SKILL.md`。
+- 产出三件：判定 JSON、双语报告 md（真对白问题与工具误读分开写；「台词重复说」单独点名）、每条同名 `.srt` 词轨（UTF-8，给剪映专业版导入）。
+- 上传飞牛 `H3_comfyUI_5090/inbox/<剧名>EP<范围>对白审核（<日期>）/`，与成片 archive 分开，不往单元四件套目录里塞第五个文件。上传后逐个回读验大小。
+- 口径说清：ASR 只核「说了什么」，查不出双人同念；每集仍按 `h3-queue-run.mdc` 抽 1–2 条人工看嘴型归属，结论写进双语报告。
+- 审核发现真对白问题（缺句、乱序、多说进保留版）按问题条处理，不要默认开入队门禁 `--dialogue-gate`（默认不开，见 `h3-queue-run.mdc`）。

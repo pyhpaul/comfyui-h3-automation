@@ -26,9 +26,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import queue
 import random
 import shutil
 import sys
+import threading
 import time
 from pathlib import Path, PurePosixPath
 
@@ -100,6 +102,70 @@ def graft_motion_latent(workflow: dict, parent_latent: str, load_clip: int) -> N
     workflow["364"]["inputs"]["audio"] = [TRIM_ID, 1]
 
 
+def _archive_worker(base: str, tasks: "queue.Queue[dict | None]",
+                    errors: list[str]) -> None:
+    """Single background worker: download mp4+latent, then Feiniu/local.
+
+    Per h3-queue-run.mdc, the main loop must HANDOFF and queue the next
+    unit as soon as history exposes the GPU latent path; downloads and
+    archive uploads happen here, never blocking the next queue_prompt.
+    """
+    client = ComfyClient(base)
+    while True:
+        task = tasks.get()
+        try:
+            if task is None:
+                return
+            label = f"{task['ep_code']}-{task['unit']}"
+            saved = collect_outputs(client, task["entry"],
+                                    ROOT / "outputs" / task["prompt_id"],
+                                    prefer_node_ids=["364"])
+            mp4s = [p for p in saved if p.suffix.lower() == ".mp4"]
+            if not mp4s:
+                raise RuntimeError(f"{label}: no mp4")
+            rel = task["latent_rel"]
+            sub = str(PurePosixPath(rel).parent)
+            if sub == ".":
+                sub = ""
+            probe = client._client.get(
+                "/view", params={"filename": PurePosixPath(rel).name,
+                                 "subfolder": sub, "type": "output"})
+            if probe.status_code >= 400:
+                raise RuntimeError(f"latent download HTTP {probe.status_code}")
+            meta = task["meta"]
+            payloads = {
+                f"{label}-chaofu-wenxi_00001-audio.mp4":
+                    mp4s[0].read_bytes(),
+                f"{task['ep_code'].lower()}_{task['unit'].lower()}"
+                f"_wenxi_00001.safetensors": probe.content,
+                "prompt_h3.txt": task["wired"].encode("utf-8"),
+                "run_meta.json": (json.dumps(meta, ensure_ascii=False,
+                                             indent=2) + "\n").encode("utf-8"),
+            }
+            if task["local_only"]:
+                dest = (ROOT / ".cache" / "chaofu_fix1_verify"
+                        / label / "wenxi")
+                dest.mkdir(parents=True, exist_ok=True)
+                for name, data in payloads.items():
+                    (dest / name).write_bytes(data)
+                print(f"LOCAL_SAVED {label} wenxi -> {dest}", flush=True)
+            else:
+                remote = archive_named_files(
+                    payloads, batch=task["feiniu_batch"],
+                    episode=task["episode"], unit=f"{task['unit']}-WENXI")
+                print(f"FEINIU {label}-wenxi {remote}", flush=True)
+            print(f"SUCCESS {label} wenxi prompt_id={task['prompt_id']} "
+                  f"latent={rel} elapsed={meta['elapsed_s']}s", flush=True)
+            out_dir = ROOT / "outputs" / task["prompt_id"]
+            if out_dir.is_dir():
+                shutil.rmtree(out_dir, ignore_errors=True)
+        except Exception as exc:  # surfaced to main before next queue
+            errors.append(f"{task['ep_code']}-{task['unit']}: {exc}")
+            print(f"ARCHIVE_FAILED {exc}", flush=True)
+        finally:
+            tasks.task_done()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--job-prefix", required=True,
@@ -108,7 +174,10 @@ def main() -> int:
     ap.add_argument("--parent-latent", default=None,
                     help="output-relative parent latent for the first "
                          "parent_latent unit in --units")
-    ap.add_argument("--feiniu-batch", required=True)
+    ap.add_argument("--feiniu-batch", default=None)
+    ap.add_argument("--local-only", action="store_true",
+                    help="save payloads under .cache/chaofu_fix1_verify "
+                         "instead of uploading to Feiniu (audit-first)")
     ap.add_argument("--seed", type=int, default=None,
                     help="fixed seed (default: random per unit, recorded "
                          "in run_meta.json)")
@@ -126,7 +195,18 @@ def main() -> int:
     print(f"READY gpu={device!r} chain=wenxi prefix={args.job_prefix}", flush=True)
 
     parent_latent: str | None = args.parent_latent
+    archive_tasks: "queue.Queue[dict | None]" = queue.Queue()
+    archive_errors: list[str] = []
+    worker = threading.Thread(
+        target=_archive_worker, args=(base, archive_tasks, archive_errors),
+        name="chaofu-wenxi-archive", daemon=True)
+    worker.start()
     for unit in args.units:
+        if archive_errors:
+            # h3-queue-run.mdc: a failed background archive stops the batch
+            print(f"ARCHIVE_FAILED stop before {unit}: {archive_errors}",
+                  flush=True)
+            break
         unit = unit.strip().upper()
         job_dir = JOB_ROOT / f"{args.job_prefix}-{unit}"
         if not job_dir.is_dir():
@@ -195,24 +275,14 @@ def main() -> int:
         print(f"QUEUED {ep_code}-{unit} prompt_id={prompt_id}", flush=True)
         entry = _wait_history(client, prompt_id, f"{ep_code}-{unit}-wenxi")
 
-        saved = collect_outputs(client, entry, ROOT / "outputs" / prompt_id,
-                                prefer_node_ids=["364"])
-        mp4s = [p for p in saved if p.suffix.lower() == ".mp4"]
-        if not mp4s:
-            raise RuntimeError(f"{ep_code}-{unit}: no mp4")
+        # HANDOFF point (h3-queue-run.mdc): history exposing the GPU
+        # latent path is enough to queue the next unit. Downloading the
+        # mp4/latent and the Feiniu upload run in the archive worker.
         latent_rel = extract_saved_latent_path(
             entry, filename_prefix=latent_prefix, clip_index=unit_index(unit))
         if not latent_rel:
             raise RuntimeError(f"{ep_code}-{unit}: missing saved latent path")
         rel = latent_rel.split("output/", 1)[-1]
-        sub = str(PurePosixPath(rel).parent)
-        if sub == ".":
-            sub = ""
-        probe = client._client.get(
-            "/view", params={"filename": PurePosixPath(rel).name,
-                              "subfolder": sub, "type": "output"})
-        if probe.status_code >= 400:
-            raise RuntimeError(f"latent download HTTP {probe.status_code}")
 
         meta = {
             "continuity": "motion_latent" if parent_latent else "independent",
@@ -226,26 +296,24 @@ def main() -> int:
             "source_job": str(job_dir.relative_to(ROOT)),
             "elapsed_s": round(time.monotonic() - t0),
         }
-        payloads = {
-            f"{ep_code}-{unit}-chaofu-wenxi_00001-audio.mp4":
-                mp4s[0].read_bytes(),
-            f"{ep_code.lower()}_{unit.lower()}_wenxi_00001.safetensors":
-                probe.content,
-            "prompt_h3.txt": wired.encode("utf-8"),
-            "run_meta.json": (json.dumps(meta, ensure_ascii=False, indent=2)
-                              + "\n").encode("utf-8"),
-        }
-        remote = archive_named_files(
-            payloads, batch=args.feiniu_batch, episode=episode,
-            unit=f"{unit}-WENXI")
-        print(f"FEINIU {ep_code}-{unit}-wenxi {remote}", flush=True)
-        print(f"SUCCESS {ep_code}-{unit} wenxi prompt_id={prompt_id} "
-              f"latent={rel} elapsed={meta['elapsed_s']}s", flush=True)
-        out_dir = ROOT / "outputs" / prompt_id
-        if out_dir.is_dir():
-            shutil.rmtree(out_dir, ignore_errors=True)
+        if not args.local_only and not args.feiniu_batch:
+            raise SystemExit("need --feiniu-batch unless --local-only")
+        archive_tasks.put({
+            "ep_code": ep_code, "unit": unit, "prompt_id": prompt_id,
+            "entry": entry, "latent_rel": rel, "wired": wired,
+            "meta": meta, "episode": episode,
+            "feiniu_batch": args.feiniu_batch,
+            "local_only": args.local_only,
+        })
+        print(f"HANDOFF {ep_code}-{unit} latent={rel!r}", flush=True)
         # chain: next parent_latent unit consumes this unit's latent
         parent_latent = rel
+    archive_tasks.join()
+    archive_tasks.put(None)
+    worker.join()
+    if archive_errors:
+        print(f"BATCH_ARCHIVE_FAILED {archive_errors}", flush=True)
+        return 1
     print(f"BATCH_DONE wenxi {args.job_prefix}", flush=True)
     return 0
 

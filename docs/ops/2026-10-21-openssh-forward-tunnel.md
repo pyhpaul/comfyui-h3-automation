@@ -38,6 +38,11 @@ OpenSSH 原生 `ssh -L` 转发。规矩已写入 `.cursor/rules/h3-gpu-vm106.mdc
    会先确认 EP02 未被旧 runner 提交，避免孤儿 prompt。
 4. runner 侧同时去重：`scripts/run_lihun_wenxi.py` 对相同
    （文件名， 大小）的参考图只上传一次，同集 42 次上传降到约 9 次。
+5. 切换时踩的坑：在 `ssh vm106 "... ssh -N -L ... &"` 里以后台方式起的
+   OpenSSH 转发，会在该 ssh 会话结束时被 SIGHUP 带走（8191 一度无监听，
+   接管脚本验卡失败自停，未丢任何 prompt；当时 U03 已完整归档）。
+   固定起法：`setsid ssh ... < /dev/null &` 完全脱离会话再验监听。
+   卡和 Comfy 本体全程无事，8193 的先行转发可作对照。
 
 ## 今后口径
 

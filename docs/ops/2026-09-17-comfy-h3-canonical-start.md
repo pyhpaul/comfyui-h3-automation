@@ -31,8 +31,15 @@ vm122 不再做隧道。当前步骤以 `.cursor/rules/h3-gpu-vm106.mdc` 为准�
 python main.py \
   --listen 127.0.0.1 --port 8188 --cuda-device 0 \
   --lowvram --reserve-vram 4 --disable-smart-memory \
+  --disable-cuda-malloc \
   --force-fp16 --disable-cuda-graphs --enable-manager
 ```
+
+`--disable-cuda-malloc`（原生 CUDA 分配器）是硬要求：文戏 SelfLift 稀疏
+注意力在 `cudaMallocAsync` 下会把整个 Comfy 进程崩掉。启动脚本里由
+`H3_DISABLE_CUDA_MALLOC` 控制（默认 1）；验证时看 `/system_stats` 设备名
+后缀应为 `native`。详见
+`docs/ops/2026-10-21-wenxi-cuda-allocator-crash.md`。
 
 日志默认：`/root/autodl-tmp/ComfyUI/comfyUI-h3.log`  
 租卡上也可：`/root/start_comfy_h3.sh`（与 `comfy_gpu_start.sh` 同内容）。

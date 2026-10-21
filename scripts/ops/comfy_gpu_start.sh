@@ -23,6 +23,16 @@ case "${H3_DISABLE_SMART_MEMORY:-1}" in
   *) echo "H3_DISABLE_SMART_MEMORY must be 0 or 1" >&2; exit 2 ;;
 esac
 
+# Native CUDA allocator (default). Wenxi SelfLift sparse attention crashes
+# the whole Comfy process under cudaMallocAsync (cuMemFreeAsync invalid
+# argument). Set H3_DISABLE_CUDA_MALLOC=0 only to A/B the async allocator.
+# See docs/ops/2026-10-21-wenxi-cuda-allocator-crash.md
+case "${H3_DISABLE_CUDA_MALLOC:-1}" in
+  1) cuda_malloc_flag=(--disable-cuda-malloc) ;;
+  0) cuda_malloc_flag=() ;;
+  *) echo "H3_DISABLE_CUDA_MALLOC must be 0 or 1" >&2; exit 2 ;;
+esac
+
 exec python main.py \
   --listen 127.0.0.1 \
   --port 8188 \
@@ -30,6 +40,7 @@ exec python main.py \
   --lowvram \
   --reserve-vram 4 \
   "${memory_flag[@]}" \
+  "${cuda_malloc_flag[@]}" \
   --force-fp16 \
   --disable-cuda-graphs \
   --enable-manager \

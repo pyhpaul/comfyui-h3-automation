@@ -74,9 +74,35 @@ def test_two_mp4s_are_rejected():
     try:
         select_archive_files(files)
     except RuntimeError as exc:
-        assert "file count is 5" in str(exc)
+        assert "archive file set invalid" in str(exc)
     else:
         raise AssertionError("expected reject")
+
+
+def test_selection_accepts_dialogue_qc_pair():
+    files = _files()
+    files["EP01-U01.srt"] = b"srt"
+    files["dialogue_check.json"] = b"{}"
+    names = [name for name, _payload in select_archive_files(files)]
+    assert len(names) == 6
+    assert "EP01-U01.srt" in names and "dialogue_check.json" in names
+
+
+def test_add_qc_files_lands_pair_in_unit_folder():
+    from comfy_orch.feiniu_archive import add_qc_files
+
+    share = _Share()
+    directory = add_qc_files(
+        "EP01-U01.srt", b"srt", b"{}",
+        batch="batch", episode="EP01", unit="U01", smb=share,
+    )
+    assert directory == remote_unit_dir("batch", "EP01", "U01")
+    stored = {path.split("\\")[-1] for path in share.files}
+    assert stored == {"EP01-U01.srt", "dialogue_check.json"}
+    puts = share.puts
+    add_qc_files("EP01-U01.srt", b"srt", b"{}",
+                 batch="batch", episode="EP01", unit="U01", smb=share)
+    assert share.puts == puts
 
 
 def test_upload_lands_in_the_batch_episode_unit_folder():

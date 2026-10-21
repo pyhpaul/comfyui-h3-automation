@@ -1,7 +1,10 @@
 """Upload one finished H3 unit straight to Feiniu.
 
-The archive folder gets four files: the mp4, the safetensors latent, prompt_h3.txt,
-and run_meta.json. prompt_source.txt and prompt_audit.json stay off the share.
+A finished unit folder holds six files. The render archive lands the first
+four: the mp4, the safetensors latent, prompt_h3.txt, and run_meta.json.
+The dialogue-QC flow adds the last two afterwards (see add_qc_files): the
+unit's .srt word track and dialogue_check.json. prompt_source.txt and
+prompt_audit.json stay off the share.
 """
 
 from __future__ import annotations
@@ -14,8 +17,9 @@ from pathlib import Path
 HOST = "192.168.60.103"
 SHARE = "ai短剧同步文件夹"
 PASSFILE = Path(os.environ.get("H3_FEINIU_PASSFILE", "/home/linux_dev/.config/fnos/ai.pass"))
-_KEEP = {"prompt_h3.txt", "run_meta.json"}
+_KEEP = {"prompt_h3.txt", "run_meta.json", "dialogue_check.json"}
 _SKIP = {"prompt_source.txt", "prompt_audit.json"}
+_QC_SUFFIX = ".srt"
 
 
 def episode_code(episode: str) -> str:
@@ -37,11 +41,18 @@ def select_archive_files(files: dict[str, bytes]) -> list[tuple[str, bytes]]:
     chosen = [
         (name, payload)
         for name, payload in sorted(files.items())
-        if name not in _SKIP and (name in _KEEP or name.endswith((".mp4", ".safetensors")))
+        if name not in _SKIP
+        and (name in _KEEP or name.endswith((".mp4", ".safetensors", _QC_SUFFIX)))
     ]
-    if len(chosen) != 4:
-        names = [name for name, _payload in chosen]
-        raise RuntimeError(f"archive file count is {len(chosen)}: {names}")
+    names = [name for name, _payload in chosen]
+    core = (
+        sum(name.endswith(".mp4") for name in names),
+        sum(name.endswith(".safetensors") for name in names),
+        "prompt_h3.txt" in names,
+        "run_meta.json" in names,
+    )
+    if core != (1, 1, True, True) or len(chosen) > 6:
+        raise RuntimeError(f"archive file set invalid: {names}")
     return chosen
 
 
@@ -139,6 +150,50 @@ def archive_named_files(
                 raise last_error
         checked = _remote_sizes(current, directory)
         for name, payload in chosen:
+            if checked.get(name) != len(payload):
+                raise RuntimeError(f"{unit} {name} size mismatch")
+    finally:
+        if owns_connection:
+            try:
+                current.close()
+            except Exception:
+                pass
+    return directory
+
+
+def add_qc_files(
+    srt_name: str,
+    srt_payload: bytes,
+    report_payload: bytes,
+    *,
+    batch: str,
+    episode: str,
+    unit: str,
+    smb=None,
+    connect=None,
+) -> str:
+    """Add a unit's dialogue-QC pair (.srt + dialogue_check.json) to its folder.
+
+    Pieces five and six of the unit set; they only exist after the post-render
+    dialogue check, so they are uploaded separately from the render archive.
+    Same-size files already on the share are skipped; sizes are re-read after.
+    """
+    if not srt_name.endswith(_QC_SUFFIX):
+        raise RuntimeError(f"QC word track must be a .srt: {srt_name!r}")
+    directory = remote_unit_dir(batch, episode, unit)
+    owns_connection = smb is None
+    current = smb if smb is not None else (connect or connect_feiniu)()
+    try:
+        _ensure_tree(current, directory)
+        present = _remote_sizes(current, directory)
+        for name, payload in ((srt_name, srt_payload),
+                              ("dialogue_check.json", report_payload)):
+            if present.get(name) == len(payload):
+                continue
+            current.putFile(SHARE, directory + "\\" + name, _reader(payload))
+        checked = _remote_sizes(current, directory)
+        for name, payload in ((srt_name, srt_payload),
+                              ("dialogue_check.json", report_payload)):
             if checked.get(name) != len(payload):
                 raise RuntimeError(f"{unit} {name} size mismatch")
     finally:

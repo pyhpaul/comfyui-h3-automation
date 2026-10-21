@@ -1,0 +1,17 @@
+---
+description: 本地磁盘不堆积：拆包中转文件用完即删，成片进飞牛后删本地 job/outputs
+alwaysApply: true
+---
+
+# 本地磁盘清理（不留历史副本）
+
+本地只留账本，不留副本。原包在飞牛 inbox、成片在飞牛 archive，随时可按集重拆，不需要本地留底。
+
+- 资产包 zip 只是中转：从飞牛下载到 `.cache/<任务>/`，`jobs/ep_units/` 建好并审核通过后，**立刻删 zip 和解压目录**，不要等整批跑完。
+- 一批成片确认进了飞牛（每单元 mp4、latent、`prompt_h3.txt`、`run_meta.json` 四件齐）后，删该批的 `jobs/ep_units/<PREFIX>-*` 和对应 `outputs/<prompt_id>/`。不要把「以后可能修」当留底理由；要修从飞牛原包按集重拆。
+- 任务级缓存（`.cache/<任务>/`：抽查拉回的 mp4、A/B 成片、验证产物）在任务收尾时清掉。大文件类证据先镜像到飞牛 inbox 独立文件夹并回读验完，再删本地；本地只留报告、日志、提示词文本这类小文件。
+- `runs/` 是账本（运行日志、审核 JSON、status），保留，不当副本删。
+- 删之前先确认没有别的会话或进程在用：查本地 runner 进程（`run_ep_units_profiled`、`run_chaofu_wenxi` 等）和两条隧道的 `/queue`。队列里正在跑的那条，其 job 目录等这批结束再删；拿不准就先问用户。
+- 定期盘点：`du -sh jobs/ep_units outputs .cache`。发现 GB 级堆积先按上面口径清，并向用户报清了什么、留了什么。
+
+2026-10-21 首次执行记录见 `docs/ops/2026-10-21-local-disk-cleanup.md`（两轮共清约 32G）。

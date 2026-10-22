@@ -327,7 +327,10 @@ def main() -> int:
                 "dst.mkdir(parents=True,exist_ok=True)\n"
                 "tarfile.open('/content/lihun_input.tar.gz').extractall(dst)\n"
                 "print('MOVED',len(list(dst.rglob('*'))))\n")
-            exec_retry(session, mover, 60, logdir / f"mover{idx}.log")
+            # A mover exec can queue behind a busy guest kernel (the
+            # batch phase keeps rendering server-side even if an exec
+            # returns early), so 60s is far too tight here.
+            exec_retry(session, mover, 1800, logdir / f"mover{idx}.log")
             began = time.monotonic()
             exec_file(session, BATCH_PHASE, 14400,
                       logdir / f"batch_phase_{idx}.log",

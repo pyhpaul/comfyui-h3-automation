@@ -24,7 +24,8 @@ BASE = "http://192.168.50.106:8190"
 INPUT = ROOT / ".cache/chaofu_fx21_colab/input"
 PROBE_IN = ROOT / ".cache/chaofu_probe/input"
 OUT = ROOT / ".cache/chaofu_probe/out"
-ORDER = ["P-A-U04L1", "P-B1-U06L1", "P-B2-U06L2"]
+ORDER = ["P-A-U04L1", "P-B1-U06L1", "P-B2-U06L2",
+         "P-C-U04L1-OTS", "P-B1R-U06L1", "P-E-U06L1-OTS", "P-D-U06L2-OTS"]
 
 
 def http_json(path, data=None, timeout=30):

@@ -3,7 +3,7 @@ name: comfy-h3-episode-assembly
 description: >-
   Assemble and post-produce an episode from H3 unit clips: auditable story
   cuts, conservative seams, English phrase subtitles, sparse music with
-  dialogue ducking, ending design, technical QC and independent review.
+  dialogue ducking, ending design, technical QC and agent self-review.
   Use for 整集拼接/自动粗剪/EP后期/字幕配乐/结尾包装 or diagnosing unit seams.
   The existing rough-cut CLI is not a complete post-production pipeline.
 ---
@@ -21,7 +21,7 @@ description: >-
 | agent 自主选择结尾效果、音效、剧情节拍配乐 | [Agent 主导创作](references/agent-direction.md) |
 | 选用已认可 ending，或记录新方案 | [Ending 方案库](../../../docs/ending-presets/index.md) |
 | 接缝诊断、计划粗剪 | 本文件的剪辑和接缝规则 |
-| 成片验收、子 agent 审核、交付 | [QC 与审核](references/qc-review.md) |
+| 成片验收、自检、按需独立审核、交付 | [QC 与审核](references/qc-review.md) |
 
 ### 当前实现边界
 
@@ -63,7 +63,8 @@ description: >-
 
 用户希望由 agent 主导结尾与音乐的创作判断。先读实际素材和剧情，
 自行决定效果、配乐段落、切换与留白，生成一版最有依据的推荐成片，
-经独立审核后交用户。不先发参数菜单等待人工选定，也不默认批量渲染
+经执行 agent 自检和技术 QC 后交用户；默认不启动子 agent 审核。
+不先发参数菜单等待人工选定，也不默认批量渲染
 多个版本让用户代做判断。“审过的计划”默认指 agent 自检，非人工审批。
 
 结尾可选轻推近、渐暗/淡出、虚影或同步音效，配乐可按剧情阶段选择
@@ -129,9 +130,10 @@ manifest，新建 revision 目录，不覆盖旧片。保留母版、审片版�
 ### 5. QC、审核与交付
 
 按 [QC 与审核](references/qc-review.md) 检查最终导出的实际文件，
-不能只看 manifest 或中间 WAV。用户当前工作流要求做完让子 agent
-审核：分音频、字幕/视觉、剧情节奏三路，审核绑定最终成片 hash。
-若环境无法委派，明确标记审核未完成，不伪造评审或通过状态。
+不能只看 manifest 或中间 WAV。执行 agent 自检音频、字幕/视觉、剧情
+节奏与结尾，记录实际检查、最终成片 hash 和剩余风险。
+子 agent 审核不再是默认步骤或交付门禁，仅在用户明确要求时启用；
+未启用记为 `NOT_REQUESTED`，不是审核失败或待补项，不伪造评审。
 
 区分“技术检查通过”“可供用户审片”“用户确认发布”。改片后相关检查
 与审核失效，必须对新 hash 重做。完整实时观看/听感没有做就写未做。

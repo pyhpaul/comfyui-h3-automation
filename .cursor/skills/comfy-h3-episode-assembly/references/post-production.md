@@ -151,7 +151,8 @@ OUT=outputs/ep-post-pilot/EP01-v21-v2-replay-20261022-01
 
 不要选已有 `EP01-v21-v2-final` 作输出。转写是英文 small 本地模型；
 verify 也是固定 EP01，包含本例名字别名和音频锚点假设。
-完成命令后仍须执行 QC 参考中的人工门禁和子 agent 审核。
+完成命令后仍须执行 QC 参考中的成片自检与剩余技术检查。
+子 agent 审核默认关闭，仅在用户明确要求时执行，不作为固定交付门禁。
 
 ### v3 agent 推荐版入口
 
@@ -169,7 +170,8 @@ OUT=outputs/ep-post-pilot/EP01-v21-v3-replay-01
 
 实际首版输出目录为 `outputs/ep-post-pilot/EP01-v21-v3-agent-directed/`，
 不得拿它作为重跑输出。`creative_plan.json` 记录推荐理由与已落实参数；
-是否可审片以该版本 QC 和 `AGENT_REVIEW.md` 为准，不凭文件存在推断通过。
+是否可审片以该版本 QC 和执行 agent 的自检记录为准，不凭文件存在推断通过。
+历史 `AGENT_REVIEW.md` 仍保留为该旧版审核证据，不是新版本必需产物。
 
 ### 换成新 EP 前必须适配
 

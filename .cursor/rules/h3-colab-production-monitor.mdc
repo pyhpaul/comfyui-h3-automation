@@ -1,0 +1,27 @@
+---
+description: Colab batch production runs under a 5-minute monitoring loop with defined checks, escalation, and reporting
+alwaysApply: true
+---
+
+# Colab 生产定时监控
+
+任何 Colab 批量生产（`colab_h3_*_batch_host.py` 一类）启动时必须同时挂一个 5 分钟定时监控循环（哨兵 `AGENT_LOOP_TICK_<批次>`），不许"发完就不管"。循环活到整批完成或用户喊停，收尾时显式撤掉。
+
+每轮 tick 必查五项：
+
+1. **渲染进度**：guest 日志的 `UNIT_DONE` / `UNIT_FAILED` 计数与最后一条；长时间无新完成（>2 条时长）要查卡点。
+2. **归档追赶**：Drive 回执与宿主 `FEINIU` 落地在跟上渲染；归档器连两轮无新拉回就查它卡在哪条（回执查询慢不是死了，先看 rclone 子进程在查哪条）。
+3. **对白 QC**：滚动报告（`runs/dialogue_check_*_rolling.md`）的新行；PASS 率与 FAIL 明细。
+4. **保活与计费**：keeper 日志 5 分钟内有新的 attempt/ok；`colab usage` 的 Active、rate、余额。只看 Active=1 不算保活证据（见 `docs/ops/2026-10-21-colab-session-loss-and-guard.md`）。
+5. **监督进程**：宿主还活着；它死了先领养同一会话续跑，不要直接新开会话。
+
+汇报节奏：无变化一句话带过（进度计数 + 会话状态）；有变化或异常报具体单元与原因。每包/每集完成报里程碑。
+
+异常处置（不要等用户发现）：
+
+- **渲染 FAIL**：先看自愈路径是否覆盖（宿主等回执重发、guest 按 Drive 回执跳过、跨 VM 时 `seed_parent_latent` 自动播种链头）；覆盖不了的记入修复清单并报用户。
+- **对白 QC FAIL**：逐段看词轨定位（缺句/多话/串词），结论写入 `runs/<批次>_fix_plan.md`（问题、证据时间戳、成因、修复措施、验收标准）；没有大量 FAIL 就继续生产，整批出完统一补产（换种子重渲，片头多话类可评估剪片头兜底）。
+- **名册丢失**（`sessions.json` 被清空、按名 exec 报 not found，但 `colab usage` 仍 Active≥1）：立刻用 `scripts/ops/colab_takeover_rebuild.py` 从服务端接管重建句柄，验 exec 与 Comfy 存活后续跑；VM 已被回收才 `colab_unassign.py` 停计费并报告。不要对不存在的会话反复发命令，也不要干等。
+- **keeper 死亡**：guard 的断路器盯的是 keeper 日志；keeper 没了先重启 keeper（独立进程组），再查会话是否还在回收宽限内。
+
+会话与停机：用户没说停就不停；付费看门狗的 deadline 是硬顶，开批时给足（≥8 小时或按批量估算）；整批完成、归档齐、QC 审完后按用户口径保持待命或停机，并在收尾报告里写清会话去向与余额。

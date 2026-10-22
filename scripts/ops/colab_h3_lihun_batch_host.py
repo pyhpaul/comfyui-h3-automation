@@ -106,6 +106,18 @@ def main() -> int:
                     help="skip the account-idle gate when creating a "
                          "session (multi-session parallel production; "
                          "each session is billed separately)")
+    ap.add_argument("--remote-name",
+                    help="Drive namespace under REMOTE_BASE for receipts "
+                         "(default: the session name; fix rounds use a "
+                         "suffixed name on an adopted session so candidate "
+                         "receipts never collide with production ones)")
+    ap.add_argument("--feiniu-batch", default=FEINIU_BATCH,
+                    help="Feiniu archive batch folder (fix rounds pass "
+                         "the fix-release folder, e.g. "
+                         "'离婚后修复定版（10.22）\\文戏工作流')")
+    ap.add_argument("--feiniu-unit-plain", action="store_true",
+                    help="archive under plain unit names (U03) instead "
+                         "of U03-WENXI (fix-release layout)")
     args = ap.parse_args()
 
     bundle_dirs = [INPUT] + list(args.extra_input)
@@ -138,7 +150,7 @@ def main() -> int:
     else:
         session = "h3-lihun-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         logdir = BASE / session
-    remote = f"{REMOTE_BASE}/{session}"
+    remote = f"{REMOTE_BASE}/{args.remote_name or session}"
     if not args.execute_paid:
         print(json.dumps({"ready": True, "paid_started": False,
                           "session": session, "remote": remote,
@@ -232,8 +244,10 @@ def main() -> int:
                              "prompt_h3.txt", "run_meta.json"):
                     payloads[name] = (dest / name).read_bytes()
                 remote_dir = archive_named_files(
-                    payloads, batch=FEINIU_BATCH, episode=unit["episode"],
-                    unit=f"{unit['unit']}-WENXI")
+                    payloads, batch=args.feiniu_batch,
+                    episode=unit["episode"],
+                    unit=(unit["unit"] if args.feiniu_unit_plain
+                          else f"{unit['unit']}-WENXI"))
                 archived[tag] = remote_dir
                 del pending[tag]
                 print(f"FEINIU {tag} -> {remote_dir}", flush=True)
@@ -474,9 +488,9 @@ def main() -> int:
                 f"archive incomplete archived={len(archived)}/{len(units)} "
                 f"failed={failed_units}")
         print(f"LIHUN_BATCH_DONE units={len(archived)} "
-              f"batch={FEINIU_BATCH}", flush=True)
+              f"batch={args.feiniu_batch}", flush=True)
         (logdir / "archived.json").write_text(json.dumps(
-            {"session": session, "feiniu_batch": FEINIU_BATCH,
+            {"session": session, "feiniu_batch": args.feiniu_batch,
              "archived": archived}, ensure_ascii=False, indent=2) + "\n")
         return 0
     finally:

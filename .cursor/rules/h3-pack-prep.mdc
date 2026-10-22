@@ -5,6 +5,20 @@ alwaysApply: true
 
 # H3 拆包与入队前
 
+**开工先列完整任务清单。** 用户一提出拆解资产包（拆包 / 建 jobs / 审包），先把下面整条流程列成清单亮出来，再动手；每完成一步就更新状态。目的是让用户随时看清 agent 在第几步、能在哪一步喊停或改方向，不要闷头做完才汇报。
+
+1. 确认来源：飞牛 inbox 原包路径、剧名/版本、集数范围；生产批次名向用户要，不沿用上次。
+2. 中转下载：原包到 `.cache/<任务>/`（只是中转，建好 jobs 后删）。
+3. 拆包建 jobs：`jobs/ep_units/<PREFIX>-*`；复用 `write_unit` 先清 `_LABEL`，显示名用本包上传块的名字。
+4. 正文处理（只许三类改动，见下）：参考图标签、场景四格裁唯一机位、对白括号规范；双人同框条标听者闭嘴风险。
+5. 机器审核：`scripts/audit_pack_prompts.py`，no_parent 与 with_parent 都退出码 0；未绑图扫描 + 人工分档（补绑 / 改泛称 / 保持原样，逐条列出）。
+6. 链结构确认：逐集列断链点（换场、`start_mode=independent`、上一条上下分屏），场景连续才 `motion_latent` 接力。
+7. 审核汇报：单元数、台词句数/最密条、多说话人同条清单、风险条清单——到此为止，等用户发话。
+8. 入队（只有用户明确说了才做）：默认一采，批次名已确认，生产监控循环同时挂起（见 `h3-colab-production-monitor.mdc`）。
+9. 归档核对：每单元六件套（mp4、latent、`prompt_h3.txt`、`run_meta.json`、词轨、dialogue_check）进飞牛对应集/单元目录。
+10. 复审：每集抽 1～2 条人工看（重点双人同念）；QC FAIL 进 `runs/<批次>_fix_plan.md`，整批后补产。
+11. 收尾：删中转 zip/解压目录与已归档 jobs，本地只留 `runs/` 账本；报告清了什么、留了什么。
+
 用户没说入队，就只拆包和审核，不要 `queue_prompt`。
 
 审核必须跑 `scripts/audit_pack_prompts.py`，no_parent 和 with_parent 都过，退出码 0。盘上的 `prompt_audit.json` 不够。`FAIL latent-scene` 不能入队。

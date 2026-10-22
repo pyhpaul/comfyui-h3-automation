@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import tarfile
@@ -85,10 +86,23 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--execute-paid", action="store_true")
     ap.add_argument("--safety-hours", type=float, default=5.0)
+    ap.add_argument("--adopt-session",
+                    help="reuse this live session instead of creating one "
+                         "(env stages already done are skipped)")
+    ap.add_argument("--adopt-logdir", type=Path,
+                    help="logdir of the original host run (stage markers)")
+    ap.add_argument("--extra-input", type=Path, action="append", default=[],
+                    help="additional input bundle dir(s) rendered after "
+                         "the primary one, in the same session")
+    ap.add_argument("--no-stop", action="store_true",
+                    help="leave the session running at the end "
+                         "(heartbeat keeper + guards stay armed)")
     args = ap.parse_args()
 
-    manifest = json.loads((INPUT / "units.json").read_text())
-    units = manifest["units"]
+    bundle_dirs = [INPUT] + list(args.extra_input)
+    units = []
+    for d in bundle_dirs:
+        units += json.loads((d / "units.json").read_text())["units"]
     wheels = list(VENDOR.glob("sageattention-2.2.0-cp313-cp313-linux_x86_64.whl"))
     required = [CONFIG, VENDOR / "colab-h3-rclone.gz",
                 SCRIPTS / "h3_g4_identity.py",
@@ -104,25 +118,45 @@ def main() -> int:
     wheel = wheels[0]
     wheel_sha = hashlib.sha256(wheel.read_bytes()).hexdigest()
 
-    session = "h3-lihun-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    adopt = bool(args.adopt_session)
+    if adopt:
+        session = args.adopt_session
+        logdir = args.adopt_logdir or (BASE / session)
+        if not logdir.is_dir():
+            raise RuntimeError(f"adopt logdir missing: {logdir}")
+    else:
+        session = "h3-lihun-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        logdir = BASE / session
     remote = f"{REMOTE_BASE}/{session}"
     if not args.execute_paid:
         print(json.dumps({"ready": True, "paid_started": False,
                           "session": session, "remote": remote,
-                          "units": len(units)}, ensure_ascii=False))
+                          "units": len(units), "adopt": adopt},
+                         ensure_ascii=False))
         return 0
 
-    logdir = BASE / session
-    logdir.mkdir(parents=True, exist_ok=False)
     snapshots = logdir / "cu-snapshots.jsonl"
-    before = snapshot(snapshots, "before_assignment")
-    sessions = run(["colab", "sessions"], logdir / "sessions-before.log",
-                   timeout=30)
-    if before["active"] or before["rate"] or "No active sessions" not in sessions:
-        raise RuntimeError("Colab not idle")
+    done_stages = set()
+    if adopt:
+        timing = logdir / "stage-timing.jsonl"
+        if timing.is_file():
+            for line in timing.read_text().splitlines():
+                try:
+                    done_stages.add(json.loads(line)["stage"])
+                except Exception:
+                    pass
+        print(f"ADOPT {session} done_stages={sorted(done_stages)}",
+              flush=True)
+    else:
+        logdir.mkdir(parents=True, exist_ok=False)
+        before = snapshot(snapshots, "before_assignment")
+        sessions = run(["colab", "sessions"], logdir / "sessions-before.log",
+                       timeout=30)
+        if before["active"] or before["rate"] or "No active sessions" not in sessions:
+            raise RuntimeError("Colab not idle")
     (logdir / "trial-inputs.json").write_text(json.dumps(
         {"session": session, "remote": remote, "wheel_sha256": wheel_sha,
-         "before": before, "units": [u["tag"] for u in units]},
+         "adopt": adopt, "units": [u["tag"] for u in units]},
         ensure_ascii=False, indent=2) + "\n")
 
     created = False
@@ -182,11 +216,20 @@ def main() -> int:
     arch_thread = None
     try:
         created = True
-        run(["colab", "new", "--session", session, "--gpu", "G4"],
-            logdir / "assignment.log", timeout=180)
-        assigned = snapshot(snapshots, "assigned")
-        if assigned["active"] != 1 or assigned["rate"] <= 0:
-            raise RuntimeError("G4 assignment not confirmed")
+        if adopt:
+            subprocess.run(["pkill", "-f",
+                            f"colab_h3_paid_watchdog.sh {session}"],
+                           check=False)
+            assigned = snapshot(snapshots, "adopted")
+            if assigned["active"] != 1:
+                raise RuntimeError("adopted session is not active")
+            print(f"ADOPTED {session} rate={assigned['rate']}", flush=True)
+        else:
+            run(["colab", "new", "--session", session, "--gpu", "G4"],
+                logdir / "assignment.log", timeout=180)
+            assigned = snapshot(snapshots, "assigned")
+            if assigned["active"] != 1 or assigned["rate"] <= 0:
+                raise RuntimeError("G4 assignment not confirmed")
         wl = (logdir / "watchdog.log").open("w")
         try:
             watcher = subprocess.Popen(
@@ -197,13 +240,13 @@ def main() -> int:
         finally:
             wl.close()
         touch_heartbeat()
+        guard_env = dict(os.environ)
+        guard_env.update({"HEARTBEAT": str(HEARTBEAT), "AUTO_UNASSIGN": "1",
+                          "POLL_S": "60",
+                          "LOG": str(ROOT / "runs/colab_orphan_guard.log")})
         guard = subprocess.Popen(
             ["bash", str(SCRIPTS / "colab_orphan_guard.sh")],
-            env={"PATH": "/usr/bin:/bin:/usr/local/bin:"
-                          + str(Path.home() / ".local/bin"),
-                 "HEARTBEAT": str(HEARTBEAT), "AUTO_UNASSIGN": "1",
-                 "POLL_S": "60",
-                 "LOG": str(ROOT / "runs/colab_orphan_guard.log")},
+            env=guard_env,
             stdin=subprocess.DEVNULL,
             stdout=(logdir / "orphan-guard.log").open("w"),
             stderr=subprocess.STDOUT, start_new_session=True)
@@ -215,37 +258,12 @@ def main() -> int:
                    (SCRIPTS / "h3_a100_phase_receipt.py",
                     "/content/h3_a100_phase_receipt.py"),
                    (WENXI_INSTALL, "/content/wenxi_install.py"),
-                   (BATCH_PHASE, "/content/wenxi_batch_phase.py"),
-                   (wheel, "/content/" + wheel.name)]
+                   (BATCH_PHASE, "/content/wenxi_batch_phase.py")]
+        if not adopt:
+            uploads.append((wheel, "/content/" + wheel.name))
         for src, dst in uploads:
             run(["colab", "upload", "--session", session, str(src), dst],
                 logdir / ("upload-" + src.name + ".log"), timeout=300)
-        bundle = logdir / "lihun_input.tar.gz"
-        with tarfile.open(bundle, "w:gz") as tar:
-            for p in sorted(INPUT.rglob("*")):
-                if p.is_file():
-                    tar.add(p, arcname=str(p.relative_to(INPUT)))
-        last = None
-        for attempt in range(3):
-            try:
-                run(["colab", "upload", "--session", session, str(bundle),
-                     "/content/lihun_input.tar.gz"],
-                    logdir / f"upload-bundle-{attempt}.log", timeout=600)
-                last = None
-                break
-            except Exception as e:
-                last = e
-                time.sleep(5)
-        if last is not None:
-            raise last
-        mover = logdir / "mover.py"
-        mover.write_text(
-            "import tarfile,pathlib\n"
-            "dst=pathlib.Path('/content/wenxi_setup/input'); "
-            "dst.mkdir(parents=True,exist_ok=True)\n"
-            "tarfile.open('/content/lihun_input.tar.gz').extractall(dst)\n"
-            "print('MOVED',len(list(dst.rglob('*'))))\n")
-        exec_retry(session, mover, 60, logdir / "mover.log")
 
         stages = (("identity", SCRIPTS / "h3_g4_identity.py", 60, {}),
                   ("preinstall", SCRIPTS / "colab_h3_preinstall_torch.py", 720, {}),
@@ -253,6 +271,9 @@ def main() -> int:
                   ("setup", SCRIPTS / "h3_g4_setup.py", 900,
                    {"H3_G4_WHEEL_SHA256": wheel_sha}))
         for name, path, timeout, env in stages:
+            if name in done_stages:
+                print(f"STAGE_SKIP {name} (adopt)", flush=True)
+                continue
             began = time.monotonic()
             exec_retry(session, path, timeout, logdir / f"{name}.log", **env)
             if STAGE_MARKERS[name] not in (logdir / f"{name}.log").read_text(
@@ -264,24 +285,60 @@ def main() -> int:
                  "rate": st["rate"], "balance": st["balance"]}) + "\n")
             print(f"STAGE_OK {name}", flush=True)
 
-        began = time.monotonic()
-        exec_retry(session, WENXI_INSTALL, 900, logdir / "wenxi_install.log")
-        txt = (logdir / "wenxi_install.log").read_text(errors="replace")
-        if "WENXI_NATIVE_ALLOCATOR_OK" not in txt:
-            raise RuntimeError("native allocator not verified")
-        snapshot(snapshots, "wenxi_install")
-        print("STAGE_OK wenxi_install", flush=True)
+        install_log = logdir / "wenxi_install.log"
+        if adopt and install_log.is_file() and \
+                "WENXI_NATIVE_ALLOCATOR_OK" in install_log.read_text(
+                    errors="replace"):
+            print("STAGE_SKIP wenxi_install (adopt)", flush=True)
+        else:
+            exec_retry(session, WENXI_INSTALL, 900, install_log)
+            txt = install_log.read_text(errors="replace")
+            if "WENXI_NATIVE_ALLOCATOR_OK" not in txt:
+                raise RuntimeError("native allocator not verified")
+            snapshot(snapshots, "wenxi_install")
+            print("STAGE_OK wenxi_install", flush=True)
 
         arch_thread = threading.Thread(target=archiver, daemon=True)
         arch_thread.start()
-        began = time.monotonic()
-        exec_file(session, BATCH_PHASE, 14400, logdir / "batch_phase.log",
-                  H3_WENXI_REMOTE=remote)
-        batch_txt = (logdir / "batch_phase.log").read_text(errors="replace")
-        print("BATCH_EXEC_ENDED",
-              f"elapsed={round(time.monotonic() - began, 1)}", flush=True)
-        if "BATCH_PHASE_DONE" not in batch_txt:
-            raise RuntimeError("batch phase ended without BATCH_PHASE_DONE")
+        for idx, bdir in enumerate(bundle_dirs):
+            bundle = logdir / f"lihun_input_{idx}.tar.gz"
+            with tarfile.open(bundle, "w:gz") as tar:
+                for p in sorted(bdir.rglob("*")):
+                    if p.is_file():
+                        tar.add(p, arcname=str(p.relative_to(bdir)))
+            last = None
+            for attempt in range(3):
+                try:
+                    run(["colab", "upload", "--session", session, str(bundle),
+                         "/content/lihun_input.tar.gz"],
+                        logdir / f"upload-bundle{idx}-{attempt}.log",
+                        timeout=600)
+                    last = None
+                    break
+                except Exception as e:
+                    last = e
+                    time.sleep(5)
+            if last is not None:
+                raise last
+            mover = logdir / f"mover{idx}.py"
+            mover.write_text(
+                "import tarfile,pathlib\n"
+                "dst=pathlib.Path('/content/wenxi_setup/input'); "
+                "dst.mkdir(parents=True,exist_ok=True)\n"
+                "tarfile.open('/content/lihun_input.tar.gz').extractall(dst)\n"
+                "print('MOVED',len(list(dst.rglob('*'))))\n")
+            exec_retry(session, mover, 60, logdir / f"mover{idx}.log")
+            began = time.monotonic()
+            exec_file(session, BATCH_PHASE, 14400,
+                      logdir / f"batch_phase_{idx}.log",
+                      H3_WENXI_REMOTE=remote)
+            batch_txt = (logdir / f"batch_phase_{idx}.log").read_text(
+                errors="replace")
+            print(f"BATCH_EXEC_ENDED idx={idx}",
+                  f"elapsed={round(time.monotonic() - began, 1)}", flush=True)
+            if "BATCH_PHASE_DONE" not in batch_txt:
+                raise RuntimeError(
+                    f"batch phase {idx} ended without BATCH_PHASE_DONE")
         stop_archive.set()
         arch_thread.join(timeout=1800)
         snapshot(snapshots, "after_batch")
@@ -299,7 +356,12 @@ def main() -> int:
         stop_archive.set()
         if arch_thread is not None:
             arch_thread.join(timeout=120)
-        if created:
+        if created and args.no_stop:
+            kept = snapshot(snapshots, "kept_alive")
+            print(f"SESSION_KEPT {session} balance={kept['balance']} "
+                  f"rate={kept['rate']} (guards + heartbeat keeper stay "
+                  f"armed; stop explicitly when done)", flush=True)
+        elif created:
             try:
                 stop_and_verify(session, logdir, watcher)
             finally:
@@ -319,7 +381,7 @@ def main() -> int:
                 print(f"HOST_DONE balance={after['balance']} "
                       f"active={after['active']} rate={after['rate']}",
                       flush=True)
-        if guard is not None and guard.poll() is None:
+        if guard is not None and guard.poll() is None and not args.no_stop:
             guard.terminate()
 
 

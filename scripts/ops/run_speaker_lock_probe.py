@@ -27,7 +27,7 @@ OUT = ROOT / ".cache/chaofu_probe/out"
 ORDER = ["P-A-U04L1", "P-B1-U06L1", "P-B2-U06L2",
          "P-C-U04L1-OTS", "P-B1R-U06L1", "P-E-U06L1-OTS", "P-D-U06L2-OTS",
          "P-F-U04L2-OTS", "P-G-U04L3-OTS", "P-H-U04L4", "P-G2-U04L3-OTS-INDEP",
-         "P-G3-U04L3-FRAG", "PROD3-U04-3SHOT"]
+         "P-G3-U04L3-FRAG", "PROD3-U04-3SHOT", "PROD3-U06-3SHOT"]
 
 
 def http_json(path, data=None, timeout=30):

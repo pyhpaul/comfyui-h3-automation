@@ -423,6 +423,39 @@ PROMPT_PROD3 = f"""【H3 提示词】
 【交出状态】Wade Mercer 站在舱门口面南，左手向南伸出、掌心朝上悬在半空，嘴唇闭合，目光钉在 Cole Mercer 怀里的金条上，右手仍按着西侧门框；Cole Mercer 在其正南面北，右臂箍着六根金条贴在胸前，全面罩挂在胸前，嘴唇闭合，眼神冷；海风大，浪拍船身，发动机低速运转。
 """
 
+PROMPT_PROD3_U06 = f"""【H3 提示词】
+
+【参考设定】
+{COLE.format(n=1)}
+{WADE.format(n=2)}
+{SCENE.format(n=3)}
+{MASK.format(n=4)}
+{TANK.format(n=5)}
+{ROPE.format(n=6)}
+
+{MOOD}
+
+{RULES}
+本条共三个镜头，镜头之间硬切。每个镜头里只有点名的说话人正脸入画说话；另一人只以前景碎片（后脑一角、肩背、手臂）入画，脸和嘴完全不在画框内，不转头、不回头。画面里每个人只出现一次，不出现分身或重复人物。Cole Mercer 全程不碰、不抬胸前的全面罩，不把全面罩戴到脸上。
+
+【空间／朝向硬锁】0 秒：承接 U05 尾态。Cole Mercer 站在船尾栏杆门东侧门柱正北、横栏内侧，身体面北，右手攥着安全绳的扣环绳头举在胸前，绳垂到他左脚边、栏杆门前甲板上的绳盘里，左手扶着栏杆横栏；气瓶背在背上，全面罩挂在胸前。Wade Mercer 站在驾驶舱门口，身体面南，左手搭在东侧门框上。
+
+【画面内容】
+场景：渔船甲板
+人物：Cole Mercer［潜水时期］、Wade Mercer
+环境描述：白天，阴天，低云压着铁灰色的海面，海风渐起，浪涌更急，天色渐暗
+
+▲镜头一（0–5 秒），过肩镜头，近景［越过 Wade Mercer 左肩拍 Cole Mercer 正面，船尾栏杆门旁］。前景只有 Wade Mercer 的后脑一角、左肩和上背失焦入画，他身体其余部分在画框外，脸和嘴不可见、不开口；Cole Mercer 在画面中央，盯着 Wade Mercer，右手攥紧安全绳，指节发白，左手扶着横栏，口型同步开口，音量压低、语速放慢、语气一字一顿地说：（ Wade. I mean it. ） Cole Mercer说完，嘴唇合上，眼睛不眨，攥绳的手没有松开。
+▲镜头二（5–10 秒），跟拍转过肩镜头，中景转中近景［Wade Mercer从驾驶舱门口走到船尾，停在 Cole Mercer 对面］。硬切。Wade Mercer 离开门框沿甲板中线向南走到船尾，停在栏杆门正北、绳盘旁，正面朝南对着 Cole Mercer，弯腰用右手从绳盘里拎起安全绳的另一端，在右手掌心绕一圈，直起身看着 Cole Mercer，肩膀一耸，扬起眉毛；此时前景只有 Cole Mercer 的后脑一角、右肩和上背失焦入画，他身体其余部分在画框外，脸和嘴不可见、不转头、不开口；Wade Mercer 在画面中央，口型同步开口，音量适中、语速不紧不慢、语气带着轻慢的笑地说：（ When have I ever really left you down there? ） Wade Mercer说完，嘴唇合上，嘴角的笑还挂着。
+▲镜头三（10–15 秒），过肩特写镜头［越过 Wade Mercer 肩头推近 Cole Mercer 的脸］。硬切。前景只有 Wade Mercer 的后脑一角和肩背边缘失焦入画，脸和嘴不可见、不开口；Cole Mercer 的脸在画面中央推到眉眼到下巴的大特写，嘴留在画内，他的瞳孔收缩了一下，眼睑缓缓眯起，嘴角没有笑意，口型同步开口，音量很低、语速缓慢、语气一字一顿地说：（ Remember you said that. ） Cole Mercer说完，嘴唇合上，视线仍钉在 Wade Mercer 脸上。
+
+音频：环境音［低沉的海风声、浪拍船身的闷响］+ 动作音［脚步声、安全绳被攥紧和拎起的摩擦声］+ 人物音［Cole Mercer一字一顿的叮嘱、Wade Mercer轻慢的反问、Cole Mercer低沉的一句话］
+
+【H3 latent 接入文字】承接 U05：Cole 站在栏杆门东侧门柱正北、横栏内侧，面北，右手举着安全绳的扣环绳头，绳垂到他左脚边、栏杆门前甲板上的绳盘里；气瓶背在背上，全面罩挂在胸前，目光沉沉地对着舱门口方向。Wade 在驾驶舱门口面南，左手搭在东侧门框上，嘴角微扬，视线对着 Cole。0.00–1.00 秒从 U05 尾部最后 1 秒真实原始 H3 AV latent 重生成，保留 24 帧重叠，不自动裁切、合片或淡化；首秒保持人物身份、服装、站位、朝向、视线、持物和现场光声。之后进入本条镜头一。
+
+【交出状态】Cole Mercer 站在栏杆门东侧门柱正北、横栏内侧，右手攥着安全绳扣环绳头，绳垂到左脚边的绳盘里，全面罩挂在胸前，嘴唇闭合，目光钉在 Wade Mercer 脸上；Wade Mercer 站在栏杆门正北、绳盘旁，右手掌心绕着安全绳的另一端，嘴唇闭合，嘴角带着笑；天色渐暗，浪涌更急。
+"""
+
 # tag -> (source unit, kept ref indexes in source order, prompt, length,
 #         seed, mode)  mode: indep | chain-prod | chain-probe | chain-b1r
 #         | chain-pc | chain-pf | chain-pg
@@ -440,6 +473,7 @@ PROBES = {
     "P-G2-U04L3-OTS-INDEP": ("EP02-U04", [1, 0, 2, 4], PROMPT_G2, 120, 3091999188883044845, "indep"),
     "P-G3-U04L3-FRAG": ("EP02-U04", [1, 0, 2, 4], PROMPT_G3, 120, 3091999188883044845, "indep"),
     "PROD3-U04-3SHOT": ("EP02-U04", [0, 1, 2, 3, 4, 5], PROMPT_PROD3, 360, 3091999188883044845, "chain-prod"),
+    "PROD3-U06-3SHOT": ("EP01-U06", [0, 2, 3, 4, 5, 6], PROMPT_PROD3_U06, 360, 6632933335260644632, "chain-prod"),
 }
 SAVE_PREFIX = {
     "P-A-U04L1": "h3_context/probe/ep02_u04a",
@@ -455,6 +489,7 @@ SAVE_PREFIX = {
     "P-G2-U04L3-OTS-INDEP": "h3_context/probe/ep02_u04c_ots2",
     "P-G3-U04L3-FRAG": "h3_context/probe/ep02_u04c_frag",
     "PROD3-U04-3SHOT": "h3_context/probe/ep02_u04_3shot",
+    "PROD3-U06-3SHOT": "h3_context/probe/ep01_u06_3shot",
 }
 
 

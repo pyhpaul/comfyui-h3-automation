@@ -110,7 +110,9 @@ def render_music_cue(music: Path, cue: dict, dest: Path, gain: float,
     fade_in, fade_out = cue_fades(cue, total)
     fades = (f"afade=t=in:d={fade_in}," if fade_in else "")
     if fade_out:
-        fades += f"afade=t=out:st={duration - fade_out}:d={fade_out},"
+        # Fixed-point: float dust like 1e-15 (fade_out == duration) would
+        # otherwise render in scientific notation, which ffmpeg rejects.
+        fades += f"afade=t=out:st={duration - fade_out:.6f}:d={fade_out},"
     settings = (
         f"aresample=48000,atrim=start={cue['source_in']}:duration={duration},asetpts=N/SR/TB,"
         f"volume={gain}dB,{fades}"

@@ -42,8 +42,11 @@ from run_lihun_wenxi import (  # noqa: E402
     unit_index,
 )
 
-OUT = ROOT / ".cache" / "lihun_v23_colab" / "input"
-EPISODES = ["EP01", "EP02", "EP03", "EP04", "EP05"]
+import os
+
+OUT = Path(os.environ.get("LIHUN_COLAB_OUT",
+                          ROOT / ".cache" / "lihun_v23_colab" / "input"))
+EPISODES = [a.upper() for a in sys.argv[1:]] or ["EP01", "EP02", "EP03", "EP04", "EP05"]
 
 
 def main() -> int:

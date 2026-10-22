@@ -75,7 +75,7 @@
   （支持 `--backup` / `--endpoint` / 唯一 assignment 三种匹配，
   只打印 token 指纹）。全程挂 orphan guard，结束三次复查
   Active=0、rate=0，余额 956.91 不变（实验消耗约 0.001 CU）。
-  完整实录：`runs/colab_takeover_test_20261022.md`。
+  完整实录：`docs/ops/2026-10-22-colab-takeover-test.md`（本地账本 `runs/colab_takeover_test_20261022.md` 同源）。
 
 ## 本批账（潮缚 fx21）
 

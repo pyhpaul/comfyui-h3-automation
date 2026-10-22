@@ -47,7 +47,8 @@ def load_config(root: Path, shared: dict, plan: dict) -> dict:
     return config
 
 
-def render_picture(config: dict, preset: dict, clips: list[Clip], out: Path) -> tuple[Path, list[dict], dict]:
+def render_picture(config: dict, preset: dict, clips: list[Clip], out: Path,
+                   tail_pad_frames: int = 0) -> tuple[Path, list[dict], dict]:
     parts, stages = [], []
     for i, clip in enumerate(clips):
         source = Path(config["sources"][clip.unit]["path"])
@@ -59,13 +60,14 @@ def render_picture(config: dict, preset: dict, clips: list[Clip], out: Path) -> 
                                  -1.0 - float(level["input_tp"]))), 3)
         part = out / "work" / f"part-{i}.mkv"
         if i == len(clips) - 1:
-            render_bloom_segment(source, part, clip, gain, preset, out / "logs/ending.log")
+            render_bloom_segment(source, part, clip, gain, preset, out / "logs/ending.log",
+                                 tail_pad_frames)
         else:
             render_segment(source, part, clip.in_frame, clip.out_frame, gain, False,
                            out / "logs" / f"part-{i}.log")
         parts.append(part)
         stages.append({"unit": clip.unit, "input_lufs": level["input_i"], "gain_db": gain})
-    layout = ending_layout(sum(c.out_frame - c.in_frame for c in clips), preset)
+    layout = ending_layout(sum(c.out_frame - c.in_frame for c in clips), preset, tail_pad_frames)
     card = out / "work/endcard.mkv"
     render_endcard(card, layout["card_frames"], out / "logs/card.log", False,
                    config["episode"])
@@ -131,12 +133,13 @@ def render(root: Path, shared_file: Path, plan_file: Path, out: Path) -> None:
     captions, words = collect_captions(config, clips)
     displayed = write_subtitles(out, captions, words, config["subtitle_style"],
                                 config["episode"])
-    layout = ending_layout(sum(c.out_frame - c.in_frame for c in clips), preset)
+    tail_pad_frames = config["ending"].get("tail_pad_frames", 0)
+    layout = ending_layout(sum(c.out_frame - c.in_frame for c in clips), preset, tail_pad_frames)
     if max(c.end for c in captions) >= layout["bloom_start_s"]:
         raise ValueError("ending effect would overlap dialogue")
     save(out / "input_contract.json", shared)
     save(out / "creative_plan.json", plan)
-    picture, staging, layout = render_picture(config, preset, clips, out)
+    picture, staging, layout = render_picture(config, preset, clips, out, tail_pad_frames)
     normalized, audio_qc = render_audio(config, preset, picture, layout, captions, out)
     outputs = []
     episode = config["episode"]

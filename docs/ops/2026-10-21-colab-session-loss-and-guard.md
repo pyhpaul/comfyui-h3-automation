@@ -154,6 +154,13 @@ proxy token 只有 3600 秒寿命，CLI 的 keep-alive 守护只 ping 账户端�
    （不含 token）。宿主建会话后自动挂 guardian。验收看
    `runs/colab_session_guardian.log` 的 `rebuilt` 记录。
 
+多开实测（2026-10-22）：生产会话运行中另开一台 G4 测试会话，
+`colab usage` 显示 Active assignments: 2、rate 17.80/h（两台分别
+计费）；测试 VM exec 正常（hostname 不同），生产机渲染/归档不受
+影响；`colab stop` 测试会话后回到 Active=1、rate 8.90，名册只剩
+生产会话。结论：付费模式支持多台并发，按集拆分并行生产可行，
+每台需独立 keeper + guardian + 归档通道（Drive remote 按会话隔离）。
+
 剩余边界：keeper 与 guardian 仍在本地工作站上。若 WSL/工作站休眠、
 断网或两者都退出，VM 侧没有已知的自续租通道，仍会在宽限后被回收；
 长批次必须同时盯 keeper 与 guardian 日志新鲜度，而不只是盯监督进程。

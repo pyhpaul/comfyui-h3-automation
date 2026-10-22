@@ -46,6 +46,7 @@ VENDOR = BASE / "vendor"
 WENXI_INSTALL = SCRIPTS / "colab_h3_wenxi_install.py"
 BATCH_PHASE = SCRIPTS / "colab_h3_wenxi_batch_phase.py"
 KEEPER = SCRIPTS / "colab_heartbeat_keeper.sh"
+GUARDIAN = SCRIPTS / "colab_session_guardian.sh"
 REMOTE_BASE = "h3drive_h3:comfyui-h3-colab-dedicated/lihun-v23"
 FEINIU_BATCH = "离婚后（10.22）"
 HEARTBEAT = ROOT / "runs/lihun_v23_colab_heartbeat"
@@ -115,7 +116,8 @@ def main() -> int:
                 SCRIPTS / "h3_g4_setup.py",
                 SCRIPTS / "h3_a100_phase_receipt.py",
                 SCRIPTS / "colab_h3_paid_watchdog.sh",
-                WENXI_INSTALL, BATCH_PHASE, KEEPER,
+                WENXI_INSTALL, BATCH_PHASE, KEEPER, GUARDIAN,
+                SCRIPTS / "colab_takeover_rebuild.py",
                 SCRIPTS / "colab_keepalive_probe.py", INPUT / "units.json"]
     missing = [str(p) for p in required if not p.is_file()]
     if missing or len(wheels) != 1:
@@ -168,6 +170,7 @@ def main() -> int:
     watcher = None
     guard = None
     keeper = None
+    guardian = None
     keeper_stop = logdir / "KEEPER_STOP"
     started = time.monotonic()
     deadline = datetime.now(timezone.utc) + timedelta(hours=args.safety_hours)
@@ -297,6 +300,17 @@ def main() -> int:
             stdin=subprocess.DEVNULL,
             stdout=(logdir / "orphan-guard.log").open("w"),
             stderr=subprocess.STDOUT, start_new_session=True)
+
+        # Session guardian: rotate the 1h runtime-proxy token before
+        # it expires and rebuild the roster within a minute if the
+        # CLI prunes it anyway (see colab_session_guardian.sh).
+        guardian = subprocess.Popen(
+            ["bash", str(GUARDIAN), session,
+             str(logdir / "sessions_backup.json"), "2400", "60"],
+            stdin=subprocess.DEVNULL,
+            stdout=(logdir / "session-guardian.out").open("w"),
+            stderr=subprocess.STDOUT, start_new_session=True)
+        print(f"GUARDIAN_STARTED pid={guardian.pid}", flush=True)
 
         uploads = [(CONFIG, "/content/rclone.conf"),
                    (VENDOR / "colab-h3-rclone.gz", "/content/rclone.gz"),
@@ -476,6 +490,9 @@ def main() -> int:
                     keeper.wait(timeout=10)
                 except subprocess.TimeoutExpired:
                     keeper.terminate()
+        if guardian is not None and not args.no_stop \
+                and guardian.poll() is None:
+            guardian.terminate()
         if guard is not None and guard.poll() is None and not args.no_stop:
             guard.terminate()
 

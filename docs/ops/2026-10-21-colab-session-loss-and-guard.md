@@ -140,9 +140,23 @@
 4. 停机权集中：只有全部完成后的显式停机路径能写 `KEEPER_STOP` 并
    `colab stop`；orphan guard 继续只做计费兜底，不承担保活。
 
-剩余边界：keeper 仍在本地工作站上。若 WSL/工作站休眠、断网或 keeper
-自身连续失败退出，VM 侧没有已知的自续租通道，仍会在宽限后被回收；
-长批次必须同时盯 keeper 日志新鲜度，而不只是盯监督进程。
+名册反复丢失的根因（同日下午在同一会话上又丢两次后定位）：runtime
+proxy token 只有 3600 秒寿命，CLI 的 keep-alive 守护只 ping 账户端点、
+不刷新 `sessions.json` 里的 token；token 过期后下一次按名 exec 撞
+404/401，CLI 即判定会话丢失并清空名册（CLI 日志里 kernel 404 的时间
+与建会话/接管后约 1 小时精确吻合）。assignment 与 VM 本体此时都还
+活着，所以接管重建每次都能成功。
+
+5. `scripts/ops/colab_session_guardian.sh`：token 轮换守护。每 40 分钟
+   主动调 `colab_takeover_rebuild.py` 换新 token 重写名册（过期前
+   轮换，不等撞墙），名册已丢时 60 秒内自动重建；每次轮换重生 CLI
+   keep-alive 守护并杀掉旧的。备份只存 endpoint/kernel/session
+   （不含 token）。宿主建会话后自动挂 guardian。验收看
+   `runs/colab_session_guardian.log` 的 `rebuilt` 记录。
+
+剩余边界：keeper 与 guardian 仍在本地工作站上。若 WSL/工作站休眠、
+断网或两者都退出，VM 侧没有已知的自续租通道，仍会在宽限后被回收；
+长批次必须同时盯 keeper 与 guardian 日志新鲜度，而不只是盯监督进程。
 
 ## 本批账（潮缚 fx21）
 

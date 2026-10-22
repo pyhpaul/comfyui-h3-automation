@@ -3,8 +3,16 @@
 
 One JSON file is the single source of truth for a fix round's scoreboard:
 which (unit, chain) slots are shipped, which candidates exist, their seeds,
-verdicts (strict | relaxed | fail) and editor cut points. Never track this
-in chat memory.
+verdicts (strict | relaxed | fail), review evidence and editor cut points.
+Never track this in chat memory.
+
+A strict/relaxed verdict is a human decision, not an automated audit
+result. It is accepted only with a complete dialogue review record:
+method=full-dialogue-watch, scope=all-dialogue-lines, a named reviewer
+and concrete evidence. ASR, F0, scene cuts and sparse still frames are
+screening evidence and can never justify a passing verdict by themselves.
+A later fail returns the slot to pending unless another passing candidate
+for the same slot remains.
 
 Usage:
   python scripts/ops/fix_registry.py --registry runs/fixround.json init \
@@ -14,12 +22,16 @@ Usage:
       --job-id e865fa5b29fd --mp4 outputs/.../x-audio.mp4
   python scripts/ops/fix_registry.py --registry runs/fixround.json verdict \
       --unit EP06-U04 --chain orig --tag s2-a1 --verdict relaxed \
+      --review-method full-dialogue-watch --reviewer lai \
+      --review-scope all-dialogue-lines \
+      --review-evidence "watched every dialogue segment in motion; ..." \
       --cut "剪掉 4.0s-6.0s 胡话段" --shipped-dir "原工作流/EP06/U04"
   python scripts/ops/fix_registry.py --registry runs/fixround.json status
 """
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 
@@ -34,6 +46,46 @@ def save(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=1),
                     encoding="utf-8")
+
+
+def _empty_review() -> dict:
+    return {
+        "method": "", "reviewer": "", "scope": "", "evidence": "",
+        "reviewed_at": "",
+    }
+
+
+def _refresh_slot(data: dict, unit: str, chain: str) -> None:
+    """Derive a slot from candidate verdicts (fail can revoke a pass)."""
+    verdicts = [
+        c.get("verdict") for c in data.get("candidates", [])
+        if c.get("unit") == unit and c.get("chain") == chain
+    ]
+    key = f"{unit}:{chain}"
+    if "strict" in verdicts:
+        data["slots"][key] = "shipped-strict"
+    elif "relaxed" in verdicts:
+        data["slots"][key] = "shipped-relaxed"
+    else:
+        data["slots"][key] = "pending"
+
+
+def _validate_pass_review(args: argparse.Namespace) -> None:
+    if args.verdict not in ("strict", "relaxed"):
+        return
+    problems = []
+    if args.review_method != "full-dialogue-watch":
+        problems.append("--review-method must be full-dialogue-watch")
+    if not args.reviewer.strip():
+        problems.append("--reviewer is required")
+    if args.review_scope != "all-dialogue-lines":
+        problems.append("--review-scope must be all-dialogue-lines")
+    if len(args.review_evidence.strip()) < 10:
+        problems.append("--review-evidence must describe the completed review")
+    if problems:
+        raise SystemExit(
+            "refusing to record a passing verdict without a complete "
+            "human dialogue review: " + "; ".join(problems))
 
 
 def main() -> int:
@@ -57,9 +109,20 @@ def main() -> int:
                        help="strict | relaxed | fail" if a == "--verdict" else None)
     p.add_argument("--cut", default="")
     p.add_argument("--shipped-dir", default="")
+    p.add_argument("--review-method", default="",
+                   help="passing verdicts require full-dialogue-watch")
+    p.add_argument("--reviewer", default="")
+    p.add_argument("--review-scope", default="",
+                   help="passing verdicts require all-dialogue-lines")
+    p.add_argument("--review-evidence", default="",
+                   help="what was watched and checked, per line")
+    p.add_argument("--reviewed-at", default="",
+                   help="ISO timestamp; defaults to now (UTC)")
 
     sub.add_parser("status")
     args = ap.parse_args()
+    if args.cmd == "verdict":
+        _validate_pass_review(args)
     data = load(args.registry)
 
     if args.cmd == "init":
@@ -72,7 +135,7 @@ def main() -> int:
             "seed": args.seed, "job_id": args.job_id,
             "prompt_id": args.prompt_id, "mp4": args.mp4,
             "latent": args.latent, "verdict": "", "cut": "",
-            "shipped_dir": ""})
+            "shipped_dir": "", "review": _empty_review()})
     elif args.cmd == "verdict":
         for cand in data["candidates"]:
             if (cand["unit"], cand["chain"], cand["tag"]) == \
@@ -80,12 +143,20 @@ def main() -> int:
                 cand["verdict"] = args.verdict
                 cand["cut"] = args.cut
                 cand["shipped_dir"] = args.shipped_dir
+                cand.setdefault("review", _empty_review())
+                if args.verdict in ("strict", "relaxed"):
+                    cand["review"] = {
+                        "method": args.review_method,
+                        "reviewer": args.reviewer.strip(),
+                        "scope": args.review_scope,
+                        "evidence": args.review_evidence.strip(),
+                        "reviewed_at": args.reviewed_at or datetime.now(
+                            timezone.utc).isoformat(),
+                    }
                 break
         else:
             raise SystemExit(f"candidate not found: {args.unit}:{args.chain} {args.tag}")
-        if args.verdict in ("strict", "relaxed"):
-            data["slots"][f"{args.unit}:{args.chain}"] = \
-                f"shipped-{args.verdict}"
+        _refresh_slot(data, args.unit, args.chain)
     save(args.registry, data)
 
     if args.cmd in ("init", "status"):

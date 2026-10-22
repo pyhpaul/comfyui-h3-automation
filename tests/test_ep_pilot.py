@@ -62,6 +62,16 @@ def test_alignment_handles_asr_split_name_via_multi_token_alias():
     assert cues[0].end == pytest.approx(4.9)
 
 
+def test_alignment_skip_first_keeps_later_performance():
+    texts = ["You'd", "stop?", "You'd", "stop?", "Yes."]
+    words = [Word("U07", i, i + 0.5, text) for i, text in enumerate(texts)]
+    cues = align_dialogue(["You'd stop?", "Yes."], words, {}, skip_first={"You'd stop?"})
+    assert cues[0].start == 2
+    assert cues[1].start == 4
+    with pytest.raises(ValueError, match="align"):
+        align_dialogue(["You'd stop?"], words[:2], {}, skip_first={"You'd stop?"})
+
+
 def test_alignment_does_not_invent_missing_words():
     with pytest.raises(ValueError, match="align"):
         align_dialogue(["You asked for the ring."], [Word("U01", 0, 1, "ring")], {})

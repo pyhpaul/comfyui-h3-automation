@@ -41,7 +41,9 @@ def collect_captions(config: dict, clips: list[Clip]) -> tuple[list[Subtitle], l
         prompt = Path(source["prompt"]).read_text()
         body = prompt.split("【画面内容】", 1)[1].split("【H3 latent", 1)[0]
         lines = [line.strip() for line in re.findall(r"（\s*([A-Za-z][^）]+)）", body)]
-        captions.extend(align_dialogue(lines, words, config["subtitle_aliases"]))
+        skip_first = {item["phrase"] for item in config.get("alignment_skips", [])
+                      if item["unit"] == unit}
+        captions.extend(align_dialogue(lines, words, config["subtitle_aliases"], skip_first))
         for word in words:
             if word.end <= word.start:
                 continue

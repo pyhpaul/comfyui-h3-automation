@@ -92,7 +92,8 @@ def tokens(text: str, aliases: dict[str, str]) -> list[str]:
     return result
 
 
-def align_dialogue(lines: list[str], words: list[Word], aliases: dict[str, str]) -> list[Subtitle]:
+def align_dialogue(lines: list[str], words: list[Word], aliases: dict[str, str],
+                   skip_first: set[str] | None = None) -> list[Subtitle]:
     heard = [(token, word) for word in words for token in tokens(word.text, aliases)]
     heard_tokens = [token for token, _word in heard]
     cursor = 0
@@ -114,6 +115,12 @@ def align_dialogue(lines: list[str], words: list[Word], aliases: dict[str, str])
                 continue
             match = next((i for i in range(cursor, len(heard) - len(need) + 1)
                           if heard_tokens[i:i + len(need)] == need), None)
+            if match is not None and skip_first and phrase in skip_first:
+                # The plan deliberately keeps a later performance of this
+                # phrase (the first is an editorial duplicate); align to
+                # the next occurrence instead. Still an error if none.
+                match = next((i for i in range(match + 1, len(heard) - len(need) + 1)
+                              if heard_tokens[i:i + len(need)] == need), None)
             if match is None:
                 raise ValueError(f"cannot align scripted phrase: {phrase!r}")
             first, last = heard[match][1], heard[match + len(need) - 1][1]

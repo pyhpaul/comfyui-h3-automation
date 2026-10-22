@@ -102,6 +102,10 @@ def main() -> int:
                     help="Drive remote of a previous session whose "
                          "success receipts should be skipped, not "
                          "re-rendered (repeatable)")
+    ap.add_argument("--allow-concurrent", action="store_true",
+                    help="skip the account-idle gate when creating a "
+                         "session (multi-session parallel production; "
+                         "each session is billed separately)")
     args = ap.parse_args()
 
     bundle_dirs = [INPUT] + list(args.extra_input)
@@ -159,7 +163,9 @@ def main() -> int:
         before = snapshot(snapshots, "before_assignment")
         sessions = run(["colab", "sessions"], logdir / "sessions-before.log",
                        timeout=30)
-        if before["active"] or before["rate"] or "No active sessions" not in sessions:
+        if not args.allow_concurrent and (
+                before["active"] or before["rate"]
+                or "No active sessions" not in sessions):
             raise RuntimeError("Colab not idle")
     (logdir / "trial-inputs.json").write_text(json.dumps(
         {"session": session, "remote": remote, "wheel_sha256": wheel_sha,
@@ -256,7 +262,13 @@ def main() -> int:
             run(["colab", "new", "--session", session, "--gpu", "G4"],
                 logdir / "assignment.log", timeout=180)
             assigned = snapshot(snapshots, "assigned")
-            if assigned["active"] != 1 or assigned["rate"] <= 0:
+            if args.allow_concurrent:
+                confirmed = (assigned["active"] > before["active"]
+                             and assigned["rate"] > before["rate"])
+            else:
+                confirmed = (assigned["active"] == 1
+                             and assigned["rate"] > 0)
+            if not confirmed:
                 raise RuntimeError("G4 assignment not confirmed")
         wl = (logdir / "watchdog.log").open("w")
         try:

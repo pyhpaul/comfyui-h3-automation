@@ -252,8 +252,147 @@ PROMPT_D = f"""【H3 提示词】
 【交出状态】Wade Mercer 站在栏杆门正北、绳盘旁，面南正对 Cole Mercer，右手掌心绕着安全绳的另一端，嘴唇闭合，嘴角带着笑，视线落在 Cole Mercer 脸上；Cole Mercer 在其正南面北持着绳的另一头，前景只露后脑、右肩和上背，背对机位；天色渐暗，浪涌更急。
 """
 
+PROMPT_F = f"""【H3 提示词】
+
+【参考设定】
+{COLE.format(n=1)}
+{WADE.format(n=2)}
+{SCENE.format(n=3)}
+{MASK.format(n=4)}
+{GOLD.format(n=5)}
+{TANK.format(n=6)}
+
+{MOOD}
+
+{RULES}
+
+【空间／朝向硬锁】0 秒：承接上一段尾态。Wade Mercer 站在驾驶舱门口，身体面南，右手按在西侧门框上；Cole Mercer 站在 Wade Mercer 正南约一臂远，身体面北正对 Wade Mercer，右臂箍着六根金条贴在胸前，左手垂着，全面罩挂在胸前，气瓶背在背上。反打机位在 Wade Mercer 右肩正后方，画面右上前景只有 Wade Mercer 的后脑右侧、右肩和上背，金棕色短发与深酒红色 Polo 衫肩部强烈失焦虚化，占画面不超过四分之一；Wade Mercer 的脸完全不在画框内，全程不转头、不回头、不侧脸，嘴不可见。Cole Mercer 在画面中央近景，焦点清晰，脸和嘴清楚可见。
+
+【画面内容】
+场景：渔船甲板
+人物：Cole Mercer［潜水时期］、Wade Mercer（仅肩背前景）
+环境描述：白天，阴天，低云压着铁灰色的海面，海风很大，天色发暗
+
+▲过肩反打镜头，近景［越过 Wade Mercer 右肩拍 Cole Mercer 正面］。前景 Wade Mercer 只有后脑、右肩和上背失焦入画，全程背对机位、不转头，只有肩背随呼吸轻微起伏，不开口；Cole Mercer 眼睛一动不动，右臂稳稳箍着怀里的六根金条，胸口慢慢鼓起一口气，随后口型同步开口，音量很低、语速很慢、语气像从牙缝里挤出来地说：（ No thanks to you. ） Cole Mercer说完，嘴唇合上，眼神冷得没有一点温度，仍盯着 Wade Mercer。
+
+音频：环境音［海风声、浪拍船身的闷响］+ 人物音［Cole Mercer低沉的回答］
+
+【H3 latent 接入文字】承接上一段：Wade Mercer 在驾驶舱门口面南说话，Cole Mercer 在其正南面北，右臂箍着六根金条，全面罩挂在胸前。0.00–1.00 秒从上一段尾部最后 1 秒真实原始 H3 AV latent 重生成，保留 24 帧重叠，不自动裁切、合片或淡化；首秒保持人物身份、服装、站位、朝向、视线、持物和现场光声。随后切到反打机位：机位在 Wade Mercer 右肩后方，Wade Mercer 只以肩背前景入画，Cole Mercer 正面入画说话。
+
+【交出状态】Cole Mercer 站在驾驶舱门口正南约一臂远，面北，右臂箍着六根金条贴在胸前，全面罩挂在胸前，嘴唇闭合，眼神冷，盯着 Wade Mercer；Wade Mercer 在舱门口面南，右手按在西侧门框上，前景只露后脑、右肩和上背，背对机位；海风大，浪拍船身。
+"""
+
+PROMPT_G = f"""【H3 提示词】
+
+【参考设定】
+{WADE.format(n=1)}
+{COLE.format(n=2)}
+{SCENE.format(n=3)}
+{GOLD.format(n=4)}
+
+{MOOD}
+
+{RULES}
+
+【空间／朝向硬锁】0 秒：承接上一段尾态。Cole Mercer 站在驾驶舱门口正南约一臂远，身体面北，右臂箍着六根金条贴在胸前，眼神冷；Wade Mercer 站在舱门口，身体面南，右手按在西侧门框上。机位在 Cole Mercer 右肩正后方，画面右下前景是 Cole Mercer 的后脑右侧、右肩和上背，强烈失焦虚化；Cole Mercer 怀里的金条在前景下缘只露出一排暗金色的顶端，Cole Mercer 的脸完全不在画框内，全程不转头、不回头、不侧脸，嘴不可见。Wade Mercer 在画面中央中近景，焦点清晰，脸和嘴清楚可见。
+
+【画面内容】
+场景：渔船甲板
+人物：Wade Mercer、Cole Mercer［潜水时期］（仅肩背前景）
+环境描述：白天，阴天，低云压着铁灰色的海面，海风很大，天色发暗
+
+▲过肩镜头，中近景［越过 Cole Mercer 右肩拍 Wade Mercer 正面］。前景 Cole Mercer 只有后脑、右肩和上背失焦入画，怀里的金条在前景下缘露出一排暗金色顶端，Cole Mercer 背对机位、不转头、不开口；Wade Mercer 的视线越过 Cole Mercer 的肩，直直落到前景下缘的金条上，瞳孔收紧，左手向南伸出、掌心朝上悬在半空，随后口型同步开口，音量短促、语速很快、语气不耐地说：（ Enough. Where's the gold? ） Wade Mercer说完，嘴唇合上，伸出的手掌还悬在半空，目光仍钉在金条上。
+
+音频：环境音［海风声、浪拍船身的闷响］+ 人物音［Wade Mercer短促的催问］
+
+【H3 latent 接入文字】承接上一段：Cole Mercer 在驾驶舱门口正南面北，右臂箍着六根金条，眼神冷；Wade Mercer 在舱门口面南。0.00–1.00 秒从上一段尾部最后 1 秒真实原始 H3 AV latent 重生成，保留 24 帧重叠，不自动裁切、合片或淡化；首秒保持人物身份、服装、站位、朝向、视线、持物和现场光声。随后切到机位在 Cole Mercer 右肩后方的过肩镜，Cole Mercer 只以肩背前景入画，Wade Mercer 正面入画说话。
+
+【交出状态】Wade Mercer 站在舱门口面南，左手向南伸出、掌心朝上悬在半空，嘴唇闭合，目光钉在 Cole Mercer 怀里的金条上，右手仍按着西侧门框；Cole Mercer 在其正南面北，右臂箍着六根金条，前景只露后脑、右肩和上背，背对机位；海风大，浪拍船身。
+"""
+
+PROMPT_H = f"""【H3 提示词】
+
+【参考设定】
+{WADE.format(n=1)}
+{COLE.format(n=2)}
+{SCENE.format(n=3)}
+{GOLD.format(n=4)}
+
+{MOOD}
+
+{RULES}
+
+【空间／朝向硬锁】0 秒：承接上一段尾态。Wade Mercer 站在舱门口面南，左手向南伸出悬在半空，右手按着西侧门框；Cole Mercer 站在其正南面北，右臂箍着六根金条。低机位贴着两人脚下的湿甲板、朝北拍：Cole Mercer 只以潜水服的腰腹以下和双臂下缘入画，脸完全不在画框内；金条落尽后机位缓缓上抬到 Wade Mercer 中近景，Wade Mercer 脸和嘴清楚可见，Cole Mercer 退到画外。
+
+【画面内容】
+场景：渔船甲板
+人物：Wade Mercer、Cole Mercer［潜水时期］（仅腰腹以下与手臂）
+环境描述：白天，阴天，低云压着铁灰色的海面，海风很大，天色发暗
+
+▲低机位转上抬镜头，近景转中近景［甲板金条落点转 Wade Mercer 正面］。开头 Cole Mercer 松开箍紧的右臂，六根金条叮叮当当砸在湿漉漉的甲板上滚开，其中一根滚到 Wade Mercer 的船鞋鞋尖前停住（此段 Cole Mercer 只有腰腹以下和手臂入画，脸不入画、不开口）；Wade Mercer 弯腰用左手拾起鞋尖前那根金条，凑到嘴边用门牙咬了一下，又在左手掌心掂了掂分量，嘴角咧开，随后口型同步开口，音量适中、语速偏快、语气像在发号施令地说：（ Real gold. Test it ashore. Give it here. ） Wade Mercer说完，嘴唇合上，右手离开门框，掌心朝上朝西侧甲板上散落的金条摊开。
+
+音频：环境音［海风声、浪拍船身的闷响］+ 动作音［金条砸在甲板上的叮当声、金条滚动声、牙齿咬金属的轻响］+ 人物音［Wade Mercer发号施令的话］
+
+【H3 latent 接入文字】承接上一段：Wade Mercer 在舱门口面南，左手伸向 Cole Mercer 怀里的金条；Cole Mercer 在其正南面北箍着金条。0.00–1.00 秒从上一段尾部最后 1 秒真实原始 H3 AV latent 重生成，保留 24 帧重叠，不自动裁切、合片或淡化；首秒保持人物身份、服装、站位、朝向、视线、持物和现场光声。随后切到贴甲板的低机位，金条落地，机位上抬到 Wade Mercer 正面。
+
+【交出状态】Wade Mercer 站在舱门口面南，左手托着一根金条停在胸前，右手掌心朝上伸向西南的甲板，嘴唇闭合，嘴角咧着；另外五根金条散在 Cole Mercer 脚边和两人西侧的湿甲板上；Cole Mercer 在画外南侧；海风大，浪拍船身。
+"""
+
+PROMPT_G2 = f"""【H3 提示词】
+
+【参考设定】
+{WADE.format(n=1)}
+{COLE.format(n=2)}
+{SCENE.format(n=3)}
+{GOLD.format(n=4)}
+
+{MOOD}
+
+{RULES}
+
+【空间／朝向硬锁】0 秒：Cole Mercer 站在驾驶舱门口正南约一臂远，身体面北，右臂箍着六根金条贴在胸前，眼神冷；Wade Mercer 站在舱门口，身体面南，右手按在西侧门框上。机位在 Cole Mercer 右肩正后方，画面右下前景是 Cole Mercer 的后脑右侧、右肩和上背，强烈失焦虚化；Cole Mercer 怀里的金条在前景下缘只露出一排暗金色的顶端，Cole Mercer 的脸完全不在画框内，全程不转头、不回头、不侧脸，嘴不可见，画面里只有这一个 Cole Mercer，不在其他位置重复出现。Wade Mercer 在画面中央中近景，焦点清晰，脸和嘴清楚可见。
+
+【画面内容】
+场景：渔船甲板
+人物：Wade Mercer、Cole Mercer［潜水时期］（仅肩背前景）
+环境描述：白天，阴天，低云压着铁灰色的海面，海风很大，天色发暗
+
+▲过肩镜头，中近景［越过 Cole Mercer 右肩拍 Wade Mercer 正面］。前景 Cole Mercer 只有后脑、右肩和上背失焦入画，怀里的金条在前景下缘露出一排暗金色顶端，Cole Mercer 背对机位、不转头、不开口；Wade Mercer 的视线越过 Cole Mercer 的肩，直直落到前景下缘的金条上，瞳孔收紧，左手向南伸出、掌心朝上悬在半空，随后口型同步开口，音量短促、语速很快、语气不耐地说：（ Enough. Where's the gold? ） Wade Mercer说完，嘴唇合上，伸出的手掌还悬在半空，目光仍钉在金条上。
+
+音频：环境音［海风声、浪拍船身的闷响］+ 人物音［Wade Mercer短促的催问］
+
+【交出状态】Wade Mercer 站在舱门口面南，左手向南伸出、掌心朝上悬在半空，嘴唇闭合，目光钉在 Cole Mercer 怀里的金条上，右手仍按着西侧门框；Cole Mercer 在其正南面北，右臂箍着六根金条，前景只露后脑、右肩和上背，背对机位；海风大，浪拍船身。
+"""
+
+PROMPT_G3 = f"""【H3 提示词】
+
+【参考设定】
+{WADE.format(n=1)}
+{COLE.format(n=2)}
+{SCENE.format(n=3)}
+{GOLD.format(n=4)}
+
+{MOOD}
+
+{RULES}
+
+【空间／朝向硬锁】0 秒：Wade Mercer 站在驾驶舱门口，身体面南，右手按在西侧门框上，左手垂在身侧。Wade Mercer 身后只有空的舱门和甲板，不站任何人。画面右下前景只有 Cole Mercer 的后脑一角、右肩和抱着金条的右臂下缘，强烈失焦虚化：金条在他臂弯里只露出一排暗金色的顶端，Cole Mercer 的身体其余部分都在画框外，脸完全不在画框内，全程不转头、不回头、不侧脸，嘴不可见；画面里只有这一个 Cole Mercer 的局部，不出现他的全身或第二张脸。Wade Mercer 在画面中央中近景，焦点清晰，脸和嘴清楚可见。
+
+【画面内容】
+场景：渔船甲板
+人物：Wade Mercer、Cole Mercer［潜水时期］（仅肩背与手臂前景）
+环境描述：白天，阴天，低云压着铁灰色的海面，海风很大，天色发暗
+
+▲过肩镜头，中近景［越过 Cole Mercer 右肩拍 Wade Mercer 正面］。前景 Cole Mercer 只有后脑一角、右肩和抱金条的手臂下缘失焦入画，不转头、不开口，Wade Mercer 身后再无别人；Wade Mercer 的视线越过 Cole Mercer 的肩，直直落到前景下缘的金条上，瞳孔收紧，左手向南伸出、掌心朝上悬在半空，随后口型同步开口，音量短促、语速很快、语气不耐地说：（ Enough. Where's the gold? ） Wade Mercer说完，嘴唇合上，伸出的手掌还悬在半空，目光仍钉在金条上。
+
+音频：环境音［海风声、浪拍船身的闷响］+ 人物音［Wade Mercer短促的催问］
+
+【交出状态】Wade Mercer 站在舱门口面南，左手向南伸出、掌心朝上悬在半空，嘴唇闭合，目光钉在 Cole Mercer 怀里的金条上，右手仍按着西侧门框，身后舱门和甲板空无一人；Cole Mercer 只以前景的后脑一角、右肩和抱金条的手臂入画，背对机位；海风大，浪拍船身。
+"""
+
 # tag -> (source unit, kept ref indexes in source order, prompt, length,
 #         seed, mode)  mode: indep | chain-prod | chain-probe | chain-b1r
+#         | chain-pc | chain-pf | chain-pg
 PROBES = {
     "P-A-U04L1": ("EP02-U04", [1, 2, 4], PROMPT_A, 120, 3091999188883044845, "indep"),
     "P-B1-U06L1": ("EP01-U06", [0, 1, 3, 4, 5, 6], PROMPT_B1, 144, 6632933335260644632, "chain-prod"),
@@ -262,6 +401,11 @@ PROBES = {
     "P-B1R-U06L1": ("EP01-U06", [0, 3, 4, 5, 6], PROMPT_B1R, 144, 6632933335260644632, "chain-prod"),
     "P-E-U06L1-OTS": ("EP01-U06", [0, 2, 3, 4, 5, 6], PROMPT_E, 144, 6632933335260644632, "chain-prod"),
     "P-D-U06L2-OTS": ("EP01-U06", [2, 0, 3, 6], PROMPT_D, 168, 6632933335260644632, "chain-b1r"),
+    "P-F-U04L2-OTS": ("EP02-U04", [0, 1, 2, 3, 4, 5], PROMPT_F, 120, 3091999188883044845, "chain-pc"),
+    "P-G-U04L3-OTS": ("EP02-U04", [1, 0, 2, 4], PROMPT_G, 120, 3091999188883044845, "chain-pf"),
+    "P-H-U04L4": ("EP02-U04", [1, 0, 2, 4], PROMPT_H, 168, 3091999188883044845, "chain-pg"),
+    "P-G2-U04L3-OTS-INDEP": ("EP02-U04", [1, 0, 2, 4], PROMPT_G2, 120, 3091999188883044845, "indep"),
+    "P-G3-U04L3-FRAG": ("EP02-U04", [1, 0, 2, 4], PROMPT_G3, 120, 3091999188883044845, "indep"),
 }
 SAVE_PREFIX = {
     "P-A-U04L1": "h3_context/probe/ep02_u04a",
@@ -271,6 +415,11 @@ SAVE_PREFIX = {
     "P-B1R-U06L1": "h3_context/probe/ep01_u06a_r",
     "P-E-U06L1-OTS": "h3_context/probe/ep01_u06a_ots",
     "P-D-U06L2-OTS": "h3_context/probe/ep01_u06b_ots",
+    "P-F-U04L2-OTS": "h3_context/probe/ep02_u04b_ots",
+    "P-G-U04L3-OTS": "h3_context/probe/ep02_u04c_ots",
+    "P-H-U04L4": "h3_context/probe/ep02_u04d",
+    "P-G2-U04L3-OTS-INDEP": "h3_context/probe/ep02_u04c_ots2",
+    "P-G3-U04L3-FRAG": "h3_context/probe/ep02_u04c_frag",
 }
 
 
@@ -321,6 +470,15 @@ def build(tag: str, spec) -> dict:
         wf["9101"]["inputs"]["clip_index"] = 1
     elif mode == "chain-b1r":
         wf["9101"]["inputs"]["latent_path"] = "h3_context/probe/ep01_u06a_r_00001.safetensors"
+        wf["9101"]["inputs"]["clip_index"] = 1
+    elif mode == "chain-pc":
+        wf["9101"]["inputs"]["latent_path"] = "h3_context/probe/ep02_u04a_ots_00001.safetensors"
+        wf["9101"]["inputs"]["clip_index"] = 1
+    elif mode == "chain-pf":
+        wf["9101"]["inputs"]["latent_path"] = "h3_context/probe/ep02_u04b_ots_00001.safetensors"
+        wf["9101"]["inputs"]["clip_index"] = 1
+    elif mode == "chain-pg":
+        wf["9101"]["inputs"]["latent_path"] = "h3_context/probe/ep02_u04c_ots_00001.safetensors"
         wf["9101"]["inputs"]["clip_index"] = 1
     # chain-prod keeps the production parent latent wiring untouched
 

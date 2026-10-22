@@ -56,6 +56,27 @@
 7. 阶段交接前先验会话存活（ping exec + `colab usage`），发现丢失立刻按 5、6
    处理并报告，不要对不存在的会话继续发命令。
 
+## 接管实测（2026-10-22，结论：第 5 条理论路径成立）
+
+用最便宜的 CPU 会话（0.08 CU/h）实测了一遍：备份名册 → 移走
+`sessions.json` 模拟丢失 → 服务端现拿 `runtimeProxyInfo` 重建
+`SessionState` → exec、stop。全程无报错，未用到 unassign 兜底：
+
+- 服务端返回的是**新 token**（指纹与旧的不同、长度 222、
+  `token_expires_in=3600`），URL 不变——接管必须现调
+  `list_assignments`，拿旧 token 拼不回去。
+- 重建后 exec 的 hostname 与丢失前一致，是同一台 VM；从丢失到
+  重建完成约 5 秒。拖久了 VM 可能已被回收，SOP 仍按限时处理、
+  失败即 unassign，不把本次结论外推到「丢很久还能接回」。
+- 本次 `kernel_id`/`session_id` 用的是备份值；真实事故无备份时
+  只能填 `None`（同 VM 新 kernel，文件在、内存状态丢），该分支
+  未单独实测。
+- 重建工具已固化为 `scripts/ops/colab_takeover_rebuild.py`
+  （支持 `--backup` / `--endpoint` / 唯一 assignment 三种匹配，
+  只打印 token 指纹）。全程挂 orphan guard，结束三次复查
+  Active=0、rate=0，余额 956.91 不变（实验消耗约 0.001 CU）。
+  完整实录：`runs/colab_takeover_test_20261022.md`。
+
 ## 本批账（潮缚 fx21）
 
 - 会话 `h3-wenxi-20261021-144455`：39/39 完成，GPU 纯渲染合计 125.5 分钟

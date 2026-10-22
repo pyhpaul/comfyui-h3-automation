@@ -1,0 +1,327 @@
+#!/usr/bin/env python3
+"""Host: one G4 session renders a lihun wenxi batch end to end.
+
+Single supervisor process per docs/ops/2026-10-21-colab-session-loss-
+and-guard.md: create session -> restore/install -> batch render in the
+guest -> archive every finished unit from Drive to Feiniu as it lands
+-> stop the session -> verify Active=0. An account-level orphan guard
+(colab_orphan_guard.sh, AUTO_UNASSIGN=1) watches the whole run; this
+process touches its heartbeat on every poll.
+
+Paid only with --execute-paid. Feiniu batch name is fixed at import
+time below (BATCH); episode/unit subfolders come from the manifest.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import subprocess
+import sys
+import tarfile
+import threading
+import time
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS = ROOT / "scripts" / "ops"
+sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(ROOT / "src"))
+
+from colab_h3_a100_ab_host import (  # noqa: E402
+    exec_file,
+    run,
+    snapshot,
+    stop_and_verify,
+)
+from colab_h3_g4_u02_host import STAGE_MARKERS  # noqa: E402
+from comfy_orch.feiniu_archive import archive_named_files  # noqa: E402
+
+CONFIG = Path.home() / ".config/rclone-h3/rclone.conf"
+BASE = ROOT / ".cache/colab_wenxi_setup"
+INPUT = ROOT / ".cache/lihun_v23_colab/input"
+VENDOR = BASE / "vendor"
+WENXI_INSTALL = SCRIPTS / "colab_h3_wenxi_install.py"
+BATCH_PHASE = SCRIPTS / "colab_h3_wenxi_batch_phase.py"
+REMOTE_BASE = "h3drive_h3:comfyui-h3-colab-dedicated/lihun-v23"
+FEINIU_BATCH = "离婚后（10.22）"
+HEARTBEAT = ROOT / "runs/lihun_v23_colab_heartbeat"
+
+
+def remote_bytes(path: str, timeout: int = 120) -> bytes:
+    for i in range(3):
+        try:
+            r = subprocess.run(["rclone", "cat", path, "--config", str(CONFIG)],
+                               capture_output=True, check=True, timeout=timeout)
+            return r.stdout
+        except Exception:
+            if i == 2:
+                raise
+            time.sleep(5)
+    raise RuntimeError("unreachable")
+
+
+def remote_json(path: str):
+    return json.loads(remote_bytes(path))
+
+
+def exec_retry(session, path, timeout, log, **env):
+    for attempt in range(2):
+        try:
+            exec_file(session, path, timeout, log, **env)
+            return
+        except Exception:
+            text = log.read_text(errors="replace") if log.is_file() else ""
+            if attempt == 0 and any(m in text for m in (
+                    "WebSocketConnectionClosedException", "SSLError",
+                    "Connection was lost", "SSLEOFError")):
+                time.sleep(10)
+                continue
+            raise
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--execute-paid", action="store_true")
+    ap.add_argument("--safety-hours", type=float, default=5.0)
+    args = ap.parse_args()
+
+    manifest = json.loads((INPUT / "units.json").read_text())
+    units = manifest["units"]
+    wheels = list(VENDOR.glob("sageattention-2.2.0-cp313-cp313-linux_x86_64.whl"))
+    required = [CONFIG, VENDOR / "colab-h3-rclone.gz",
+                SCRIPTS / "h3_g4_identity.py",
+                SCRIPTS / "colab_h3_preinstall_torch.py",
+                SCRIPTS / "colab_h3_restore.py",
+                SCRIPTS / "h3_g4_setup.py",
+                SCRIPTS / "h3_a100_phase_receipt.py",
+                SCRIPTS / "colab_h3_paid_watchdog.sh",
+                WENXI_INSTALL, BATCH_PHASE, INPUT / "units.json"]
+    missing = [str(p) for p in required if not p.is_file()]
+    if missing or len(wheels) != 1:
+        raise RuntimeError(f"missing inputs {missing} wheels={wheels}")
+    wheel = wheels[0]
+    wheel_sha = hashlib.sha256(wheel.read_bytes()).hexdigest()
+
+    session = "h3-lihun-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    remote = f"{REMOTE_BASE}/{session}"
+    if not args.execute_paid:
+        print(json.dumps({"ready": True, "paid_started": False,
+                          "session": session, "remote": remote,
+                          "units": len(units)}, ensure_ascii=False))
+        return 0
+
+    logdir = BASE / session
+    logdir.mkdir(parents=True, exist_ok=False)
+    snapshots = logdir / "cu-snapshots.jsonl"
+    before = snapshot(snapshots, "before_assignment")
+    sessions = run(["colab", "sessions"], logdir / "sessions-before.log",
+                   timeout=30)
+    if before["active"] or before["rate"] or "No active sessions" not in sessions:
+        raise RuntimeError("Colab not idle")
+    (logdir / "trial-inputs.json").write_text(json.dumps(
+        {"session": session, "remote": remote, "wheel_sha256": wheel_sha,
+         "before": before, "units": [u["tag"] for u in units]},
+        ensure_ascii=False, indent=2) + "\n")
+
+    created = False
+    watcher = None
+    guard = None
+    started = time.monotonic()
+    deadline = datetime.now(timezone.utc) + timedelta(hours=args.safety_hours)
+    archived: dict[str, str] = {}
+    failed_units: dict[str, str] = {}
+    stop_archive = threading.Event()
+
+    def touch_heartbeat():
+        HEARTBEAT.parent.mkdir(parents=True, exist_ok=True)
+        HEARTBEAT.write_text(datetime.now(timezone.utc).isoformat())
+
+    def archiver():
+        pending = {u["tag"]: u for u in units}
+        while not stop_archive.is_set() or pending:
+            touch_heartbeat()
+            for tag in list(pending):
+                unit = pending[tag]
+                try:
+                    receipt = remote_json(f"{remote}/{tag}/phase.json")
+                except Exception:
+                    continue
+                if receipt.get("state") == "failed":
+                    failed_units[tag] = str(receipt.get("error"))
+                    del pending[tag]
+                    print(f"ARCHIVE_SEEN_FAILED {tag}", flush=True)
+                    continue
+                if receipt.get("state") != "success":
+                    continue
+                dest = logdir / "units" / tag
+                dest.mkdir(parents=True, exist_ok=True)
+                run(["rclone", "copy", f"{remote}/{tag}", str(dest),
+                     "--config", str(CONFIG)],
+                    logdir / f"pull-{tag}.log", timeout=900)
+                payloads = {}
+                for name in (receipt["mp4_file"], receipt["latent_file"],
+                             "prompt_h3.txt", "run_meta.json"):
+                    payloads[name] = (dest / name).read_bytes()
+                remote_dir = archive_named_files(
+                    payloads, batch=FEINIU_BATCH, episode=unit["episode"],
+                    unit=f"{unit['unit']}-WENXI")
+                archived[tag] = remote_dir
+                del pending[tag]
+                print(f"FEINIU {tag} -> {remote_dir}", flush=True)
+            if stop_archive.is_set() and not pending:
+                break
+            if not stop_archive.is_set():
+                stop_archive.wait(45)
+            else:
+                break
+        print(f"ARCHIVER_DONE archived={len(archived)} "
+              f"failed={len(failed_units)}", flush=True)
+
+    arch_thread = None
+    try:
+        created = True
+        run(["colab", "new", "--session", session, "--gpu", "G4"],
+            logdir / "assignment.log", timeout=180)
+        assigned = snapshot(snapshots, "assigned")
+        if assigned["active"] != 1 or assigned["rate"] <= 0:
+            raise RuntimeError("G4 assignment not confirmed")
+        wl = (logdir / "watchdog.log").open("w")
+        try:
+            watcher = subprocess.Popen(
+                ["bash", str(SCRIPTS / "colab_h3_paid_watchdog.sh"),
+                 session, deadline.isoformat()],
+                stdin=subprocess.DEVNULL, stdout=wl,
+                stderr=subprocess.STDOUT, start_new_session=True)
+        finally:
+            wl.close()
+        touch_heartbeat()
+        guard = subprocess.Popen(
+            ["bash", str(SCRIPTS / "colab_orphan_guard.sh")],
+            env={"PATH": "/usr/bin:/bin:/usr/local/bin:"
+                          + str(Path.home() / ".local/bin"),
+                 "HEARTBEAT": str(HEARTBEAT), "AUTO_UNASSIGN": "1",
+                 "POLL_S": "60",
+                 "LOG": str(ROOT / "runs/colab_orphan_guard.log")},
+            stdin=subprocess.DEVNULL,
+            stdout=(logdir / "orphan-guard.log").open("w"),
+            stderr=subprocess.STDOUT, start_new_session=True)
+        print("LIHUN_SESSION", session, "remote", remote,
+              "rate", assigned["rate"], "units", len(units), flush=True)
+
+        uploads = [(CONFIG, "/content/rclone.conf"),
+                   (VENDOR / "colab-h3-rclone.gz", "/content/rclone.gz"),
+                   (SCRIPTS / "h3_a100_phase_receipt.py",
+                    "/content/h3_a100_phase_receipt.py"),
+                   (WENXI_INSTALL, "/content/wenxi_install.py"),
+                   (BATCH_PHASE, "/content/wenxi_batch_phase.py"),
+                   (wheel, "/content/" + wheel.name)]
+        for src, dst in uploads:
+            run(["colab", "upload", "--session", session, str(src), dst],
+                logdir / ("upload-" + src.name + ".log"), timeout=300)
+        bundle = logdir / "lihun_input.tar.gz"
+        with tarfile.open(bundle, "w:gz") as tar:
+            for p in sorted(INPUT.rglob("*")):
+                if p.is_file():
+                    tar.add(p, arcname=str(p.relative_to(INPUT)))
+        last = None
+        for attempt in range(3):
+            try:
+                run(["colab", "upload", "--session", session, str(bundle),
+                     "/content/lihun_input.tar.gz"],
+                    logdir / f"upload-bundle-{attempt}.log", timeout=600)
+                last = None
+                break
+            except Exception as e:
+                last = e
+                time.sleep(5)
+        if last is not None:
+            raise last
+        mover = logdir / "mover.py"
+        mover.write_text(
+            "import tarfile,pathlib\n"
+            "dst=pathlib.Path('/content/wenxi_setup/input'); "
+            "dst.mkdir(parents=True,exist_ok=True)\n"
+            "tarfile.open('/content/lihun_input.tar.gz').extractall(dst)\n"
+            "print('MOVED',len(list(dst.rglob('*'))))\n")
+        exec_retry(session, mover, 60, logdir / "mover.log")
+
+        stages = (("identity", SCRIPTS / "h3_g4_identity.py", 60, {}),
+                  ("preinstall", SCRIPTS / "colab_h3_preinstall_torch.py", 720, {}),
+                  ("restore", SCRIPTS / "colab_h3_restore.py", 2400, {}),
+                  ("setup", SCRIPTS / "h3_g4_setup.py", 900,
+                   {"H3_G4_WHEEL_SHA256": wheel_sha}))
+        for name, path, timeout, env in stages:
+            began = time.monotonic()
+            exec_retry(session, path, timeout, logdir / f"{name}.log", **env)
+            if STAGE_MARKERS[name] not in (logdir / f"{name}.log").read_text(
+                    errors="replace"):
+                raise RuntimeError(f"{name} no marker")
+            st = snapshot(snapshots, name)
+            (logdir / "stage-timing.jsonl").open("a").write(json.dumps(
+                {"stage": name, "elapsed_s": round(time.monotonic() - began, 2),
+                 "rate": st["rate"], "balance": st["balance"]}) + "\n")
+            print(f"STAGE_OK {name}", flush=True)
+
+        began = time.monotonic()
+        exec_retry(session, WENXI_INSTALL, 900, logdir / "wenxi_install.log")
+        txt = (logdir / "wenxi_install.log").read_text(errors="replace")
+        if "WENXI_NATIVE_ALLOCATOR_OK" not in txt:
+            raise RuntimeError("native allocator not verified")
+        snapshot(snapshots, "wenxi_install")
+        print("STAGE_OK wenxi_install", flush=True)
+
+        arch_thread = threading.Thread(target=archiver, daemon=True)
+        arch_thread.start()
+        began = time.monotonic()
+        exec_file(session, BATCH_PHASE, 14400, logdir / "batch_phase.log",
+                  H3_WENXI_REMOTE=remote)
+        batch_txt = (logdir / "batch_phase.log").read_text(errors="replace")
+        print("BATCH_EXEC_ENDED",
+              f"elapsed={round(time.monotonic() - began, 1)}", flush=True)
+        if "BATCH_PHASE_DONE" not in batch_txt:
+            raise RuntimeError("batch phase ended without BATCH_PHASE_DONE")
+        stop_archive.set()
+        arch_thread.join(timeout=1800)
+        snapshot(snapshots, "after_batch")
+        if len(archived) != len(units) or failed_units:
+            raise RuntimeError(
+                f"archive incomplete archived={len(archived)}/{len(units)} "
+                f"failed={failed_units}")
+        print(f"LIHUN_BATCH_DONE units={len(archived)} "
+              f"batch={FEINIU_BATCH}", flush=True)
+        (logdir / "archived.json").write_text(json.dumps(
+            {"session": session, "feiniu_batch": FEINIU_BATCH,
+             "archived": archived}, ensure_ascii=False, indent=2) + "\n")
+        return 0
+    finally:
+        stop_archive.set()
+        if arch_thread is not None:
+            arch_thread.join(timeout=120)
+        if created:
+            try:
+                stop_and_verify(session, logdir, watcher)
+            finally:
+                try:
+                    run(["colab", "log", "--session", session, "--output",
+                         str(logdir / "colab-session.jsonl")], timeout=120)
+                except Exception as e:
+                    print("SESSION_LOG_UNAVAILABLE", e, flush=True)
+                try:
+                    run(["rclone", "copy", remote, str(logdir / "evidence"),
+                         "--config", str(CONFIG)], timeout=600)
+                except Exception as e:
+                    print("EVIDENCE_PULL_UNAVAILABLE", e, flush=True)
+                (logdir / "host-wall-s.txt").write_text(
+                    f"{round(time.monotonic() - started, 2)}\n")
+                after = snapshot(snapshots, "after_stop")
+                print(f"HOST_DONE balance={after['balance']} "
+                      f"active={after['active']} rate={after['rate']}",
+                      flush=True)
+        if guard is not None and guard.poll() is None:
+            guard.terminate()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

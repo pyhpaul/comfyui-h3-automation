@@ -1,0 +1,57 @@
+{
+  "schema": "episode-post-assets/v1",
+  "ownership": "Project-owned archive; public approved preview, private original inputs",
+  "assets": [
+    {
+      "id": "bloom-hold-suspense-v1-preview",
+      "visibility": "public",
+      "path": "assets/episode_post/endings/bloom-hold-suspense/v1/preview.mp4",
+      "sha256": "e9dc2f9868a8ead86986bacb1b11a014dee6c3371009a9831588e1b442660e55",
+      "bytes": 2511580,
+      "credits": "assets/episode_post/endings/bloom-hold-suspense/v1/MUSIC_CREDITS.txt",
+      "review": "assets/episode_post/endings/bloom-hold-suspense/v1/REVIEW.md",
+      "ending_preset_id": "bloom-hold-suspense",
+      "ending_preset_version": 1,
+      "status": "USER_ACCEPTED_CONCEPT",
+      "frames": 144,
+      "fps": 24,
+      "seconds": 6
+    },
+    {
+      "id": "bloom-preview-private-base",
+      "visibility": "local",
+      "path": "assets/episode_post/local/endings/bloom-hold-suspense/v1/base-bloom.mp4",
+      "sha256": "a884fd838940f24c584927f1d13baca8d65842146693e7e0a356fef54ec5366a"
+    },
+    {
+      "id": "lihun-v21-ep01-u01",
+      "visibility": "local",
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U01-WENXI/EP01-U01-lihun-wenxi_00001-audio.mp4",
+      "sha256": "d203606e77878b5bf4e29fd641dbf587db0a8cf56cc375b865d7fe86c791661a"
+    },
+    {
+      "id": "lihun-v21-ep01-u02",
+      "visibility": "local",
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U02-WENXI/EP01-U02-lihun-wenxi_00001-audio.mp4",
+      "sha256": "e6a1b4ac7c001abab9ea7e9ea7a37a638697a1fd2e87901e00631a2a6f00c699"
+    },
+    {
+      "id": "lihun-v21-ep01-u03",
+      "visibility": "local",
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U03-WENXI/EP01-U03-lihun-wenxi_00001-audio.mp4",
+      "sha256": "33235d473fdc50b9aa38e022add5489116c83aa4e848934de3d4809730c76709"
+    },
+    {
+      "id": "lihun-v21-ep01-u04",
+      "visibility": "local",
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U04-WENXI/EP01-U04-lihun-wenxi_00001-audio.mp4",
+      "sha256": "54ebc96b6aa86521d9663563866a41f625f94362bcba7ab2208c1bbceb2776c8"
+    },
+    {
+      "id": "undertow-private-source",
+      "visibility": "local",
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/music/sb_undertow.mp3",
+      "sha256": "4652007dad67295f1f5c87c8cbc8e2df1a530e7671266a29f693a084375d3910"
+    }
+  ]
+}

@@ -161,8 +161,18 @@ def main() -> int:
     else:
         logdir.mkdir(parents=True, exist_ok=False)
         before = snapshot(snapshots, "before_assignment")
-        sessions = run(["colab", "sessions"], logdir / "sessions-before.log",
-                       timeout=30)
+        sessions = None
+        for attempt in range(3):
+            try:
+                sessions = run(["colab", "sessions"],
+                               logdir / "sessions-before.log", timeout=120)
+                break
+            except Exception as exc:
+                print(f"SESSIONS_RETRY attempt={attempt} "
+                      f"{type(exc).__name__}: {exc}", flush=True)
+                time.sleep(5)
+        if sessions is None:
+            raise RuntimeError("colab sessions unavailable after retries")
         if not args.allow_concurrent and (
                 before["active"] or before["rate"]
                 or "No active sessions" not in sessions):

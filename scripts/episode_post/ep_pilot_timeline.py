@@ -79,14 +79,16 @@ def _number_words(value: int) -> list[str]:
 def tokens(text: str, aliases: dict[str, str]) -> list[str]:
     # ASR often renders spoken numbers as digits ("35") while scripts spell
     # them out ("Thirty-five"); expand digit tokens so both sides compare
-    # as the same word sequence. Aliases still win first.
+    # as the same word sequence. Aliases still win first. An alias value
+    # may itself be several tokens ("noah" -> "no a") for names ASR splits
+    # into separate words; it then expands to that sequence.
     result: list[str] = []
     for token in re.findall(r"[a-z0-9]+(?:'[a-z]+)?", text.lower()):
         token = aliases.get(token, token)
         if token.isdigit() and int(token) < 100:
             result.extend(_number_words(int(token)))
         else:
-            result.append(token)
+            result.extend(token.split())
     return result
 
 

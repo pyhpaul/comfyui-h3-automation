@@ -390,6 +390,39 @@ PROMPT_G3 = f"""【H3 提示词】
 【交出状态】Wade Mercer 站在舱门口面南，左手向南伸出、掌心朝上悬在半空，嘴唇闭合，目光钉在 Cole Mercer 怀里的金条上，右手仍按着西侧门框，身后舱门和甲板空无一人；Cole Mercer 只以前景的后脑一角、右肩和抱金条的手臂入画，背对机位；海风大，浪拍船身。
 """
 
+PROMPT_PROD3 = f"""【H3 提示词】
+
+【参考设定】
+{COLE.format(n=1)}
+{WADE.format(n=2)}
+{SCENE.format(n=3)}
+{MASK.format(n=4)}
+{GOLD.format(n=5)}
+{TANK.format(n=6)}
+
+{MOOD}
+
+{RULES}
+本条共三个镜头，镜头之间硬切。每个镜头里只有点名的说话人正脸入画说话；另一人只以前景碎片（后脑一角、肩背、手臂）入画，脸和嘴完全不在画框内，不转头、不回头。画面里每个人只出现一次，不出现分身或重复人物。
+
+【空间／朝向硬锁】0 秒：承接 U03 尾态。Cole Mercer 站在驾驶舱门口正南约半臂远，身体面北，右臂箍着六根金条贴在胸前，全面罩挂在胸前，气瓶背在背上；Wade Mercer 站在舱门口，身体面南，右手按在西侧门框上。两人南北对峙，Cole 在南、Wade 在北，全条不换位。
+
+【画面内容】
+场景：渔船甲板
+人物：Cole Mercer［潜水时期］、Wade Mercer
+环境描述：白天，阴天，低云压着铁灰色的海面，海风很大，天色发暗
+
+▲镜头一（0–5 秒），过肩镜头，中近景［越过 Cole Mercer 右肩拍 Wade Mercer 正面］。前景只有 Cole Mercer 的后脑一角、右肩和上背失焦入画，他身体其余部分在画框外，脸和嘴不可见、不开口；Wade Mercer 在画面中央，喉头滚了一下，嘴角扯出一点硬邦邦的弧度，口型同步开口，音量适中、语速平稳、语气带着自以为占理的轻慢地说：（ You're alive, aren't you? ） Wade Mercer说完，嘴唇合上，那点弧度还挂在嘴角。
+▲镜头二（5–10 秒），过肩反打镜头，近景［越过 Wade Mercer 左肩拍 Cole Mercer 正面］。硬切。前景只有 Wade Mercer 的后脑一角、左肩和上背失焦入画，他身体其余部分在画框外，脸和嘴不可见、不开口；Cole Mercer 在画面中央，右臂稳稳箍着怀里的六根金条，眼睛一动不动，胸口慢慢鼓起一口气，口型同步开口，音量很低、语速很慢、语气像从牙缝里挤出来地说：（ No thanks to you. ） Cole Mercer说完，嘴唇合上，眼神冷得没有一点温度。
+▲镜头三（10–15 秒），过肩镜头，中近景［越过 Cole Mercer 右肩拍 Wade Mercer 正面］。硬切。前景只有 Cole Mercer 的后脑一角、右肩和抱着金条的右臂下缘失焦入画，金条在他臂弯里只露出一排暗金色的顶端，他的脸和嘴不可见、不开口，Wade Mercer 身后是空的舱门和甲板，不站任何人；Wade Mercer 在画面中央，视线越过 Cole Mercer 的肩落到前景下缘的金条上，瞳孔收紧，左手向南伸出、掌心朝上悬在半空，口型同步开口，音量短促、语速很快、语气不耐地说：（ Enough. Where's the gold? ） Wade Mercer说完，嘴唇合上，伸出的手掌还悬在半空，目光仍钉在金条上。
+
+音频：环境音［海风声、浪拍船身的闷响］+ 人物音［Wade Mercer轻慢的反问、Cole Mercer低沉的回答、Wade Mercer短促的催问］
+
+【H3 latent 接入文字】承接 U03：Cole 站在驾驶舱门口正南约半臂远的甲板中线上，面北，右臂箍着六根金条贴在湿透的胸口，左手垂着，全面罩挂在胸前，眼神沉着，盯着 Wade；Wade 在舱门口面南，右手按在西侧门框上，下巴绷紧，胸口起伏。0.00–1.00 秒从 U03 尾部最后 1 秒真实原始 H3 AV latent 重生成，保留 24 帧重叠，不自动裁切、合片或淡化；首秒保持人物身份、服装、站位、朝向、视线、持物和现场光声。之后进入本条镜头一。
+
+【交出状态】Wade Mercer 站在舱门口面南，左手向南伸出、掌心朝上悬在半空，嘴唇闭合，目光钉在 Cole Mercer 怀里的金条上，右手仍按着西侧门框；Cole Mercer 在其正南面北，右臂箍着六根金条贴在胸前，全面罩挂在胸前，嘴唇闭合，眼神冷；海风大，浪拍船身，发动机低速运转。
+"""
+
 # tag -> (source unit, kept ref indexes in source order, prompt, length,
 #         seed, mode)  mode: indep | chain-prod | chain-probe | chain-b1r
 #         | chain-pc | chain-pf | chain-pg
@@ -406,6 +439,7 @@ PROBES = {
     "P-H-U04L4": ("EP02-U04", [1, 0, 2, 4], PROMPT_H, 168, 3091999188883044845, "chain-pg"),
     "P-G2-U04L3-OTS-INDEP": ("EP02-U04", [1, 0, 2, 4], PROMPT_G2, 120, 3091999188883044845, "indep"),
     "P-G3-U04L3-FRAG": ("EP02-U04", [1, 0, 2, 4], PROMPT_G3, 120, 3091999188883044845, "indep"),
+    "PROD3-U04-3SHOT": ("EP02-U04", [0, 1, 2, 3, 4, 5], PROMPT_PROD3, 360, 3091999188883044845, "chain-prod"),
 }
 SAVE_PREFIX = {
     "P-A-U04L1": "h3_context/probe/ep02_u04a",
@@ -420,6 +454,7 @@ SAVE_PREFIX = {
     "P-H-U04L4": "h3_context/probe/ep02_u04d",
     "P-G2-U04L3-OTS-INDEP": "h3_context/probe/ep02_u04c_ots2",
     "P-G3-U04L3-FRAG": "h3_context/probe/ep02_u04c_frag",
+    "PROD3-U04-3SHOT": "h3_context/probe/ep02_u04_3shot",
 }
 
 

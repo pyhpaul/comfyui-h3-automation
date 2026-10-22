@@ -100,8 +100,8 @@ def render_audio(config: dict, preset: dict, picture: Path, layout: dict, cues: 
     sound_qc["scope"] = "SFX residual before whole-episode normalization"
     save(out / "sfx_timing_qc.json", sound_qc)
     normalized = out / "work/normalized.wav"
-    measurement = loudness(mix, out / "logs/final-first-pass.log", true_peak_target=-2.0)
-    normalize_audio(mix, normalized, measurement, out / "logs/final-second-pass.log", true_peak_target=-2.0)
+    measurement = loudness(mix, out / "logs/final-first-pass.log", true_peak_target=-2.5)
+    normalize_audio(mix, normalized, measurement, out / "logs/final-second-pass.log", true_peak_target=-2.5)
     return normalized, {"music": music_qc, "sfx": sound_qc, "sfx_cues": sound_cues}
 
 

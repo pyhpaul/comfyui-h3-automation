@@ -265,7 +265,11 @@ def main() -> int:
                             f"colab_h3_paid_watchdog.sh {session}"],
                            check=False)
             assigned = snapshot(snapshots, "adopted")
-            if assigned["active"] != 1:
+            if args.allow_concurrent:
+                confirmed = assigned["active"] >= 1
+            else:
+                confirmed = assigned["active"] == 1
+            if not confirmed:
                 raise RuntimeError("adopted session is not active")
             print(f"ADOPTED {session} rate={assigned['rate']}", flush=True)
         else:

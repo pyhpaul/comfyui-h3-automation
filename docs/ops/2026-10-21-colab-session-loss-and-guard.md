@@ -165,6 +165,39 @@ proxy token 只有 3600 秒寿命，CLI 的 keep-alive 守护只 ping 账户端�
 断网或两者都退出，VM 侧没有已知的自续租通道，仍会在宽限后被回收；
 长批次必须同时盯 keeper 与 guardian 日志新鲜度，而不只是盯监督进程。
 
+## 双线衔接卡死（2026-10-22，离婚后 v23）
+
+EP01–EP10 全部落地后约 35 分钟没有双线出片，只有 B 线在产。两层根因：
+
+1. **旧批次 exec 客户端挂死**：A 线最后一批的 guest 其实早已把
+   EP06–EP10 全部渲染并发布 Drive 回执、宿主也已逐条归档飞牛，但
+   `colab exec` 客户端在等 reply 处挂死 69 分钟不返回。宿主主线程
+   卡在 `exec_file` 上不退出，等待宿主退出才喂下一包的 chain 脚本
+   就永远等不到触发点；其间 A 机只计费、不产新条。
+2. **领养检查与双机并发不兼容**：chain 拉起的新宿主在 adopt 分支
+   写死 `active == 1` 才算领养成功；双机同时在线时
+   `Active assignments: 2`，检查必然失败，宿主秒退（traceback 后
+   仍打印 `SESSION_KEPT`，chain 记到的退出码还是 0，容易误判为
+   正常结束）。
+
+处置（已验证有效）：确认该批所有单元回执都已归档后，只
+`kill -TERM` 挂死的 exec 客户端——guest 侧工作已完成，杀客户端
+不丢任何成片；宿主随即打印 `BATCH_EXEC_ERROR` 并靠
+`wait_for_bundle` 以既有回执判定批次完成、正常收尾退出，keeper
+与 guardian 不受影响。随后给 adopt 分支加 `--allow-concurrent`
+语义（并发时 `active >= 1` 即确认领养），手动以
+`--adopt-session … --allow-concurrent --extra-input EP11-15
+--extra-input EP16-20` 拉起新宿主，EP11-U01 随后入队，双线恢复。
+
+防复发口径：
+
+- 双机时代的 chain/领养命令**必须带 `--allow-concurrent`**，无论
+  是建新会话还是领养旧会话；`runs/` 下的临时 chain 脚本是本地
+  账本（gitignore），写新 chain 时照此口径，不要漏旗标。
+- 批次全部回执已归档、但宿主超过约 30 分钟仍卡在单个 exec
+  客户端不退出时，按上面处置杀客户端让宿主按回执收尾；不要杀
+  宿主主进程，更不要停会话（keeper/guardian 还在保活）。
+
 ## 本批账（潮缚 fx21）
 
 - 会话 `h3-wenxi-20261021-144455`：39/39 完成，GPU 纯渲染合计 125.5 分钟

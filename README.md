@@ -121,6 +121,9 @@ python scripts/audit_pack_prompts.py
 | [docs/ops/2026-09-09-gpu-comfy-api-archive.md](docs/ops/2026-09-09-gpu-comfy-api-archive.md) | 租卡 / API 归档 |
 | [scripts/ops/](scripts/ops/) | 租卡启停 + vm122 转发（canonical H3） |
 | `.cursor/skills/comfy-h3-*` | Agent 分阶段 skills |
+| [scripts/episode_post/](scripts/episode_post/) | EP 后期试片正式代码、复现与验收 |
+| [docs/ending-presets/](docs/ending-presets/) | 可选 ending 方案库 |
+| [assets/episode_post/](assets/episode_post/) | 认可样片、授权与项目资产清单 |
 
 ## 仓库约定
 

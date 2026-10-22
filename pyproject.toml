@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-httpx>=0.30", "aiohttp>=3.10"]
+dev = ["pytest>=8.0", "pytest-httpx>=0.30", "aiohttp>=3.10", "numpy==2.4.6"]
 ops = ["aiohttp>=3.10"]
 
 [project.scripts]

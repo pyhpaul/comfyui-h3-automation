@@ -51,17 +51,13 @@ FEINIU_BATCH = "离婚后（10.22）"
 HEARTBEAT = ROOT / "runs/lihun_v23_colab_heartbeat"
 
 
-def remote_bytes(path: str, timeout: int = 120) -> bytes:
-    for i in range(3):
-        try:
-            r = subprocess.run(["rclone", "cat", path, "--config", str(CONFIG)],
-                               capture_output=True, check=True, timeout=timeout)
-            return r.stdout
-        except Exception:
-            if i == 2:
-                raise
-            time.sleep(5)
-    raise RuntimeError("unreachable")
+def remote_bytes(path: str, timeout: int = 60) -> bytes:
+    # Single attempt: the archiver polls every pending tag each round,
+    # so a missing receipt must fail fast (the next round retries).
+    # Retrying here made one poll round take ~15 minutes.
+    r = subprocess.run(["rclone", "cat", path, "--config", str(CONFIG)],
+                       capture_output=True, check=True, timeout=timeout)
+    return r.stdout
 
 
 def remote_json(path: str):

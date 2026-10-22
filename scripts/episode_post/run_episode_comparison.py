@@ -53,7 +53,10 @@ def render_picture(config: dict, preset: dict, clips: list[Clip], out: Path) -> 
         source = Path(config["sources"][clip.unit]["path"])
         duration = (clip.out_frame - clip.in_frame) / 24
         level = loudness(source, out / "logs" / f"level-{i}.log", clip.in_frame / 24, duration)
-        gain = round(max(-6, min(6, -18 - float(level["input_i"]))), 3)
+        # Integrated-loudness staging alone can push a quiet unit's transient
+        # (door slam, plate clatter) into clipping; keep >=1 dB peak headroom.
+        gain = round(max(-6, min(6, -18 - float(level["input_i"]),
+                                 -1.0 - float(level["input_tp"]))), 3)
         part = out / "work" / f"part-{i}.mkv"
         if i == len(clips) - 1:
             render_bloom_segment(source, part, clip, gain, preset, out / "logs/ending.log")
@@ -64,7 +67,8 @@ def render_picture(config: dict, preset: dict, clips: list[Clip], out: Path) -> 
         stages.append({"unit": clip.unit, "input_lufs": level["input_i"], "gain_db": gain})
     layout = ending_layout(sum(c.out_frame - c.in_frame for c in clips), preset)
     card = out / "work/endcard.mkv"
-    render_endcard(card, layout["card_frames"], out / "logs/card.log", False)
+    render_endcard(card, layout["card_frames"], out / "logs/card.log", False,
+                   config["episode"])
     picture = out / "work/picture.mkv"
     concatenate(parts + [card], picture, out / "logs/concat.log", layout["total_frames"])
     return picture, stages, layout

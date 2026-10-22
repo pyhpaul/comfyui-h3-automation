@@ -27,6 +27,23 @@
 - `jobs/ep_units` 与 `outputs` **全部清空**（再清 5.5G）。删前已确认本地
   无 runner 进程在读 job（v3 处于暂停、两隧道队列无本地驱动）。
 
+## 第三轮（2026-10-22，说话人锁定测试收尾，共约 12G）
+
+- `.cache/chaofu_probe`（475M）、`.cache/chaofu_fx21_check`（1.1G）、
+  `.cache/chaofu_fx21_colab`（1.9G）：串嘴调查与探针的过程产物，
+  候选与结论已在飞牛待审区、总记录已归档，整目录删。
+- `jobs/` 全部清空（5.8G → 4K）：518 个单元 job（继母 406、寿命掮客 54、
+  潮缚 fx21 39、潮缚 v2 19）与 wenwu/facerefine 测试工作区。用户确认
+  继母、寿命掮客后续都重拆重做，本地 job 无保留价值。
+- `.cache/` 其余全部清空（3.0G → 4K）：`wenxi_models`（2.0G，模型真本在
+  Drive 模型树）、`chaofu_fix1_verify`（634M，成片在飞牛 archive）、
+  `colab_wenxi_setup`（289M）、`orientation_ab`（67M，10-21 保留的它，
+  其脚本集已回收进 `scripts/ops/`，本轮清）、`chaofu_redo_packs`（41M）。
+- 规则已补两条：模型暂存、Colab 会话工作目录明确按任务级缓存清
+  （见 `.cursor/rules/h3-local-disk-cleanup.mdc`）。
+- 结果：仓库共 1.8G（`.worktrees` 的 venv 1.7G + `runs/` 88M），
+  磁盘 111G/1007G。
+
 ## 保留物
 
 - `runs/`（86M）：运行日志、审核 JSON、对白报告等账本。

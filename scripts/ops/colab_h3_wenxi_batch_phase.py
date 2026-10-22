@@ -14,6 +14,7 @@ recorded in its phase.json (state=failed) and the batch continues.
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -98,6 +99,65 @@ def heartbeat(tag):
         print(f"HEARTBEAT_FAIL {exc}", flush=True)
 
 
+DONE_REMOTES = [r.strip() for r in
+                os.environ.get("H3_DONE_REMOTES", "").split(",") if r.strip()]
+
+
+def remote_receipt(remote, tag):
+    try:
+        result = subprocess.run(
+            [str(RCLONE), "--config", str(RCLONE_CONF), "cat",
+             f"{remote}/{tag}/phase.json"],
+            capture_output=True, text=True, timeout=300)
+        if result.returncode != 0:
+            return None
+        receipt = json.loads(result.stdout)
+        return receipt if receipt.get("state") == "success" else None
+    except Exception:
+        return None
+
+
+def done_elsewhere(tag):
+    for remote in dict.fromkeys([REMOTE, *DONE_REMOTES]):
+        receipt = remote_receipt(remote, tag)
+        if receipt is not None:
+            return remote, receipt
+    return None
+
+
+COMFY_OUTPUT = Path("/content/h3-rental/ComfyUI/output")
+
+
+def seed_parent_latent(parent_rel):
+    """Fetch a chain parent's latent from a previous session's Drive
+    receipt when this VM never rendered the parent (it was skipped).
+    Returns True when the file is in place afterwards."""
+    target = COMFY_OUTPUT / parent_rel
+    if target.is_file():
+        return True
+    m = re.search(r"(ep\d+)_u(\d+)", Path(parent_rel).name.lower())
+    if not m:
+        return False
+    parent_tag = f"{m.group(1).upper()}-U{m.group(2)}"
+    for remote in dict.fromkeys([REMOTE, *DONE_REMOTES]):
+        receipt = remote_receipt(remote, parent_tag)
+        if not receipt or not receipt.get("latent_file"):
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        result = subprocess.run(
+            [str(RCLONE), "--config", str(RCLONE_CONF), "copyto",
+             f"{remote}/{parent_tag}/{receipt['latent_file']}",
+             str(target)],
+            capture_output=True, text=True, timeout=1200)
+        if result.returncode == 0 and target.is_file():
+            print(f"SEEDED_PARENT {parent_tag} -> {parent_rel} "
+                  f"from {remote}", flush=True)
+            return True
+        print(f"PARENT_SEED_FAIL {parent_tag} from {remote}: "
+              f"{result.stderr[-500:]}", flush=True)
+    return False
+
+
 def run_unit(unit, uploaded):
     tag = unit["tag"]
     outdir = OUTPUT / tag
@@ -110,6 +170,39 @@ def run_unit(unit, uploaded):
                 return True
         except Exception:
             pass
+    prior = done_elsewhere(tag)
+    if prior is not None:
+        prior_remote, prior_receipt = prior
+        if prior_remote == REMOTE:
+            phase_path.write_text(
+                json.dumps(prior_receipt, indent=2) + "\n", encoding="utf-8")
+            print(f"SKIP done-current-remote {tag}", flush=True)
+            return True
+        receipt = {
+            "tag": tag,
+            "episode": unit["episode"],
+            "unit": unit["unit"],
+            "seed": unit["seed"],
+            "started_at_utc": prior_receipt.get("started_at_utc", now()),
+            "finished_at_utc": now(),
+            "state": "success",
+            "skipped_done_remote": prior_remote,
+            "mp4_file": prior_receipt.get("mp4_file"),
+            "latent_file": prior_receipt.get("latent_file"),
+        }
+        phase_path.write_text(json.dumps(receipt, indent=2) + "\n",
+                              encoding="utf-8")
+        result = subprocess.run(
+            [str(RCLONE), "--config", str(RCLONE_CONF), "copyto",
+             str(phase_path), f"{REMOTE}/{tag}/phase.json"],
+            capture_output=True, text=True, timeout=300)
+        if result.returncode != 0:
+            print(f"SKIP_PUBLISH_FAIL {tag} {result.stderr[-1000:]}",
+                  flush=True)
+            return False
+        print(f"SKIP done-remote {tag} from {prior_remote}", flush=True)
+        heartbeat(tag)
+        return True
     started = time.monotonic()
     receipt = {"tag": tag, "episode": unit["episode"], "unit": unit["unit"],
                "seed": unit["seed"], "started_at_utc": now(),
@@ -119,6 +212,8 @@ def run_unit(unit, uploaded):
             if blob not in uploaded:
                 uploaded[blob] = upload_image(INPUT / "assets" / blob)
                 print("UPLOADED", blob, uploaded[blob], flush=True)
+        if unit.get("parent_latent"):
+            seed_parent_latent(unit["parent_latent"])
         wf = json.loads((INPUT / unit["workflow"]).read_text())
         wf = replace_blobs(wf, uploaded)
         resp = http_json("/prompt", {"prompt": wf, "client_id": uuid.uuid4().hex})

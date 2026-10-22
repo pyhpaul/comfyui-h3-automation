@@ -29,10 +29,16 @@
 
 ## 现行口径（后续 Colab 生产必须遵守）
 
-1. **单一监督进程**：建会话 → 装环境 → 全部生产 → 验收 → 停机，在同一个
-   长命进程内完成，中途不退出；每 2~3 分钟一次轻量 exec 心跳由它兼任。
-2. **任务队列放 Drive，VM 自主领活**：远端循环读 Drive 任务清单、写回执；
-   本地只监控与归档。本地进程死掉不影响 VM 生产与产物。
+1. **单一监督进程 + 独立保活进程**：建会话 → 装环境 → 全部生产 → 验收 →
+   停机仍由同一个长命监督进程负责；但每 2 分钟一次轻量 exec 保活必须由
+   独立进程组中的 keeper 承担，不能由监督进程兼任。监督进程崩溃、退出或
+   卡死时，keeper 仍须继续连接 VM，直到收到显式 stop flag 或服务端确认
+   assignment 已消失。
+2. **VM 侧批量自主渲染 + Drive 回执续跑**：任务清单随输入包上传，VM 侧
+   batch 逐条渲染并在进入下一条前把成品与 `phase.json` 回执发布到 Drive；
+   本地只轮询回执归档。新 VM 必须按旧 Drive remote 的 success 回执跳过
+   已完成单元，不能只信本地 phase 文件。监督进程死掉不应丢已发布产物，
+   但 VM 本体仍只能靠独立 keeper 保活。
 3. **干完即停**：不留“待命”会话。修复/后续渲染并进同一次监督运行，
    或另开新会话。
 4. **孤儿机兜底**：任何 Colab 生产必须同时挂
@@ -76,6 +82,67 @@
   只打印 token 指纹）。全程挂 orphan guard，结束三次复查
   Active=0、rate=0，余额 956.91 不变（实验消耗约 0.001 CU）。
   完整实录：`docs/ops/2026-10-22-colab-takeover-test.md`（本地账本 `runs/colab_takeover_test_20261022.md` 同源）。
+
+## 二次事故与保活结论（2026-10-22，离婚后 v23）
+
+同一死法在离婚后 EP01–EP10 生产中再次出现，时间线把机制钉死了：
+
+- 09:45 UTC 建会话 `h3-lihun-20261022-094504`，环境与文戏安装完成。
+- 09:54 原宿主被人为停掉后，只剩本地心跳文件写入进程与 orphan guard；
+  09:58 领养宿主接上，两批共 50 条。
+- 10:04 领养宿主因第二批 mover 的 exec 排在忙碌内核后 180 秒超时而崩溃
+  （当时 `exec_retry` 不重试 `TimeoutError`）。它退出前打印的
+  `SESSION_KEPT` 只证明那一刻 assignment 还 active，不代表之后有人保活。
+- 宿主死后 guest 仍在 VM 内核里继续渲染并向 Drive 发回执：EP02-U01
+  10:12、U03 10:18、U04 10:21 先后落地。这证明已发出的内核执行在客户端
+  断开后还能续跑一阵，但 Drive 写入不是 Google 运行时管理器的保活活动。
+- 约 10:22 VM 被回收；10:23:26 orphan guard 看到 Active=0 后退出。
+  此时 `sessions.json` 已是 `{}`，本地没有任何活着的 Colab
+  keep-alive/exec 进程。余额停在 951.81，Active=0、rate=0。
+- 抢救结果：EP01-U01～U04、EP02-U01～U04 共 8 条已从 Drive 归档飞牛
+  `archive/离婚后（10.22）/`，逐条对白 QC 均 PASS；只丢当时在途的一条。
+
+为什么“有心跳/有 guard”仍保不住：
+
+- 本地心跳文件只给本地 orphan guard 看，Google 看不见；guard 与付费
+  watchdog 都只轮询计费/执行停机，物理上不能给 VM 续租。
+- Colab 的有效保活是“本地仍有活着的 CLI 进程连着该 runtime”。fx21
+  生产那台能活完全程，是每约 4 分钟一次 exec 无意中充当了心跳。
+- 一条挂几十个单元的长 exec 也不是可靠 lifeline：它会提前返回、超时，
+  或客户端进程先死；服务端内核虽继续跑，但最后一个本地连接消失后，
+  约 15–20 分钟宽限结束 VM 就被回收。
+- 所以监督进程是生命周期单点时，保活不能再与它共生死；
+  `SESSION_KEPT` 更不能当作“之后会一直活着”的证据。
+
+已固化的根治实现（2026-10-22）：
+
+1. `scripts/ops/colab_heartbeat_keeper.sh` +
+   `scripts/ops/colab_keepalive_probe.py`：宿主建会话后立即以独立进程组
+   启动 keeper，每 120 秒一次轻量 exec；只在显式 stop file 出现或
+   `colab usage` 确认 Active=0 时退出。probe 排在忙碌内核后面超过
+   CLI 自身 timeout 不算会话丢失，只要 assignment 仍 active 就继续
+   重试，并以本地 `timeout 150` 给每次尝试加硬上限、尝试开始即写日志。
+   验收看
+   `runs/colab_heartbeat_keeper.log` 的新鲜 `keeper: ok` 时间戳，
+   不能只看 Active=1。
+2. `scripts/ops/colab_h3_wenxi_batch_phase.py`：guest 逐条发布 Drive
+   回执；新 VM 通过 `H3_DONE_REMOTES` 查旧 session remote 的 success
+   回执，已完成单元只向新 remote 发 `skipped_done_remote` 标记，
+   不重渲、不重复拉文件。
+3. `scripts/ops/colab_h3_lihun_batch_host.py`：宿主负责启动 keeper；
+   mover/stage 的 `TimeoutError` 纳入重试；batch exec 提前结束或抛错
+   不再让监督直接退出，而是等 Drive 终态回执、缺哪条就重发 guest
+   （guest 按回执跳过已完成）。正常停机时先写 keeper stop file，
+   `--no-stop` 时 keeper 与 guard 继续独立存活。orphan guard 的
+   heartbeat 改盯 keeper 的真实日志：监督死、keeper 活属于可恢复状态，
+   不误杀；keeper 死后日志变陈旧，guard 才按硬线服务端停机。禁止再用
+   无条件 touch 本地文件的循环给 guard 喂心跳，那会把断路器短路。
+4. 停机权集中：只有全部完成后的显式停机路径能写 `KEEPER_STOP` 并
+   `colab stop`；orphan guard 继续只做计费兜底，不承担保活。
+
+剩余边界：keeper 仍在本地工作站上。若 WSL/工作站休眠、断网或 keeper
+自身连续失败退出，VM 侧没有已知的自续租通道，仍会在宽限后被回收；
+长批次必须同时盯 keeper 日志新鲜度，而不只是盯监督进程。
 
 ## 本批账（潮缚 fx21）
 

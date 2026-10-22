@@ -45,6 +45,7 @@ INPUT = ROOT / ".cache/lihun_v23_colab/input"
 VENDOR = BASE / "vendor"
 WENXI_INSTALL = SCRIPTS / "colab_h3_wenxi_install.py"
 BATCH_PHASE = SCRIPTS / "colab_h3_wenxi_batch_phase.py"
+KEEPER = SCRIPTS / "colab_heartbeat_keeper.sh"
 REMOTE_BASE = "h3drive_h3:comfyui-h3-colab-dedicated/lihun-v23"
 FEINIU_BATCH = "离婚后（10.22）"
 HEARTBEAT = ROOT / "runs/lihun_v23_colab_heartbeat"
@@ -68,15 +69,18 @@ def remote_json(path: str):
 
 
 def exec_retry(session, path, timeout, log, **env):
-    for attempt in range(2):
+    for attempt in range(3):
         try:
             exec_file(session, path, timeout, log, **env)
             return
-        except Exception:
+        except Exception as exc:
             text = log.read_text(errors="replace") if log.is_file() else ""
-            if attempt == 0 and any(m in text for m in (
-                    "WebSocketConnectionClosedException", "SSLError",
-                    "Connection was lost", "SSLEOFError")):
+            retryable = isinstance(exc, TimeoutError) or any(m in text for m in (
+                "WebSocketConnectionClosedException", "SSLError",
+                "Connection was lost", "SSLEOFError"))
+            if attempt < 2 and retryable:
+                print(f"EXEC_RETRY {path.name} attempt={attempt + 1} "
+                      f"error={type(exc).__name__}: {exc}", flush=True)
                 time.sleep(10)
                 continue
             raise
@@ -97,6 +101,10 @@ def main() -> int:
     ap.add_argument("--no-stop", action="store_true",
                     help="leave the session running at the end "
                          "(heartbeat keeper + guards stay armed)")
+    ap.add_argument("--done-remote", action="append", default=[],
+                    help="Drive remote of a previous session whose "
+                         "success receipts should be skipped, not "
+                         "re-rendered (repeatable)")
     args = ap.parse_args()
 
     bundle_dirs = [INPUT] + list(args.extra_input)
@@ -111,7 +119,8 @@ def main() -> int:
                 SCRIPTS / "h3_g4_setup.py",
                 SCRIPTS / "h3_a100_phase_receipt.py",
                 SCRIPTS / "colab_h3_paid_watchdog.sh",
-                WENXI_INSTALL, BATCH_PHASE, INPUT / "units.json"]
+                WENXI_INSTALL, BATCH_PHASE, KEEPER,
+                SCRIPTS / "colab_keepalive_probe.py", INPUT / "units.json"]
     missing = [str(p) for p in required if not p.is_file()]
     if missing or len(wheels) != 1:
         raise RuntimeError(f"missing inputs {missing} wheels={wheels}")
@@ -162,6 +171,8 @@ def main() -> int:
     created = False
     watcher = None
     guard = None
+    keeper = None
+    keeper_stop = logdir / "KEEPER_STOP"
     started = time.monotonic()
     deadline = datetime.now(timezone.utc) + timedelta(hours=args.safety_hours)
     archived: dict[str, str] = {}
@@ -189,6 +200,13 @@ def main() -> int:
                     continue
                 if receipt.get("state") != "success":
                     continue
+                if receipt.get("skipped_done_remote"):
+                    archived[tag] = (
+                        f"prev:{receipt['skipped_done_remote']}")
+                    del pending[tag]
+                    print(f"ARCHIVE_SKIP_DONE_REMOTE {tag} -> "
+                          f"{receipt['skipped_done_remote']}", flush=True)
+                    continue
                 dest = logdir / "units" / tag
                 dest.mkdir(parents=True, exist_ok=True)
                 run(["rclone", "copy", f"{remote}/{tag}", str(dest),
@@ -212,6 +230,17 @@ def main() -> int:
                 break
         print(f"ARCHIVER_DONE archived={len(archived)} "
               f"failed={len(failed_units)}", flush=True)
+
+    def wait_for_bundle(tags, timeout_s):
+        deadline_wait = time.monotonic() + timeout_s
+        while True:
+            touch_heartbeat()
+            if all(tag in archived or tag in failed_units for tag in tags):
+                return True
+            remaining = deadline_wait - time.monotonic()
+            if remaining <= 0:
+                return False
+            time.sleep(min(15, remaining))
 
     arch_thread = None
     try:
@@ -239,19 +268,39 @@ def main() -> int:
                 stderr=subprocess.STDOUT, start_new_session=True)
         finally:
             wl.close()
+        print("LIHUN_SESSION", session, "remote", remote,
+              "rate", assigned["rate"], "units", len(units), flush=True)
+
+        keeper_stop.unlink(missing_ok=True)
+        keeper_out = (logdir / "heartbeat-keeper.out").open("w")
+        try:
+            keeper = subprocess.Popen(
+                ["bash", str(KEEPER), session, str(keeper_stop), "120"],
+                stdin=subprocess.DEVNULL, stdout=keeper_out,
+                stderr=subprocess.STDOUT, start_new_session=True)
+        finally:
+            keeper_out.close()
+        time.sleep(0.2)
+        if keeper.poll() is not None:
+            raise RuntimeError("heartbeat keeper exited at startup")
+        print(f"KEEPER_STARTED pid={keeper.pid} stop_file={keeper_stop}",
+              flush=True)
+
+        # The guard's dead-man switch must watch the keeper's real
+        # activity log, not a file the supervisor touches: supervisor
+        # death with a live keeper is recoverable, keeper death is not.
         touch_heartbeat()
         guard_env = dict(os.environ)
-        guard_env.update({"HEARTBEAT": str(HEARTBEAT), "AUTO_UNASSIGN": "1",
-                          "POLL_S": "60",
-                          "LOG": str(ROOT / "runs/colab_orphan_guard.log")})
+        guard_env.update({
+            "HEARTBEAT": str(ROOT / "runs/colab_heartbeat_keeper.log"),
+            "AUTO_UNASSIGN": "1", "POLL_S": "60",
+            "LOG": str(ROOT / "runs/colab_orphan_guard.log")})
         guard = subprocess.Popen(
             ["bash", str(SCRIPTS / "colab_orphan_guard.sh")],
             env=guard_env,
             stdin=subprocess.DEVNULL,
             stdout=(logdir / "orphan-guard.log").open("w"),
             stderr=subprocess.STDOUT, start_new_session=True)
-        print("LIHUN_SESSION", session, "remote", remote,
-              "rate", assigned["rate"], "units", len(units), flush=True)
 
         uploads = [(CONFIG, "/content/rclone.conf"),
                    (VENDOR / "colab-h3-rclone.gz", "/content/rclone.gz"),
@@ -259,11 +308,27 @@ def main() -> int:
                     "/content/h3_a100_phase_receipt.py"),
                    (WENXI_INSTALL, "/content/wenxi_install.py"),
                    (BATCH_PHASE, "/content/wenxi_batch_phase.py")]
-        if not adopt:
-            uploads.append((wheel, "/content/" + wheel.name))
+        # Always upload the wheel: an adopted session may have been
+        # created by a host that died before this upload landed, and
+        # the setup stage requires the file at /content/<wheel>.
+        uploads.append((wheel, "/content/" + wheel.name))
         for src, dst in uploads:
-            run(["colab", "upload", "--session", session, str(src), dst],
-                logdir / ("upload-" + src.name + ".log"), timeout=300)
+            last = None
+            for attempt in range(3):
+                try:
+                    run(["colab", "upload", "--session", session,
+                         str(src), dst],
+                        logdir / ("upload-" + src.name + ".log"),
+                        timeout=300)
+                    last = None
+                    break
+                except Exception as exc:
+                    last = exc
+                    print(f"UPLOAD_RETRY {src.name} attempt={attempt} "
+                          f"{type(exc).__name__}: {exc}", flush=True)
+                    time.sleep(5)
+            if last is not None:
+                raise last
 
         stages = (("identity", SCRIPTS / "h3_g4_identity.py", 60, {}),
                   ("preinstall", SCRIPTS / "colab_h3_preinstall_torch.py", 720, {}),
@@ -331,17 +396,40 @@ def main() -> int:
             # batch phase keeps rendering server-side even if an exec
             # returns early), so 60s is far too tight here.
             exec_retry(session, mover, 1800, logdir / f"mover{idx}.log")
-            began = time.monotonic()
-            exec_file(session, BATCH_PHASE, 14400,
-                      logdir / f"batch_phase_{idx}.log",
-                      H3_WENXI_REMOTE=remote)
-            batch_txt = (logdir / f"batch_phase_{idx}.log").read_text(
-                errors="replace")
-            print(f"BATCH_EXEC_ENDED idx={idx}",
-                  f"elapsed={round(time.monotonic() - began, 1)}", flush=True)
-            if "BATCH_PHASE_DONE" not in batch_txt:
+            bundle_units = json.loads((bdir / "units.json").read_text())["units"]
+            bundle_tags = [u["tag"] for u in bundle_units]
+            batch_complete = False
+            for exec_attempt in range(12):
+                began = time.monotonic()
+                try:
+                    exec_file(session, BATCH_PHASE, 14400,
+                              logdir / f"batch_phase_{idx}.log",
+                              H3_WENXI_REMOTE=remote,
+                              H3_DONE_REMOTES=",".join(args.done_remote))
+                except Exception as exc:
+                    print(f"BATCH_EXEC_ERROR idx={idx} "
+                          f"attempt={exec_attempt} "
+                          f"{type(exc).__name__}: {exc}", flush=True)
+                batch_log = logdir / f"batch_phase_{idx}.log"
+                batch_txt = (batch_log.read_text(errors="replace")
+                             if batch_log.is_file() else "")
+                print(f"BATCH_EXEC_ENDED idx={idx} attempt={exec_attempt}",
+                      f"elapsed={round(time.monotonic() - began, 1)}",
+                      flush=True)
+                if "BATCH_PHASE_DONE" in batch_txt and wait_for_bundle(
+                        bundle_tags, timeout_s=0):
+                    batch_complete = True
+                    break
+                if wait_for_bundle(bundle_tags, timeout_s=300):
+                    batch_complete = True
+                    break
+                print(f"BATCH_RESUME idx={idx} attempt={exec_attempt} "
+                      f"missing="
+                      f"{[t for t in bundle_tags if t not in archived and t not in failed_units]}",
+                      flush=True)
+            if not batch_complete:
                 raise RuntimeError(
-                    f"batch phase {idx} ended without BATCH_PHASE_DONE")
+                    f"batch phase {idx} did not reach terminal receipts")
         stop_archive.set()
         arch_thread.join(timeout=1800)
         snapshot(snapshots, "after_batch")
@@ -384,6 +472,14 @@ def main() -> int:
                 print(f"HOST_DONE balance={after['balance']} "
                       f"active={after['active']} rate={after['rate']}",
                       flush=True)
+        if keeper is not None and not args.no_stop:
+            keeper_stop.write_text(
+                datetime.now(timezone.utc).isoformat() + "\n")
+            if keeper.poll() is None:
+                try:
+                    keeper.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    keeper.terminate()
         if guard is not None and guard.poll() is None and not args.no_stop:
             guard.terminate()
 

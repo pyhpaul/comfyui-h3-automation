@@ -95,6 +95,16 @@ def test_alignment_splits_oclock_like_whisper():
     assert cues[0].end == 5.3
 
 
+def test_alignment_expands_glued_clock_digits():
+    words = [Word("U02", i, i + 0.4, w)
+             for i, w in enumerate(["Play", "it", "from", "3930"])]
+    cues = align_dialogue(["Play it from 39:30."], words, {})
+    assert cues[0].text == "Play it from 39:30."
+    # Glued "3930" is one Word; cue end is that word's end even though it
+    # expands to four tokens for matching.
+    assert cues[0].end == 3.4
+
+
 def test_hyphenated_word_alignment_uses_actual_word_end():
     words = [Word("U04", i / 2, (i + 1) / 2, w)
              for i, w in enumerate(["You", "married", "my", "ex", "-wife?"])]

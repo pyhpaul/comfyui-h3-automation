@@ -89,10 +89,19 @@ def tokens(text: str, aliases: dict[str, str]) -> list[str]:
         if token in {"o'clock", "oclock"}:
             result.extend(["o", "clock"])
             continue
-        if token.isdigit() and int(token) < 100:
-            result.extend(_number_words(int(token)))
-        else:
-            result.extend(token.split())
+        if token.isdigit():
+            # Whisper often glues clock times ("39:30" → "3930"); expand as
+            # mm+ss word sequences to match scripted "39:30" → thirty nine thirty.
+            if len(token) in (3, 4):
+                mm, ss = int(token[:-2]), int(token[-2:])
+                if mm < 60 and ss < 60:
+                    result.extend(_number_words(mm))
+                    result.extend(_number_words(ss))
+                    continue
+            if int(token) < 100:
+                result.extend(_number_words(int(token)))
+                continue
+        result.extend(token.split())
     return result
 
 

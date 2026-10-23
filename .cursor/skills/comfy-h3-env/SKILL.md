@@ -36,6 +36,10 @@ Use `.worktrees/feat-orch/.venv`. System python often lacks paramiko and impacke
 - **Up:** local job assets → `POST /upload/image` → Comfy `input/` filenames in graph
 - **Down:** history outputs → `GET /view`, then the four film files go to Feiniu. Do not keep a Downloads copy.
 
+## Chenyu SSH after boot
+
+Pods are on → read host/port from the open `podExample` tab via CDP (`scripts/ops/chenyu_ssh_info.py`). Do not wait for a paste first. Password goes to a mode-600 passfile; do not print it. Full steps: [reference-env.md](reference-env.md) § Chenyu SSH via CDP.
+
 ## Chenyu shutdown
 
 When the user asked to shut the current pod down after the queue, start `scripts/ops/watch_feiniu_then_shutdown.py` in its own process at queue start. Do not wait for a later reminder. The watcher waits for the runner pid, then shuts down only after a clean `BATCH_DONE`, exit marker `:0`, four Feiniu files on every planned unit, and an empty `/queue`. `ARCHIVE_FAILED`, missing files, or a busy queue prints `HOLD` and does not click. The `podExample` tab must stay open. The page instance id omits a short suffix of the SSH hostname. The click itself is still `关机` then `确 定`, never `重启`, `另存储为镜像并关机`, or `关机并销毁`. Contract: [reference-env.md](reference-env.md) and `.cursor/rules/h3-gpu-vm106.mdc`.

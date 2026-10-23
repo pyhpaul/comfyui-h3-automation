@@ -75,6 +75,41 @@ YZ one-pass name pattern example: `YZ_H3_一采_XXXXX-audio.mp4` (counter is ser
 - Browser Comfy must target the **same** instance as `COMFY_BASE_URL` (open `http://192.168.50.106:8190` when using the tunnel).
 - API upload/prompt does not refresh canvas; Load bound UI after upload to see slots.
 
+## Chenyu SSH via CDP (after boot)
+
+When the user says the pods are on, **read SSH from the open晨羽页** instead of waiting for them to paste. Do not open a second tab and do not close theirs.
+
+1. web-access skill first: `node …/web-access/scripts/check-deps.mjs`, then show the 温馨提示 once.
+2. CDP proxy `http://localhost:3456`. Target the existing `https://www.chenyu.cn/console/podExample` tab.
+3. Prefer the script:
+
+```bash
+python3 scripts/ops/chenyu_ssh_info.py --map-out /tmp/chenyu-ssh-map.json
+```
+
+It clicks each **运行中** card’s `div.serveArounItem` whose text is exactly `SSH` (real `clickAt`, not only `el.click()`), reads the inline **SSH 登录信息** panel, and writes passwords to `/tmp/.comfy_gpu_ssh_pass_<page8>` (and `.comfy_gpu_ssh_pass` / `.comfy_gpu2_ssh_pass` for the first two). Stdout prints host/port/passfile only unless `--print-password`.
+
+4. Manual CDP equivalent (same contract):
+   - Find the smallest `div` whose `innerText` contains the page `实例ID`, `SSH`, and `运行状态`.
+   - Mark that card’s `div.serveArounItem` with text `SSH` as `data-agent-ssh=…`, then `POST /clickAt` with that selector.
+   - Wait ~1.5s. Parse from the same card text:
+
+```text
+SSH 登录信息
+连接主机：
+<id…NN>.gzNN.chenyu.cn
+端口：
+<port>
+用户：
+root
+密码：
+<secret>
+连接命令：
+ssh root@… -p <port>
+```
+
+5. Page `实例ID` is the SSH hostname label with a short hex suffix removed (same rule as shutdown). Password → passfile mode `600` only. Never commit, never put in argv/git. If the tab is missing or the panel does not open, then ask the user for host/port.
+
 ## Chenyu pod shutdown
 
 Use the Chrome tab the user already has open at `https://www.chenyu.cn/console/podExample`. CDP proxy is `http://localhost:3456`. Do not open a second tab and do not close theirs.

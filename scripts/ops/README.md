@@ -19,6 +19,7 @@
 | `h3_manual_call_run_defaults.env.example` | WSL | 上述默认的环境变量样例 |
 | `refresh_manual_call_bind_labels.py` | WSL | 刷新 job「绑定资产」剧名标签（工程加强，不改正文） |
 | `watch_feiniu_then_shutdown.py` | WSL | 入队一开始另起。飞牛齐且队列空才关机，否则 `HOLD` |
+| `chenyu_ssh_info.py` | WSL | 从已打开的晨羽 `podExample` 页 CDP 读取各运行中实例的 SSH 主机/端口，密码写入 passfile |
 | `chenyu_shutdown.py` | WSL | 点晨羽页上的 `关机`。入队脚本不会自己调用它 |
 
 ```bash

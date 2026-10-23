@@ -78,6 +78,8 @@ Not a duplicated script line: H3 joint AV latent lip-ownership crosstalk. Visibl
 
 Pre-queue: flag dual-dialogue units that lack a listener-closed cue as high risk (warn; do not auto-FAIL wiring audit).
 
+Official MiniMax `h3-prompt-writing` vs pack gaps, combat prompt order, and the extended audit checklist: `docs/ops/2026-10-19-minimax-h3-official-skills-vs-pack-prompts.md`. Do **not** bulk-rewrite packs to English six-section Ref2VA.
+
 **Default:** do **not** pass `--dialogue-gate` / `H3_DIALOGUE_GATE`. After films land on Feiniu, spot-check **1–2 units per episode** (**two-speaker echo first**, then money lines, short greetings, post-dialogue action, chain head/tail). Only enable the runner gate when the user asks for this batch, or after spot-check shows clear read-aloud failures.
 
 Optional gate (user-requested only):

@@ -41,7 +41,8 @@ wenxi() { # prefix units [parent]
 }
 
 # ---- A side: dialogue singles ----
-orig 'EP06-潮缚-fix1-{unit}' U04 ep06_u03_00003.safetensors
+# EP06-U04 A-side done 2026-10-20 (prompt b471cf26, recovered to Feiniu).
+# orig 'EP06-潮缚-fix1-{unit}' U04 ep06_u03_00003.safetensors
 orig 'EP23-潮缚-fix1-{unit}' U01
 orig 'EP33-潮缚-fix1-{unit}' U01
 orig 'EP41-潮缚-fix1-{unit}' U05 ep41_u04_00004.safetensors

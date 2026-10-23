@@ -5,14 +5,15 @@ description: >-
   (L0), optional dialogue-check hook (L1), full-unit speaker/lip watch for
   HIGH units (L2), blooper screening placeholder (L3). Use after a batch
   lands, before fix-round registry, or when the user asks for 成片审核/
-  质检/同念/同镜口型/穿帮/unit visual QC. Auto outputs never authorize
-  PASS/STRICT; missing playback leaves L2 incomplete.
+  质检/同念/同镜口型/穿帮/unit visual QC. Final shipped films still get
+  human review; missing playback leaves L2 incomplete.
 ---
 
 # Unit Visual QC（单元视觉-对白联合审核）
 
 成片或复修候选的**单元级**审核由本 skill 编排。脚本可选、只辅助。
-**自动结果（解析 / ASR / VLM / 静帧）不负责放行。**
+自动层可以给出操作结论（命中、嫌疑、词面分、暂过/待修）；**最终成片
+仍走人审**，本 skill 不替代人审签字。
 
 设计全文：`docs/ops/2026-10-23-unit-visual-qc-skill-design.md`。
 
@@ -27,11 +28,11 @@ description: >-
 ## 核心原则
 
 1. Skill 编排；helper 服从本规程与报告 schema。
-2. 自动只产出 `HIT` / `SUSPECT` / `NOT_DECIDED`；`PASS`/`STRICT`/`FAIL` 定案须人证（L2=连续带声实看）。
+2. 自动结果可用于分流与阶段结论；最终成片人审兜底。
 3. **L0 = 预期同框风险，不是成片保证。** 低风险 ≠ 已证明无同念。
-4. 无播放+试听能力 → L2 保持未完成；**禁止抽帧冒充实看。**
+4. L2 口型定案优先连续带声实看；无播放+试听 → L2 标未完成，勿用抽帧冒充。
 5. 计划/报告绑定源视频与 prompt 的 SHA256；换候选旧报告作废。
-6. L3 默认 `NOT_RUN`；未跑只能写「穿帮未检查」，不能写「视觉全面通过」。
+6. L3 默认 `NOT_RUN`；未跑写明「穿帮未检查」。
 
 ## 分层检查图
 
@@ -50,9 +51,9 @@ description: >-
 1. 写出 `runs/visual_qc/<batch>/plan.md` + `plan.json`（模板见 references）
 2. L0 **Strict 与 Medium 双跑**，保留各自命中理由
 3. 绑定每 U 的 media/prompt SHA256、规则版本、层状态
-4. 顶栏固定标记：**风险排查完成、说话人未定案**
-5. **禁止**输出候选通过 / STRICT / 整集视觉通过
-6. 灰区列出且标明「未复核则排查不完整」
+4. 顶栏标记：**风险排查完成、说话人未定案**（P1 范围未做 L2）
+5. 灰区列出且标明「未复核则排查不完整」
+6. 最终成片人审仍在流程下游，本 plan 不替代人审
 
 ## 执行清单（复制跟踪）
 

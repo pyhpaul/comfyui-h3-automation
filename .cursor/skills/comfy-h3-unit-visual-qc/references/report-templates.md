@@ -7,7 +7,7 @@
 
 - **状态：风险排查完成、说话人未定案**
 - 规则版本：comfy-h3-unit-visual-qc / design 2026-10-23
-- 解析：Strict + Medium 双跑（均不作放行依据）
+- 解析：Strict + Medium 双跑（P2 前用于校准；最终成片仍人审）
 - L1：<NOT_RUN|path>
 - L2：NOT_STARTED
 - L3：NOT_RUN（穿帮未检查）

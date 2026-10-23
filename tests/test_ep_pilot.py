@@ -87,6 +87,14 @@ def test_alignment_tolerates_dropped_leading_pronoun():
     assert cues[1].text == "But you didn't."
 
 
+def test_alignment_splits_oclock_like_whisper():
+    words = [Word("U03", i, i + 0.3, w)
+             for i, w in enumerate(["Five", "o", "'clock", "was", "your", "word."])]
+    cues = align_dialogue(["Five o'clock was your word."], words, {})
+    assert cues[0].start == 0
+    assert cues[0].end == 5.3
+
+
 def test_hyphenated_word_alignment_uses_actual_word_end():
     words = [Word("U04", i / 2, (i + 1) / 2, w)
              for i, w in enumerate(["You", "married", "my", "ex", "-wife?"])]

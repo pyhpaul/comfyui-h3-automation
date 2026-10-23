@@ -85,6 +85,10 @@ def tokens(text: str, aliases: dict[str, str]) -> list[str]:
     result: list[str] = []
     for token in re.findall(r"[a-z0-9]+(?:'[a-z]+)?", text.lower()):
         token = aliases.get(token, token)
+        # Whisper often emits "o" + "'clock" as two words; scripts keep o'clock.
+        if token in {"o'clock", "oclock"}:
+            result.extend(["o", "clock"])
+            continue
         if token.isdigit() and int(token) < 100:
             result.extend(_number_words(int(token)))
         else:

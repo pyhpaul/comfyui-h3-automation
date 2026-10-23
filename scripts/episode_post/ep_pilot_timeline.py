@@ -85,11 +85,39 @@ def tokens(text: str, aliases: dict[str, str]) -> list[str]:
     result: list[str] = []
     for token in re.findall(r"[a-z0-9]+(?:'[a-z]+)?", text.lower()):
         token = aliases.get(token, token)
+        # Whisper often emits "o" + "'clock" as two words; scripts keep o'clock.
+        if token in {"o'clock", "oclock"}:
+            result.extend(["o", "clock"])
+            continue
         if token.isdigit() and int(token) < 100:
             result.extend(_number_words(int(token)))
         else:
             result.extend(token.split())
     return result
+
+
+_WEAK_LEAD = frozenset({"i", "a", "oh", "uh", "um", "and", "but", "so"})
+
+
+def _find_token_span(heard_tokens: list[str], need: list[str], cursor: int,
+                     *, after: int | None = None) -> tuple[int, int] | None:
+    """Return (start, need_len_used) for the best span match at/after cursor.
+
+    Exact match first. If ASR dropped a weak leading pronoun/filler
+    (e.g. scripted \"I wanted to.\" heard as \"wanted to.\"), retry without
+    that lead token. Returns the heard span start and how many *heard*
+    tokens were consumed (always len(matched need slice)).
+    """
+    start_at = cursor if after is None else after
+    for drop in (0, 1):
+        if drop and (len(need) < 2 or need[0] not in _WEAK_LEAD):
+            break
+        use = need[drop:]
+        match = next((i for i in range(start_at, len(heard_tokens) - len(use) + 1)
+                      if heard_tokens[i:i + len(use)] == use), None)
+        if match is not None:
+            return match, len(use)
+    return None
 
 
 def align_dialogue(lines: list[str], words: list[Word], aliases: dict[str, str],
@@ -113,19 +141,19 @@ def align_dialogue(lines: list[str], words: list[Word], aliases: dict[str, str],
             need = tokens(phrase, aliases)
             if not need:
                 continue
-            match = next((i for i in range(cursor, len(heard) - len(need) + 1)
-                          if heard_tokens[i:i + len(need)] == need), None)
-            if match is not None and skip_first and phrase in skip_first:
+            found = _find_token_span(heard_tokens, need, cursor)
+            if found is not None and skip_first and phrase in skip_first:
                 # The plan deliberately keeps a later performance of this
                 # phrase (the first is an editorial duplicate); align to
                 # the next occurrence instead. Still an error if none.
-                match = next((i for i in range(match + 1, len(heard) - len(need) + 1)
-                              if heard_tokens[i:i + len(need)] == need), None)
-            if match is None:
+                found = _find_token_span(
+                    heard_tokens, need, cursor, after=found[0] + 1)
+            if found is None:
                 raise ValueError(f"cannot align scripted phrase: {phrase!r}")
-            first, last = heard[match][1], heard[match + len(need) - 1][1]
+            match, used = found
+            first, last = heard[match][1], heard[match + used - 1][1]
             cues.append(Subtitle(first.unit, first.start, last.end, phrase))
-            cursor = match + len(need)
+            cursor = match + used
     return cues
 
 

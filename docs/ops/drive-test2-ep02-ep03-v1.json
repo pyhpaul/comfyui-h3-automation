@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "episodes": ["EP02", "EP03"],
+  "source_zip_sha256": "9927f713bebff146ff10f51e7311df8e32a55e1eb3ae422a2ba832c1c4029ef0",
+  "units": {
+    "EP02": ["U01", "U02", "U03", "U04", "U05", "U06", "U07"],
+    "EP03": ["U01", "U02", "U03", "U04", "U05", "U06", "U07", "U08"]
+  },
+  "accepted_independent_starts": {
+    "EP02": ["U01", "U02", "U04", "U06"],
+    "EP03": ["U01"]
+  },
+  "job_archive": {
+    "local": "/mnt/d/comfyui-h3-backups/rental-20260924-5090/test2-ep02-ep03/offline-20260928/test2-ep02-ep03-selected-jobs-v1.tar.gz",
+    "remote": "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/inputs/test2-20260925/ep02-ep03/accepted-v1/test2-ep02-ep03-selected-jobs-v1.tar.gz",
+    "bytes_local_and_remote": 200146604,
+    "sha256_local": "d73ff9de1137601d3625a90cdb2842cbfbb32e29208a963700d1611434e083ab",
+    "md5_local_and_remote": "49da02d2f7f7391c5708710e4100a20c"
+  },
+  "runtime_api9_patch": {
+    "local": "/mnt/d/comfyui-h3-backups/rental-20260924-5090/test2-ep02-ep03/offline-20260928/test2-ep02-ep03-runtime-api9-v1.tar.gz",
+    "sha256_local": "4c774aa0f6299ad2142712bf1b47845ea0f4ef567a890ad41f6603beb80b4a63",
+    "remote_deployed": false
+  },
+  "status": "accepted_input_not_submitted"
+}

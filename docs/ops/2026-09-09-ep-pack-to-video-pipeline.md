@@ -11,6 +11,7 @@
 |-------|------|
 | `comfy-h3-ep-pipeline` | 总控 / 验收门禁 |
 | `comfy-h3-env` | **环境：端口映射、doctor、上下传路径**（开跑前） |
+| `comfy-h3-feiniu` | **飞牛 NAS**：inbox 收资产包，archive 放成片（不压缩） |
 | `comfy-h3-ep-pack-jobs` | 解析包 → job |
 | `comfy-h3-pack-prompt-audit` | EP02 wire-only 提示词门禁 |
 | `comfy-h3-bound-export` | 上传 + 导出 bound UI/API |

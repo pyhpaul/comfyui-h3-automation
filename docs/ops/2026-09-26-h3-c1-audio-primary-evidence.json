@@ -1,0 +1,41 @@
+{
+  "source": {
+    "phase": "formal-ab-1/C1",
+    "video_bytes": 9947111,
+    "video_sha256": "f7d9898aa135548bc5448524daf6fe893398c80411fe42db7bfe72153a8a4971",
+    "validation_sha256": "8e4bad0f05c15f062180f5cf990a1b75277b07d86be94b27ac134ea4eb6d5ee4"
+  },
+  "ffprobe": {
+    "version": "8.0.1-3ubuntu2",
+    "selection": "stream=index,codec_type,codec_name,sample_rate,channels,channel_layout,start_time,duration",
+    "audio": {
+      "codec_name": "aac",
+      "sample_rate": "32000",
+      "channels": 2,
+      "channel_layout": "stereo",
+      "start_time": "0.000000",
+      "duration": "12.736000"
+    },
+    "video": {
+      "codec_name": "h264",
+      "start_time": "0.000000",
+      "duration": "12.750000"
+    }
+  },
+  "inspect_video": {
+    "audio_channels": 2,
+    "audio_duration_s": 12.736,
+    "audio_frames": 398,
+    "audio_max_db": -0.4,
+    "audio_sample_rate": 32000,
+    "audio_start_s": 0.0,
+    "audio_timeline_sha256": "cbafbae51079d437dd37e735f1d5011f7e8ed9bd04af2efe4222f5ad4f639c43",
+    "bytes": 9947111,
+    "decoded_audio_sha256": "f83ce5f3203b88d3b3f56bff5820806d06dbbc941f44422d7af900022f2c8260",
+    "decoded_video_sha256": "28ceae0d102091d951ebfd82dc361bd4481bbc03095350449d73569044d33c04",
+    "sha256": "f7d9898aa135548bc5448524daf6fe893398c80411fe42db7bfe72153a8a4971",
+    "video_duration_s": 12.75,
+    "video_frames": 306,
+    "video_timeline_sha256": "21f95f6a13ec4fd2ca8b2d9eece12e92d5841f2471c2d4f37cd790c7199fab89"
+  }
+}

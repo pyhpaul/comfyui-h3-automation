@@ -1,14 +1,7 @@
-"""Restore the frozen H3 source, models, and U01 parent on Colab.
+"""Restore the frozen H3 source, six models, and U01 parent on Colab.
 
 This is the source-controlled successor of the tested D: stage-2 restore
-script. The default remote remains the 2026-09-24 snapshot (its ``models/``
-tree may carry extra merged models, e.g. the wenxi set; at least the six
-frozen models must be present after restore).
-
-Split large models are fetched in parallel by default
-(``H3_RESTORE_PART_TRANSFERS``, default 8; set to 1 for the legacy serial
-per-part ``copyto`` path). Either way the reassembled bytes are verified
-against the same size + SHA-256 manifest as before.
+script. The default remote remains the immutable 2026-09-24 snapshot.
 """
 
 from __future__ import annotations
@@ -20,6 +13,7 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
+from typing import Callable
 
 
 REMOTE = os.environ.get(
@@ -54,78 +48,41 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _part_transfers() -> int:
-    try:
-        return max(1, int(os.environ.get("H3_RESTORE_PART_TRANSFERS", "8")))
-    except ValueError:
-        return 8
-
-
 def restore_split_model(models: Path, relative_path: str, expected_size: int,
                         expected_sha256: str) -> None:
     output = models / relative_path
     output.parent.mkdir(parents=True, exist_ok=True)
     partial = output.with_name(output.name + ".incomplete")
+    part = CONTENT / "h3-model-part.tmp"
     digest = hashlib.sha256()
     copied = 0
     part_count = (expected_size + PART_SIZE - 1) // PART_SIZE
-    transfers = _part_transfers()
-    if transfers <= 1:
-        # Legacy serial path (kept for H3_RESTORE_PART_TRANSFERS=1).
-        part = CONTENT / "h3-model-part.tmp"
-        try:
-            with partial.open("wb") as assembled:
-                for index in range(part_count):
-                    part.unlink(missing_ok=True)
-                    run(str(RCLONE), "copyto",
-                        f"{REMOTE}/model-parts/{relative_path}/part-{index:03d}",
-                        str(part), "--config", str(CONFIG),
-                        "--retries", "3", "--low-level-retries", "3")
-                    expected_part_size = min(PART_SIZE, expected_size - copied)
-                    if part.stat().st_size != expected_part_size:
-                        raise RuntimeError(f"wrong part size: {relative_path} part-{index:03d}")
-                    with part.open("rb") as source:
-                        for block in iter(lambda: source.read(8 * 1024 * 1024), b""):
-                            assembled.write(block)
-                            digest.update(block)
-                            copied += len(block)
-                    part.unlink()
-                    print("model_part", relative_path, index + 1, part_count, flush=True)
-            if copied != expected_size or digest.hexdigest() != expected_sha256:
-                raise RuntimeError(f"reassembled model mismatch: {relative_path}")
-            partial.replace(output)
-        finally:
-            part.unlink(missing_ok=True)
-        return
-    # Parallel path: one rclone copy of the whole part directory.
-    parts_dir = CONTENT / "h3-model-parts-download" / relative_path
-    parts_dir.mkdir(parents=True, exist_ok=True)
     try:
-        run(str(RCLONE), "copy", f"{REMOTE}/model-parts/{relative_path}",
-            str(parts_dir), "--config", str(CONFIG),
-            "--transfers", str(transfers), "--checkers", str(transfers),
-            "--retries", "3", "--low-level-retries", "3",
-            "--stats", "1m", "--stats-one-line")
         with partial.open("wb") as assembled:
             for index in range(part_count):
-                part = parts_dir / f"part-{index:03d}"
+                part.unlink(missing_ok=True)
+                run(str(RCLONE), "copyto",
+                    f"{REMOTE}/model-parts/{relative_path}/part-{index:03d}",
+                    str(part), "--config", str(CONFIG),
+                    "--retries", "3", "--low-level-retries", "3")
                 expected_part_size = min(PART_SIZE, expected_size - copied)
-                if not part.is_file() or part.stat().st_size != expected_part_size:
+                if part.stat().st_size != expected_part_size:
                     raise RuntimeError(f"wrong part size: {relative_path} part-{index:03d}")
                 with part.open("rb") as source:
                     for block in iter(lambda: source.read(8 * 1024 * 1024), b""):
                         assembled.write(block)
                         digest.update(block)
                         copied += len(block)
+                part.unlink()
                 print("model_part", relative_path, index + 1, part_count, flush=True)
         if copied != expected_size or digest.hexdigest() != expected_sha256:
             raise RuntimeError(f"reassembled model mismatch: {relative_path}")
         partial.replace(output)
     finally:
-        shutil.rmtree(CONTENT / "h3-model-parts-download", ignore_errors=True)
+        part.unlink(missing_ok=True)
 
 
-def main() -> None:
+def main(*, restore_model: Callable[[Path, str, int, str], None] | None = None) -> None:
     started = time.monotonic()
     with gzip.open(CONTENT / "rclone.gz", "rb") as compressed, RCLONE.open("wb") as binary:
         shutil.copyfileobj(compressed, binary)
@@ -158,7 +115,8 @@ def main() -> None:
     run(str(RCLONE), "check", f"{REMOTE}/models", str(models),
         "--config", str(CONFIG))
     for relative_path, expected_size, expected_sha256 in LARGE_MODELS:
-        restore_split_model(models, relative_path, expected_size, expected_sha256)
+        (restore_model or restore_split_model)(
+            models, relative_path, expected_size, expected_sha256)
     print("model_restore_seconds", round(time.monotonic() - model_start, 2), flush=True)
 
     latent = COMFY_ROOT / "output/h3_context/ep04_u01_00001.safetensors"
@@ -168,15 +126,8 @@ def main() -> None:
     if sha256(latent) != "6def89c01d367a64be354a93dfb7e96806d236211eb0fdfcbf4bfe493a95946a":
         raise RuntimeError("parent latent SHA-256 mismatch")
     model_count = len(list(models.rglob("*.safetensors")))
-    # Backward compatible: the frozen six must be present; extra merged
-    # models (e.g. wenxi set now in the main tree) are allowed. An exact
-    # count can still be enforced via H3_RESTORE_EXPECTED_MODELS.
-    expected_exact = os.environ.get("H3_RESTORE_EXPECTED_MODELS")
-    if expected_exact:
-        if model_count != int(expected_exact):
-            raise RuntimeError(f"expected {expected_exact} H3 models, found {model_count}")
-    elif model_count < 6:
-        raise RuntimeError(f"expected at least six H3 models, found {model_count}")
+    if model_count != 6:
+        raise RuntimeError(f"expected six H3 models, found {model_count}")
     print("restore_ready", {"models": model_count,
                             "seconds": round(time.monotonic() - started, 2)}, flush=True)
 

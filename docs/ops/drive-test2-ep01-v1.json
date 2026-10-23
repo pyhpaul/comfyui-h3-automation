@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "episode": "EP01-测试2-v1",
+  "source_zip_sha256": "9927f713bebff146ff10f51e7311df8e32a55e1eb3ae422a2ba832c1c4029ef0",
+  "units": ["U01", "U02", "U03", "U04", "U05", "U06", "U07", "U08"],
+  "independent_starts": ["U01", "U05"],
+  "job_archive": {
+    "remote": "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/inputs/test2-20260925/ep01/test2-ep01-jobs-v1.tar",
+    "bytes": 80558080,
+    "sha256": "0aa34f6628e9caf7e241e8bbfcc41fe38a81b1f173ecc5570763f9a1ef53c2a2"
+  }
+}

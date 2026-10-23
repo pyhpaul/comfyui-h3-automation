@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "episode": "EP04-H3-manual-v16",
+  "units": ["U03", "U04", "U05"],
+  "job_archive": {
+    "remote": "h3drive_h3:comfyui-h3-colab-dedicated/standard-v1/inputs/ep04/manual-v16/ep04-manual-v16-u03-u05.tar",
+    "bytes": 21637120,
+    "sha256": "a5c7f63fc53a8aaefa7f72f14e7177be35f6de74f13ebe16e30ff8d69c1ff687"
+  },
+  "parent_latent": {
+    "remote": "h3drive_h3:comfyui-h3-colab-dedicated/rental-20260924-5090/g4-u02/h3-g4-u02-20260927-064924/G4_U02/run/downloads/EP04-U02-v16/ep04_u02_g4_u02_00002.safetensors",
+    "output_relative_path": "h3_context/ep04_u02_g4_u02_00002.safetensors",
+    "bytes": 38580184,
+    "sha256": "fe7bba15b43bcaee71ddc2b0d6e22681bae841842e351a9eccbdf9f543fcb992"
+  }
+}

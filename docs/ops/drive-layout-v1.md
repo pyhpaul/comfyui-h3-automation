@@ -16,6 +16,9 @@ standard-v1/
   README.md
   manifests/
     restore-rental-20260924-v1.json
+    drive-chain-ep04-u03-u05-v1.json
+  inputs/
+    ep04/manual-v16/ep04-manual-v16-u03-u05.tar
   runtime/
     g4-sm120/
       sageattention-2.2.0-cp313-cp313-linux_x86_64.whl
@@ -32,6 +35,9 @@ standard-v1/
             run/downloads/...safetensors
             comfyUI.log
             nvidia-smi.csv
+      chain/<session>/
+        preflight.json
+        chain-inputs.json
 ```
 
 Use lowercase `epNN/uNN` path components, a UTC timestamped session ID, and
@@ -54,6 +60,7 @@ the layout look uniform.
 | Code, setup scripts, tests, runbooks, hash manifests | Git repository |
 | Frozen source/model/parent restore snapshot | Existing `rental-20260924-5090/` Drive prefix and D: backup |
 | GPU-specific binary wheel | `standard-v1/runtime/<gpu-arch>/` in Drive, D: backup; SHA in Git |
+| Frozen job/assets continuation packages | `standard-v1/inputs/<episode>/<pack>/` in Drive and D: backup; hash manifest in Git |
 | Future generation outputs and evidence | `standard-v1/runs/<episode>/<unit>/<session>/` in Drive |
 | OAuth tokens, `rclone.conf`, API credentials | Local secret store only; never Git or Drive |
 | Original large rental image/filesystem backup | D: only; do not upload unused 45+ GiB archives to Drive |

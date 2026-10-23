@@ -17,33 +17,6 @@
       "title": "YZ参考图5"
     }
   },
-  "61": {
-    "inputs": {
-      "image": ""
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "YZ参考图6"
-    }
-  },
-  "62": {
-    "inputs": {
-      "image": ""
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "YZ参考图7"
-    }
-  },
-  "63": {
-    "inputs": {
-      "image": ""
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "YZ参考图8"
-    }
-  },
   "27": {
     "inputs": {
       "video": "",
@@ -420,15 +393,15 @@
         0
       ],
       "ref_images.ref_image_6": [
-        "61",
+        "407",
         0
       ],
       "ref_images.ref_image_7": [
-        "62",
+        "408",
         0
       ],
       "ref_images.ref_image_8": [
-        "63",
+        "409",
         0
       ],
       "ref_videos.ref_video_0": [
@@ -475,6 +448,33 @@
     "class_type": "KSampler",
     "_meta": {
       "title": "K采样器"
+    }
+  },
+  "407": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "YZ参考图6"
+    }
+  },
+  "408": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "YZ参考图7"
+    }
+  },
+  "409": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "YZ参考图8"
     }
   }
 }

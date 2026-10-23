@@ -25,7 +25,6 @@ def test_large_model_manifest_matches_restore_script():
 def test_split_model_requires_exact_bytes_and_digest(tmp_path, monkeypatch):
     payload = b"abcdefghij"
     parts = [payload[:4], payload[4:8], payload[8:]]
-    monkeypatch.setenv("H3_RESTORE_PART_TRANSFERS", "1")
     monkeypatch.setattr(restore, "CONTENT", tmp_path)
     monkeypatch.setattr(restore, "PART_SIZE", 4)
     seen = []
@@ -42,31 +41,7 @@ def test_split_model_requires_exact_bytes_and_digest(tmp_path, monkeypatch):
     assert (tmp_path / "models/x/model.safetensors").read_bytes() == payload
 
 
-def test_split_model_parallel_requires_exact_bytes_and_digest(tmp_path, monkeypatch):
-    payload = b"abcdefghij"
-    parts = [payload[:4], payload[4:8], payload[8:]]
-    monkeypatch.setenv("H3_RESTORE_PART_TRANSFERS", "4")
-    monkeypatch.setattr(restore, "CONTENT", tmp_path)
-    monkeypatch.setattr(restore, "PART_SIZE", 4)
-    calls = []
-
-    def fake_run(*args):
-        calls.append(args)
-        # args: rclone, copy, <remote dir>, <local parts dir>, ...
-        dest = Path(args[3])
-        dest.mkdir(parents=True, exist_ok=True)
-        for i, chunk in enumerate(parts):
-            (dest / f"part-{i:03d}").write_bytes(chunk)
-
-    monkeypatch.setattr(restore, "run", fake_run)
-    digest = hashlib.sha256(payload).hexdigest()
-    restore.restore_split_model(tmp_path / "models", "x/model.safetensors", len(payload), digest)
-    assert len(calls) == 1 and calls[0][1] == "copy" and "--transfers" in calls[0]
-    assert (tmp_path / "models/x/model.safetensors").read_bytes() == payload
-
-
 def test_split_model_does_not_publish_bad_digest(tmp_path, monkeypatch):
-    monkeypatch.setenv("H3_RESTORE_PART_TRANSFERS", "1")
     monkeypatch.setattr(restore, "CONTENT", tmp_path)
     monkeypatch.setattr(restore, "PART_SIZE", 4)
 

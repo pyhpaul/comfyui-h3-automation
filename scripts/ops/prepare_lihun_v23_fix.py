@@ -4,9 +4,11 @@
 For every FAIL unit in runs/lihun_v23_fix_plan.md, emit N candidate
 units (tags EPxx-UyyC1..CN) into .cache/lihun_v23_fix1/input/, copying
 workflow/prompt/assets from the original production pack and replacing
-only the workflow seed. Prompts, durations and chain fields stay
-identical to production (fix standard: seed batch first, prompt surgery
-only for structural problems). Candidate seeds are derived
+only the workflow seed. Prompts and chain fields stay identical to
+production by default (seed batch first). Duration is not hard-locked
+to the production clip: a later prep pass may adapt it to dialogue
+length + ~2s (see fix standard §3.2). Prompt surgery only for
+structural problems. Candidate seeds are derived
 deterministically from sha256("lihun-fix1-<tag>-C<i>") so the pack is
 reproducible and never collides with the production seed segment.
 
@@ -43,6 +45,11 @@ FAIL_UNITS = [
     "EP31-U01",
     "EP67-U07",
     "EP68-U04",
+    "EP33-U04",
+    "EP71-U02",
+    "EP71-U04",
+    "EP36-U01",
+    "EP38-U07",
 ]
 
 
@@ -72,6 +79,30 @@ def replace_seed(workflow: Path, old_seed: int, new_seed: int) -> str:
     return text.replace(needle, f'"seed": {new_seed}')
 
 
+def disconnect_parent(wf_text: str, ctag: str) -> str:
+    """Fix round does not chain-render: drop motion-context load and
+    rewire like an independent unit so Comfy never needs parent latent."""
+    wf = json.loads(wf_text)
+    if "9101" in wf or "9102" in wf or "9103" in wf:
+        if "397" in wf and "positive" in wf["397"].get("inputs", {}):
+            wf["397"]["inputs"]["positive"] = ["265", 0]
+        if "364" in wf:
+            inputs = wf["364"].setdefault("inputs", {})
+            inputs["images"] = ["253", 0]
+            inputs["audio"] = ["254", 0]
+        for nid in ("9101", "9102", "9103"):
+            wf.pop(nid, None)
+    if "364" in wf and "filename_prefix" in wf["364"].get("inputs", {}):
+        prefix = str(wf["364"]["inputs"]["filename_prefix"])
+        # EP42-U03-lihun-wenxi -> EP42-U03C1-lihun-wenxi
+        base = prefix.rsplit("-lihun-", 1)
+        if len(base) == 2:
+            wf["364"]["inputs"]["filename_prefix"] = f"{ctag}-lihun-{base[1]}"
+        else:
+            wf["364"]["inputs"]["filename_prefix"] = f"{ctag}-lihun-wenxi"
+    return json.dumps(wf, ensure_ascii=False, indent=2) + "\n"
+
+
 def main() -> int:
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -90,8 +121,9 @@ def main() -> int:
             ctag = f"{tag}C{idx}"
             seed = candidate_seed(ctag)
             wf_name = f"workflows/{ctag}.json"
-            (OUT / wf_name).write_text(replace_seed(
-                pack / src["workflow"], int(src["seed"]), seed))
+            seeded = replace_seed(
+                pack / src["workflow"], int(src["seed"]), seed)
+            (OUT / wf_name).write_text(disconnect_parent(seeded, ctag))
             entry = dict(src)
             entry.update({
                 "tag": ctag,
@@ -100,6 +132,9 @@ def main() -> int:
                 "job": f"{src['job']}-fix1c{idx}",
                 "fix_of": tag,
                 "candidate": idx,
+                "start_mode": "independent",
+                "parent_latent": None,
+                "prev_tag": None,
             })
             units.append(entry)
     (OUT / "units.json").write_text(json.dumps(

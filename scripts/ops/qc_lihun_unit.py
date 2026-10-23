@@ -51,7 +51,9 @@ def main() -> int:
     args = ap.parse_args()
 
     ep, unit = args.tag.split("-")
-    job = ROOT / "jobs/ep_units" / f"{ep}-继母-v23-{unit}"
+    # Fix-round candidates are tagged UxxC1…; prompt lives on the base unit job.
+    base_unit = re.sub(r"C\d+$", "", unit)
+    job = ROOT / "jobs/ep_units" / f"{ep}-继母-v23-{base_unit}"
     mp4s = sorted(args.unit_dir.glob("*.mp4"))
     if len(mp4s) != 1:
         raise SystemExit(f"{args.tag}: mp4s={mp4s}")

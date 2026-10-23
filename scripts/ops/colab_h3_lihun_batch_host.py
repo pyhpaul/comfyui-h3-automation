@@ -92,6 +92,11 @@ def main() -> int:
                          "(env stages already done are skipped)")
     ap.add_argument("--adopt-logdir", type=Path,
                     help="logdir of the original host run (stage markers)")
+    ap.add_argument("--input", type=Path,
+                    help="primary input bundle dir (default: "
+                         ".cache/lihun_v23_colab/input); fix rounds pass "
+                         "the candidate pack here so production units are "
+                         "not re-entered as batch idx=0")
     ap.add_argument("--extra-input", type=Path, action="append", default=[],
                     help="additional input bundle dir(s) rendered after "
                          "the primary one, in the same session")
@@ -120,7 +125,8 @@ def main() -> int:
                          "of U03-WENXI (fix-release layout)")
     args = ap.parse_args()
 
-    bundle_dirs = [INPUT] + list(args.extra_input)
+    primary = args.input or INPUT
+    bundle_dirs = [primary] + list(args.extra_input)
     units = []
     for d in bundle_dirs:
         units += json.loads((d / "units.json").read_text())["units"]
@@ -134,7 +140,7 @@ def main() -> int:
                 SCRIPTS / "colab_h3_paid_watchdog.sh",
                 WENXI_INSTALL, BATCH_PHASE, KEEPER, GUARDIAN,
                 SCRIPTS / "colab_takeover_rebuild.py",
-                SCRIPTS / "colab_keepalive_probe.py", INPUT / "units.json"]
+                SCRIPTS / "colab_keepalive_probe.py", primary / "units.json"]
     missing = [str(p) for p in required if not p.is_file()]
     if missing or len(wheels) != 1:
         raise RuntimeError(f"missing inputs {missing} wheels={wheels}")

@@ -213,7 +213,9 @@ def run_unit(unit, uploaded):
                 uploaded[blob] = upload_image(INPUT / "assets" / blob)
                 print("UPLOADED", blob, uploaded[blob], flush=True)
         if unit.get("parent_latent"):
-            seed_parent_latent(unit["parent_latent"])
+            if not seed_parent_latent(unit["parent_latent"]):
+                raise RuntimeError(
+                    f"parent latent missing for {tag}: {unit['parent_latent']}")
         wf = json.loads((INPUT / unit["workflow"]).read_text())
         wf = replace_blobs(wf, uploaded)
         resp = http_json("/prompt", {"prompt": wf, "client_id": uuid.uuid4().hex})

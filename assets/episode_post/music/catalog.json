@@ -1,0 +1,2469 @@
+{
+  "schema": "episode-music-catalog/v1",
+  "created_utc": "2026-10-23T07:38:22.233178+00:00",
+  "ownership": "Local project-held licensed files; copyright remains with composers",
+  "selection": {
+    "path": "assets/episode_post/music/selection.json",
+    "sha256": "cfc9b134318ba4cf78d273351629987149b5cc3c911251a322971af0545cc565",
+    "bytes": 2845
+  },
+  "scope": "Candidate pool only; no edits or frozen comparison contracts changed",
+  "tracks": [
+    {
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/music/sb_undertow.mp3",
+      "sha256": "4652007dad67295f1f5c87c8cbc8e2df1a530e7671266a29f693a084375d3910",
+      "bytes": 10000906,
+      "technical": {
+        "duration_s": 249.930975,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -14.5,
+        "true_peak_dbtp": -1.07,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 225.0,
+          "end": 245.0,
+          "rms_dbfs": -22.91,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 115.0,
+          "end": 135.0,
+          "rms_dbfs": -14.35,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 185.0,
+          "end": 205.0,
+          "rms_dbfs": -11.78,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "sb-undertow-full",
+      "title": "Undertow",
+      "artist": "Scott Buckley",
+      "variant": "full",
+      "source_url": "https://www.scottbuckley.com.au/library/undertow/",
+      "download_url": "https://www.scottbuckley.com.au/library/wp-content/uploads/2019/12/sb_undertow.mp3",
+      "moods": [
+        "suspense",
+        "restrained-conflict"
+      ],
+      "instruments": [
+        "strings",
+        "piano"
+      ],
+      "use_cases": [
+        "identity-reveal",
+        "family-standoff"
+      ],
+      "caution": "Existing pilot reference, not the default for every episode.",
+      "tag_basis": "Official composer description plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/sb-undertow/source-page.html",
+          "sha256": "7b716c553a46052844c6f759a7aecc661fc19f5461621d5d20842bce2c91ea03",
+          "bytes": 100022
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/using-this-music.html",
+          "sha256": "1dbe681c219d0ae404aad36eb4d5732fc24718848736e05beafa170f205259f2",
+          "bytes": 44873
+        }
+      ],
+      "attribution": "'Undertow' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required synchronized-media candidate; no blanket platform clearance",
+        "provider_notices": [
+          "Credit in YouTube description",
+          "Do not resell isolated audio",
+          "Do not reupload to music streaming services",
+          "Do not enroll source/remixes in audio fingerprinting services"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/sb-signal-to-noise/full.mp3",
+      "sha256": "47a2f15ecd65f1d7ef0418ee17ae31f4e724bdf73b2c2838aaa39ac1703d094e",
+      "bytes": 14143939,
+      "technical": {
+        "duration_s": 353.498889,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -14.5,
+        "true_peak_dbtp": -1.0,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 325.0,
+          "end": 345.0,
+          "rms_dbfs": -24.78,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 65.0,
+          "end": 85.0,
+          "rms_dbfs": -15.69,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 275.0,
+          "end": 295.0,
+          "rms_dbfs": -11.21,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "sb-signal-to-noise-full",
+      "title": "Signal to Noise",
+      "artist": "Scott Buckley",
+      "variant": "full",
+      "source_url": "https://www.scottbuckley.com.au/library/signal-to-noise/",
+      "download_url": "https://www.scottbuckley.com.au/library/wp-content/uploads/2020/04/sb_signaltonoise.mp3",
+      "moods": [
+        "mystery",
+        "melancholy",
+        "hope"
+      ],
+      "instruments": [
+        "cello",
+        "piano",
+        "synth",
+        "low-strings"
+      ],
+      "use_cases": [
+        "investigation",
+        "doubt",
+        "hidden-truth"
+      ],
+      "caution": "Lead melody can compete with dialogue; compare the no-piano mix.",
+      "tag_basis": "Official composer description plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/sb-signal-to-noise/source-page.html",
+          "sha256": "e7994694ee1029fd6274d734b4f8bc6ceb9c0afd3d46b26283636730addadd53",
+          "bytes": 95580
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/using-this-music.html",
+          "sha256": "1dbe681c219d0ae404aad36eb4d5732fc24718848736e05beafa170f205259f2",
+          "bytes": 44873
+        }
+      ],
+      "attribution": "'Signal to Noise' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required synchronized-media candidate; no blanket platform clearance",
+        "provider_notices": [
+          "Credit in YouTube description",
+          "Do not resell isolated audio",
+          "Do not reupload to music streaming services",
+          "Do not enroll source/remixes in audio fingerprinting services"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/sb-signal-to-noise/no-piano-melody.mp3",
+      "sha256": "8e20b496b0614053565d4f43c80f469c84abd2aefb3ba01e29dfa813f49b9594",
+      "bytes": 14178456,
+      "technical": {
+        "duration_s": 354.353333,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -16.29,
+        "true_peak_dbtp": -1.08,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 165.0,
+          "end": 185.0,
+          "rms_dbfs": -25.6,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 105.0,
+          "end": 125.0,
+          "rms_dbfs": -16.79,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 265.0,
+          "end": 285.0,
+          "rms_dbfs": -12.56,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "sb-signal-to-noise-no-piano-melody",
+      "title": "Signal to Noise",
+      "artist": "Scott Buckley",
+      "variant": "no-piano-melody",
+      "source_url": "https://www.scottbuckley.com.au/library/signal-to-noise/",
+      "download_url": "https://www.scottbuckley.com.au/library/wp-content/uploads/2020/04/sb_signaltonoise_nomelody.mp3",
+      "moods": [
+        "mystery",
+        "melancholy",
+        "hope"
+      ],
+      "instruments": [
+        "cello",
+        "piano",
+        "synth",
+        "low-strings"
+      ],
+      "use_cases": [
+        "investigation",
+        "doubt",
+        "hidden-truth"
+      ],
+      "caution": "Lead melody can compete with dialogue; compare the no-piano mix.",
+      "tag_basis": "Official composer description plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/sb-signal-to-noise/source-page.html",
+          "sha256": "e7994694ee1029fd6274d734b4f8bc6ceb9c0afd3d46b26283636730addadd53",
+          "bytes": 95580
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/using-this-music.html",
+          "sha256": "1dbe681c219d0ae404aad36eb4d5732fc24718848736e05beafa170f205259f2",
+          "bytes": 44873
+        }
+      ],
+      "attribution": "'Signal to Noise' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required synchronized-media candidate; no blanket platform clearance",
+        "provider_notices": [
+          "Credit in YouTube description",
+          "Do not resell isolated audio",
+          "Do not reupload to music streaming services",
+          "Do not enroll source/remixes in audio fingerprinting services"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/sb-the-old-ones/full.mp3",
+      "sha256": "6f933a86122fade9ac69b848edf101a1dd286fac788488466b1b77f0e89721ec",
+      "bytes": 12086530,
+      "technical": {
+        "duration_s": 302.071429,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -18.1,
+        "true_peak_dbtp": -1.1,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -26.37,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 65.0,
+          "end": 85.0,
+          "rms_dbfs": -19.44,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 275.0,
+          "end": 295.0,
+          "rms_dbfs": -12.7,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "sb-the-old-ones-full",
+      "title": "The Old Ones",
+      "artist": "Scott Buckley",
+      "variant": "full",
+      "source_url": "https://www.scottbuckley.com.au/library/the-old-ones/",
+      "download_url": "http://www.scottbuckley.com.au/library/wp-content/uploads/2018/10/sb_theoldones.mp3",
+      "moods": [
+        "eerie",
+        "horror",
+        "unease"
+      ],
+      "instruments": [
+        "abstract-strings",
+        "synth"
+      ],
+      "use_cases": [
+        "danger",
+        "unresolved-threat",
+        "horror-ending"
+      ],
+      "caution": "Not interchangeable with warm romance or calm defiance.",
+      "tag_basis": "Official composer description plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/sb-the-old-ones/source-page.html",
+          "sha256": "7404715fb8c48976afb24eb01ad7169d16ff0c085b0f93fc1087f3b4635a3b57",
+          "bytes": 81228
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/using-this-music.html",
+          "sha256": "1dbe681c219d0ae404aad36eb4d5732fc24718848736e05beafa170f205259f2",
+          "bytes": 44873
+        }
+      ],
+      "attribution": "'The Old Ones' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required synchronized-media candidate; no blanket platform clearance",
+        "provider_notices": [
+          "Credit in YouTube description",
+          "Do not resell isolated audio",
+          "Do not reupload to music streaming services",
+          "Do not enroll source/remixes in audio fingerprinting services"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/sb-machina/full.mp3",
+      "sha256": "72f479c583fd1cb894584c51d4fb9b33200b098bd1b13195bd41d29586d9d344",
+      "bytes": 11639298,
+      "technical": {
+        "duration_s": 290.895737,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -14.62,
+        "true_peak_dbtp": -1.03,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -17.22,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 125.0,
+          "end": 145.0,
+          "rms_dbfs": -16.14,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 245.0,
+          "end": 265.0,
+          "rms_dbfs": -10.42,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "sb-machina-full",
+      "title": "Machina",
+      "artist": "Scott Buckley",
+      "variant": "full",
+      "source_url": "https://www.scottbuckley.com.au/library/machina/",
+      "download_url": "https://www.scottbuckley.com.au/library/wp-content/uploads/2019/12/sb_machina.mp3",
+      "moods": [
+        "sci-fi",
+        "cold",
+        "mysterious"
+      ],
+      "instruments": [
+        "electronic",
+        "synth",
+        "glitch"
+      ],
+      "use_cases": [
+        "technology",
+        "surveillance",
+        "urban-mystery"
+      ],
+      "caution": "Electronic texture may conflict with period or domestic drama.",
+      "tag_basis": "Official composer description plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/sb-machina/source-page.html",
+          "sha256": "e2d5a69dae2a889c61051b5c814f0113844fa47ca84d328c06934ed993bb1522",
+          "bytes": 75294
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/using-this-music.html",
+          "sha256": "1dbe681c219d0ae404aad36eb4d5732fc24718848736e05beafa170f205259f2",
+          "bytes": 44873
+        }
+      ],
+      "attribution": "'Machina' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required synchronized-media candidate; no blanket platform clearance",
+        "provider_notices": [
+          "Credit in YouTube description",
+          "Do not resell isolated audio",
+          "Do not reupload to music streaming services",
+          "Do not enroll source/remixes in audio fingerprinting services"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/sb-snowfall/full.mp3",
+      "sha256": "56e267faf043be43877546b4f33a00228284076954c06c0163f9b804ebbd87b5",
+      "bytes": 9940302,
+      "technical": {
+        "duration_s": 248.406689,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -14.41,
+        "true_peak_dbtp": -0.29,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -25.02,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 145.0,
+          "end": 165.0,
+          "rms_dbfs": -16.83,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 205.0,
+          "end": 225.0,
+          "rms_dbfs": -12.47,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "sb-snowfall-full",
+      "title": "Snowfall",
+      "artist": "Scott Buckley",
+      "variant": "full",
+      "source_url": "https://www.scottbuckley.com.au/library/snowfall/",
+      "download_url": "http://www.scottbuckley.com.au/library/wp-content/uploads/2018/12/sb_snowfall.mp3",
+      "moods": [
+        "reflective",
+        "sad",
+        "intimate"
+      ],
+      "instruments": [
+        "layered-piano",
+        "strings",
+        "synth"
+      ],
+      "use_cases": [
+        "loss",
+        "memory",
+        "quiet-regret"
+      ],
+      "caution": "Melodic piano needs dialogue audition; sadness is an inferred use, not a verified scene fit.",
+      "tag_basis": "Official composer description plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/sb-snowfall/source-page.html",
+          "sha256": "6e43b5fe40a26f1de42cf167bd0fe99bd7dbc142b56e547f87f06ab32b15ab79",
+          "bytes": 111160
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/using-this-music.html",
+          "sha256": "1dbe681c219d0ae404aad36eb4d5732fc24718848736e05beafa170f205259f2",
+          "bytes": 44873
+        }
+      ],
+      "attribution": "'Snowfall' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required synchronized-media candidate; no blanket platform clearance",
+        "provider_notices": [
+          "Credit in YouTube description",
+          "Do not resell isolated audio",
+          "Do not reupload to music streaming services",
+          "Do not enroll source/remixes in audio fingerprinting services"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/sb-chasing-daylight/full.mp3",
+      "sha256": "f8581d155e0a05ea2e0a58ca430917587d308157ac5551f441ea8745b875feee",
+      "bytes": 10958088,
+      "technical": {
+        "duration_s": 273.857959,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -14.08,
+        "true_peak_dbtp": -1.05,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 245.0,
+          "end": 265.0,
+          "rms_dbfs": -20.44,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 85.0,
+          "end": 105.0,
+          "rms_dbfs": -15.35,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 135.0,
+          "end": 155.0,
+          "rms_dbfs": -10.94,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "sb-chasing-daylight-full",
+      "title": "Chasing Daylight",
+      "artist": "Scott Buckley",
+      "variant": "full",
+      "source_url": "https://www.scottbuckley.com.au/library/chasing-daylight/",
+      "download_url": "https://www.scottbuckley.com.au/library/wp-content/uploads/2021/03/sb_chasingdaylight.mp3",
+      "moods": [
+        "contemplative",
+        "healing",
+        "hopeful"
+      ],
+      "instruments": [
+        "piano",
+        "strings",
+        "synth"
+      ],
+      "use_cases": [
+        "reconciliation",
+        "care",
+        "emotional-recovery"
+      ],
+      "caution": "Keep contemplative passages distinct from later builds; audition scene transitions.",
+      "tag_basis": "Official composer description plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/sb-chasing-daylight/source-page.html",
+          "sha256": "882db342de10af8cc3dcaec209003dda8136a5683b9a1ebdd771d4a7783276c6",
+          "bytes": 103499
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/using-this-music.html",
+          "sha256": "1dbe681c219d0ae404aad36eb4d5732fc24718848736e05beafa170f205259f2",
+          "bytes": 44873
+        }
+      ],
+      "attribution": "'Chasing Daylight' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required synchronized-media candidate; no blanket platform clearance",
+        "provider_notices": [
+          "Credit in YouTube description",
+          "Do not resell isolated audio",
+          "Do not reupload to music streaming services",
+          "Do not enroll source/remixes in audio fingerprinting services"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/sb-felicity/full.mp3",
+      "sha256": "054dcaafd60653b9b562941c478f762ace27d7620e11f1b83f95271756aedb4a",
+      "bytes": 8427286,
+      "technical": {
+        "duration_s": 210.593741,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -14.11,
+        "true_peak_dbtp": -0.96,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -20.18,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 65.0,
+          "end": 85.0,
+          "rms_dbfs": -15.36,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 145.0,
+          "end": 165.0,
+          "rms_dbfs": -11.87,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "sb-felicity-full",
+      "title": "Felicity",
+      "artist": "Scott Buckley",
+      "variant": "full",
+      "source_url": "https://www.scottbuckley.com.au/library/felicity/",
+      "download_url": "https://www.scottbuckley.com.au/library/wp-content/uploads/2021/03/sb_felicity.mp3",
+      "moods": [
+        "light",
+        "hopeful",
+        "romantic-comedy"
+      ],
+      "instruments": [
+        "piano",
+        "mandolin",
+        "violin",
+        "synth",
+        "drums"
+      ],
+      "use_cases": [
+        "light-romance",
+        "daily-life",
+        "positive-montage"
+      ],
+      "caution": "Not slapstick or a neutral bed; folk/pop rhythm may be too busy under dialogue.",
+      "tag_basis": "Official composer description plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/sb-felicity/source-page.html",
+          "sha256": "2e75627d52839b9f87f7d0c0c9bbdb11e72518d5ecd1df6a5d9a5fd46ec612d8",
+          "bytes": 88703
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/using-this-music.html",
+          "sha256": "1dbe681c219d0ae404aad36eb4d5732fc24718848736e05beafa170f205259f2",
+          "bytes": 44873
+        }
+      ],
+      "attribution": "'Felicity' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required synchronized-media candidate; no blanket platform clearance",
+        "provider_notices": [
+          "Credit in YouTube description",
+          "Do not resell isolated audio",
+          "Do not reupload to music streaming services",
+          "Do not enroll source/remixes in audio fingerprinting services"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/sb-pathfinder/full.mp3",
+      "sha256": "f20e3e9aaac2d947510ec971d7ea477320370091c3ea7b1541792c3fe5683e78",
+      "bytes": 8176518,
+      "technical": {
+        "duration_s": 204.321927,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -14.0,
+        "true_peak_dbtp": -1.06,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -18.83,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 95.0,
+          "end": 115.0,
+          "rms_dbfs": -17.16,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 155.0,
+          "end": 175.0,
+          "rms_dbfs": -14.24,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "sb-pathfinder-full",
+      "title": "Pathfinder",
+      "artist": "Scott Buckley",
+      "variant": "full",
+      "source_url": "https://www.scottbuckley.com.au/library/pathfinder/",
+      "download_url": "https://www.scottbuckley.com.au/library/wp-content/uploads/2021/04/sb_pathfinder.mp3",
+      "moods": [
+        "heroic",
+        "adventurous",
+        "triumphant"
+      ],
+      "instruments": [
+        "brass",
+        "strings",
+        "orchestra"
+      ],
+      "use_cases": [
+        "victory",
+        "reversal",
+        "action-montage"
+      ],
+      "caution": "High-density scoring; prefer non-dialogue action, not every verbal reversal.",
+      "tag_basis": "Official composer description plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/sb-pathfinder/source-page.html",
+          "sha256": "6cc4706ebab61804bed9db7b6aeb9456a34f185a95433a94a5f52099c9246dfb",
+          "bytes": 90455
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/using-this-music.html",
+          "sha256": "1dbe681c219d0ae404aad36eb4d5732fc24718848736e05beafa170f205259f2",
+          "bytes": 44873
+        }
+      ],
+      "attribution": "'Pathfinder' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required synchronized-media candidate; no blanket platform clearance",
+        "provider_notices": [
+          "Credit in YouTube description",
+          "Do not resell isolated audio",
+          "Do not reupload to music streaming services",
+          "Do not enroll source/remixes in audio fingerprinting services"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/sb-juggernaut/full.mp3",
+      "sha256": "50be286d170f5a08791f1540b110fbbb4c0aa26e841084fceff0c908379e76f6",
+      "bytes": 8885000,
+      "technical": {
+        "duration_s": 222.023039,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -14.81,
+        "true_peak_dbtp": -0.61,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -21.71,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 145.0,
+          "end": 165.0,
+          "rms_dbfs": -16.07,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 185.0,
+          "end": 205.0,
+          "rms_dbfs": -13.99,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "sb-juggernaut-full",
+      "title": "Juggernaut",
+      "artist": "Scott Buckley",
+      "variant": "full",
+      "source_url": "https://www.scottbuckley.com.au/library/juggernaut/",
+      "download_url": "https://www.scottbuckley.com.au/library/wp-content/uploads/2022/07/Juggernaut.mp3",
+      "moods": [
+        "menacing",
+        "driving",
+        "epic"
+      ],
+      "instruments": [
+        "strings",
+        "brass",
+        "percussion"
+      ],
+      "use_cases": [
+        "villain",
+        "conflict-escalation",
+        "pursuit"
+      ],
+      "caution": "Strong dark action treatment, not ordinary conversational tension.",
+      "tag_basis": "Official composer description plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/sb-juggernaut/source-page.html",
+          "sha256": "287f9bc31eda8e485b5cb4c3d80212be9d49819e184916d91ce9a557801f8bea",
+          "bytes": 74591
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/using-this-music.html",
+          "sha256": "1dbe681c219d0ae404aad36eb4d5732fc24718848736e05beafa170f205259f2",
+          "bytes": 44873
+        }
+      ],
+      "attribution": "'Juggernaut' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required synchronized-media candidate; no blanket platform clearance",
+        "provider_notices": [
+          "Credit in YouTube description",
+          "Do not resell isolated audio",
+          "Do not reupload to music streaming services",
+          "Do not enroll source/remixes in audio fingerprinting services"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1700074/full.mp3",
+      "sha256": "9e980a5a5ff7663d7f5ac22209190f34f1df465c5a6b588dd2c0bcbfc217e380",
+      "bytes": 10341722,
+      "technical": {
+        "duration_s": 323.108594,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -17.85,
+        "true_peak_dbtp": -0.51,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 155.0,
+          "end": 175.0,
+          "rms_dbfs": -20.21,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 65.0,
+          "end": 85.0,
+          "rms_dbfs": -17.43,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 125.0,
+          "end": 145.0,
+          "rms_dbfs": -16.47,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1700074-full",
+      "title": "Jazz Brunch",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1700074",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700074",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jazz%20Brunch.mp3",
+      "moods": [
+        "relaxed",
+        "jazz",
+        "everyday"
+      ],
+      "use_cases": [
+        "cafe",
+        "conversation",
+        "daily-life"
+      ],
+      "instruments": [
+        "Electric Piano",
+        "Drums",
+        "Bass",
+        "Organ",
+        "Guitar"
+      ],
+      "provider_bpm": "100",
+      "provider_feel": "Bright, Grooving, Relaxed",
+      "caution": "Groove may be too light for serious betrayal.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Jazz Brunch\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1700069/full.mp3",
+      "sha256": "322103dd6ac5fae4872122f91d32cccd4d964b86d300585a5a0cdfaf7048af5d",
+      "bytes": 9069455,
+      "technical": {
+        "duration_s": 283.350219,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -21.7,
+        "true_peak_dbtp": -3.14,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 105.0,
+          "end": 125.0,
+          "rms_dbfs": -21.87,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -20.92,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 45.0,
+          "end": 65.0,
+          "rms_dbfs": -19.75,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1700069-full",
+      "title": "Bossa Antigua",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1700069",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700069",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Bossa%20Antigua.mp3",
+      "moods": [
+        "relaxed",
+        "bossa-nova",
+        "bright"
+      ],
+      "use_cases": [
+        "date",
+        "travel",
+        "leisure"
+      ],
+      "instruments": [
+        "Guitar",
+        "Bass",
+        "Drums"
+      ],
+      "provider_bpm": "70",
+      "provider_feel": "Bright, Grooving, Relaxed",
+      "caution": "Specific bossa character, not universal romance music.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Bossa Antigua\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1100806/full.mp3",
+      "sha256": "e20d316b541c72690a3b0311c9f3d40fd00717359ab7567d7df82a9316c1dec4",
+      "bytes": 12309016,
+      "technical": {
+        "duration_s": 307.6702,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -15.78,
+        "true_peak_dbtp": 0.14,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 285.0,
+          "end": 305.0,
+          "rms_dbfs": -15.9,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 85.0,
+          "end": 105.0,
+          "rms_dbfs": -14.25,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 215.0,
+          "end": 235.0,
+          "rms_dbfs": -13.74,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1100806-full",
+      "title": "Airport Lounge",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1100806",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100806",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Airport%20Lounge.mp3",
+      "moods": [
+        "lounge",
+        "calm",
+        "relaxed"
+      ],
+      "use_cases": [
+        "waiting",
+        "office",
+        "low-stakes-dialogue"
+      ],
+      "instruments": [
+        "Bass",
+        "Drum Kit",
+        "Electric Piano",
+        "Vibraphone"
+      ],
+      "provider_bpm": "129",
+      "provider_feel": "Bouncy, Calming, Relaxed",
+      "caution": "Low narrative urgency; audition lead instruments under speech.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Airport Lounge\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1300012/full.mp3",
+      "sha256": "8c46b44e65324bc339fbbc3e770611d671f6c74a40f3ec8dd50332c082b25cc9",
+      "bytes": 7570404,
+      "technical": {
+        "duration_s": 189.2049,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -19.3,
+        "true_peak_dbtp": -1.83,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 145.0,
+          "end": 165.0,
+          "rms_dbfs": -26.61,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 65.0,
+          "end": 85.0,
+          "rms_dbfs": -23.76,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 75.0,
+          "end": 95.0,
+          "rms_dbfs": -20.95,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1300012-full",
+      "title": "Local Forecast - Elevator",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1300012",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300012",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3",
+      "moods": [
+        "awkward",
+        "light",
+        "jazz"
+      ],
+      "use_cases": [
+        "elevator",
+        "deadpan",
+        "awkward-silence"
+      ],
+      "instruments": [
+        "Piano",
+        "Bass",
+        "Drum Kit",
+        "Electric Piano",
+        "Flute",
+        "Trumpet",
+        "Percussion",
+        "Guitar"
+      ],
+      "provider_bpm": "82",
+      "provider_feel": "Bouncy, Bright, Grooving",
+      "caution": "Intentionally filtered to resemble poor elevator speakers; not a defective download.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Local Forecast - Elevator\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1400037/full.mp3",
+      "sha256": "8433b770a630d9b1594fd484442c677907ece899a4d149954cd2e74fd733e311",
+      "bytes": 6566713,
+      "technical": {
+        "duration_s": 205.139625,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -20.24,
+        "true_peak_dbtp": -3.18,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 185.0,
+          "end": 205.0,
+          "rms_dbfs": -23.53,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 115.0,
+          "end": 135.0,
+          "rms_dbfs": -21.21,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 85.0,
+          "end": 105.0,
+          "rms_dbfs": -20.32,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1400037-full",
+      "title": "Carefree",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1400037",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400037",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3",
+      "moods": [
+        "bright",
+        "optimistic",
+        "casual"
+      ],
+      "use_cases": [
+        "daily-life",
+        "positive-montage",
+        "family"
+      ],
+      "instruments": [
+        "Ukulele",
+        "Guitar",
+        "Marimba",
+        "Glockenspiel",
+        "Percussion"
+      ],
+      "provider_bpm": "96",
+      "provider_feel": "Bouncy, Bright, Calming, Uplifting",
+      "caution": "Cheerful ukulele can make serious scenes feel like advertisements.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Carefree\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1100772/full.mp3",
+      "sha256": "db1710333d68a215277f77e4e17e1a64bf4ed38f87c70f8d0f56b16b6aa4f884",
+      "bytes": 5466943,
+      "technical": {
+        "duration_s": 136.620425,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -17.51,
+        "true_peak_dbtp": -0.08,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 85.0,
+          "end": 105.0,
+          "rms_dbfs": -17.96,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -17.62,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 45.0,
+          "end": 65.0,
+          "rms_dbfs": -16.23,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1100772-full",
+      "title": "Sneaky Snitch",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1100772",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100772",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Sneaky%20Snitch.mp3",
+      "moods": [
+        "mischievous",
+        "comic-suspense"
+      ],
+      "use_cases": [
+        "sneaking",
+        "comic-scheming",
+        "playful-secret"
+      ],
+      "instruments": [
+        "Oboe",
+        "Strings",
+        "Snare Drum"
+      ],
+      "provider_bpm": "87",
+      "provider_feel": "Bouncy, Dark, Humorous, Mysterious",
+      "caution": "Comic suspicion, not serious horror; oboe melody may dominate dialogue.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Sneaky Snitch\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1100768/full.mp3",
+      "sha256": "cb23b1833c35e391de10d998d6a40cfc760565ce31d23014c86025523ca8239b",
+      "bytes": 2696840,
+      "technical": {
+        "duration_s": 67.368,
+        "codec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2,
+        "integrated_lufs": -16.33,
+        "true_peak_dbtp": -0.04,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 45.0,
+          "end": 65.0,
+          "rms_dbfs": -17.37,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 35.0,
+          "end": 55.0,
+          "rms_dbfs": -16.7,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 25.0,
+          "end": 45.0,
+          "rms_dbfs": -16.48,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1100768-full",
+      "title": "Fluffing a Duck",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1100768",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100768",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3",
+      "moods": [
+        "slapstick",
+        "playful",
+        "bouncy"
+      ],
+      "use_cases": [
+        "visual-joke",
+        "comic-mishap"
+      ],
+      "instruments": [
+        "Tuba",
+        "Flute",
+        "Trombones",
+        "Bass Clarinet",
+        "Clarinet",
+        "Percussion"
+      ],
+      "provider_bpm": "122",
+      "provider_feel": "Bouncy, Bright, Humorous",
+      "caution": "Official description says two short versions in one file; audition internal boundaries before selecting.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Fluffing a Duck\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1100646/full.mp3",
+      "sha256": "699f7a3cd227dfe5c1e88099b45af57202bfe9d56f86b8b43e4252b65dd96768",
+      "bytes": 3745876,
+      "technical": {
+        "duration_s": 93.5445,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -18.57,
+        "true_peak_dbtp": -0.38,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 35.0,
+          "end": 55.0,
+          "rms_dbfs": -20.69,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 15.0,
+          "end": 35.0,
+          "rms_dbfs": -20.13,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -18.88,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1100646-full",
+      "title": "Investigations",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1100646",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100646",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Investigations.mp3",
+      "moods": [
+        "humorous",
+        "mysterious",
+        "light"
+      ],
+      "use_cases": [
+        "comic-investigation",
+        "banter",
+        "small-misunderstanding"
+      ],
+      "instruments": [
+        "Pizzicato Strings",
+        "English Horn",
+        "Bassoon",
+        "Marimba",
+        "Glockenspiel",
+        "Cowbells"
+      ],
+      "provider_bpm": "94",
+      "provider_feel": "Humorous, Mysterious",
+      "caution": "Do not confuse its title with a serious crime-thriller mood.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Investigations\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1500054/full.mp3",
+      "sha256": "e6203c8c8fddbae0d9790da391a6ea73ef765fc3eec08bd87441e63037dc3c9c",
+      "bytes": 7650907,
+      "technical": {
+        "duration_s": 239.020438,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -13.43,
+        "true_peak_dbtp": 0.94,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 215.0,
+          "end": 235.0,
+          "rms_dbfs": -13.43,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 75.0,
+          "end": 95.0,
+          "rms_dbfs": -12.88,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 165.0,
+          "end": 185.0,
+          "rms_dbfs": -12.17,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1500054-full",
+      "title": "Funky Chunk",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1500054",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500054",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Funky%20Chunk.mp3",
+      "moods": [
+        "funk",
+        "grooving",
+        "upbeat"
+      ],
+      "use_cases": [
+        "confident-entrance",
+        "work-montage",
+        "playful-reversal"
+      ],
+      "instruments": [
+        "Bass",
+        "Electric Piano",
+        "Drums",
+        "Guitar",
+        "Synth",
+        "Horns"
+      ],
+      "provider_bpm": "115",
+      "provider_feel": "Bright, Grooving, Uplifting",
+      "caution": "Bass and rhythm are prominent; leave space for dialogue.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Funky Chunk\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1300028/full.mp3",
+      "sha256": "3e50c832e0739479c6f0306661c9601e081738eef939630bb121e66195691b64",
+      "bytes": 5821253,
+      "technical": {
+        "duration_s": 145.475925,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -8.52,
+        "true_peak_dbtp": 1.24,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 125.0,
+          "end": 145.0,
+          "rms_dbfs": -10.09,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 105.0,
+          "end": 125.0,
+          "rms_dbfs": -8.32,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -8.05,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1300028-full",
+      "title": "Exhilarate",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1300028",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300028",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Exhilarate.mp3",
+      "moods": [
+        "rock",
+        "driving",
+        "intense"
+      ],
+      "use_cases": [
+        "chase",
+        "sport",
+        "action-montage"
+      ],
+      "instruments": [
+        "Guitar",
+        "Bass",
+        "Drum Kit",
+        "Synth"
+      ],
+      "provider_bpm": "170",
+      "provider_feel": "Aggressive, Driving, Intense",
+      "caution": "Fast rock energy, not a default argument bed.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Exhilarate\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1300046/full.mp3",
+      "sha256": "f12cbb52bd4b92bd6cf8a343645567c119627e9cbf98108a3eb6ac2cc275ee46",
+      "bytes": 8576659,
+      "technical": {
+        "duration_s": 214.360825,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -17.28,
+        "true_peak_dbtp": -0.82,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 115.0,
+          "end": 135.0,
+          "rms_dbfs": -20.4,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 35.0,
+          "end": 55.0,
+          "rms_dbfs": -16.32,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 155.0,
+          "end": 175.0,
+          "rms_dbfs": -14.45,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1300046-full",
+      "title": "Dream Culture",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1300046",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300046",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Dream%20Culture.mp3",
+      "moods": [
+        "dreamlike",
+        "calm",
+        "relaxed"
+      ],
+      "use_cases": [
+        "dream",
+        "memory",
+        "soft-transition"
+      ],
+      "instruments": [
+        "Piano",
+        "Percussion"
+      ],
+      "provider_bpm": "70",
+      "provider_feel": "Calming, Relaxed, Uplifting",
+      "caution": "Reverse effects need audition around cuts and dialogue.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Dream Culture\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1100044/full.mp3",
+      "sha256": "937d39cf1c5e1a95161709cdd5333a6e69a60c692a31b39cc28f26ad6aea6971",
+      "bytes": 8051049,
+      "technical": {
+        "duration_s": 197.664,
+        "codec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2,
+        "integrated_lufs": -22.81,
+        "true_peak_dbtp": -2.61,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 15.0,
+          "end": 35.0,
+          "rms_dbfs": -35.74,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 75.0,
+          "end": 95.0,
+          "rms_dbfs": -26.6,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 95.0,
+          "end": 115.0,
+          "rms_dbfs": -21.28,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1100044-full",
+      "title": "There is Romance",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1100044",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100044",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/There%20is%20Romance.mp3",
+      "moods": [
+        "romantic",
+        "calm",
+        "uplifting"
+      ],
+      "use_cases": [
+        "affection",
+        "reconciliation",
+        "tender-moment"
+      ],
+      "instruments": [
+        "Piano"
+      ],
+      "provider_bpm": "93",
+      "provider_feel": "Calming, Relaxed, Uplifting",
+      "caution": "Solo piano character; audition melody against spoken lines.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"There is Romance\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1100208/full.mp3",
+      "sha256": "b888fa087b580959d5bd49e61340b44dc0b9f85cd3b4c2d35042d47edea77ae8",
+      "bytes": 3947252,
+      "technical": {
+        "duration_s": 96.048,
+        "codec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2,
+        "integrated_lufs": -31.27,
+        "true_peak_dbtp": -10.81,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 75.0,
+          "end": 95.0,
+          "rms_dbfs": -41.52,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 35.0,
+          "end": 55.0,
+          "rms_dbfs": -34.96,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 25.0,
+          "end": 45.0,
+          "rms_dbfs": -33.62,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1100208-full",
+      "title": "Heartbreaking",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1100208",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100208",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Heartbreaking.mp3",
+      "moods": [
+        "somber",
+        "sad",
+        "intimate"
+      ],
+      "use_cases": [
+        "loss",
+        "breakup",
+        "regret"
+      ],
+      "instruments": [
+        "Piano"
+      ],
+      "provider_bpm": "72",
+      "provider_feel": "Calming, Somber",
+      "caution": "Do not force grief onto ambiguous acting; silence may be stronger.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Heartbreaking\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1100564/full.mp3",
+      "sha256": "aeefb582c77059aaf5b10d1e9125d7b19adca07cd841f3654e74aed7da9a3a71",
+      "bytes": 3679550,
+      "technical": {
+        "duration_s": 89.3649,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -12.46,
+        "true_peak_dbtp": 0.33,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 35.0,
+          "end": 55.0,
+          "rms_dbfs": -11.73,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 65.0,
+          "end": 85.0,
+          "rms_dbfs": -11.29,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 15.0,
+          "end": 35.0,
+          "rms_dbfs": -11.08,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1100564-full",
+      "title": "Desert City",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1100564",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100564",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Desert%20City.mp3",
+      "moods": [
+        "mysterious",
+        "grooving",
+        "relaxed"
+      ],
+      "use_cases": [
+        "travel",
+        "setting-establishment",
+        "exploration"
+      ],
+      "instruments": [
+        "Percussion",
+        "Dulcimer"
+      ],
+      "provider_bpm": "86",
+      "provider_feel": "Grooving, Mysterious, Relaxed",
+      "caution": "Percussion/dulcimer texture is not proof of cultural or geographic authenticity.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Desert City\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan1200046/full.mp3",
+      "sha256": "a97f91b78cc7e27c79773e4ab889b364104babc4685a6ec5426e428f13983b26",
+      "bytes": 9329988,
+      "technical": {
+        "duration_s": 233.1951,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -16.74,
+        "true_peak_dbtp": -0.69,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 5.0,
+          "end": 25.0,
+          "rms_dbfs": -15.87,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 45.0,
+          "end": 65.0,
+          "rms_dbfs": -15.39,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 165.0,
+          "end": 185.0,
+          "rms_dbfs": -14.53,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan1200046-full",
+      "title": "Dub Eastern",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN1200046",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200046",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Dub%20Eastern.mp3",
+      "moods": [
+        "dub",
+        "dark",
+        "relaxed"
+      ],
+      "use_cases": [
+        "urban-night",
+        "low-key-intrigue",
+        "stylized-montage"
+      ],
+      "instruments": [
+        "Bass",
+        "Drum Kit",
+        "Piano",
+        "Guitar",
+        "Synth"
+      ],
+      "provider_bpm": "69",
+      "provider_feel": "Calming, Dark, Grooving, Mystical, Relaxed",
+      "caution": "A stylized dub track, not authentic regional scoring; prominent bass needs mixing.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Dub Eastern\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    },
+    {
+      "path": "assets/episode_post/local/music/km-usuan2100030/full.mp3",
+      "sha256": "51924be4565a2f101f4daa45998aa4c3577dab05ba5d1067ffb7bc57583ad503",
+      "bytes": 7392261,
+      "technical": {
+        "duration_s": 369.50205,
+        "codec": "mp3",
+        "sample_rate": 44100,
+        "channels": 2,
+        "integrated_lufs": -20.27,
+        "true_peak_dbtp": -7.98,
+        "full_decode_passed": true
+      },
+      "candidate_segments": [
+        {
+          "start": 135.0,
+          "end": 155.0,
+          "rms_dbfs": -19.12,
+          "role": "lower-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 275.0,
+          "end": 295.0,
+          "rms_dbfs": -18.51,
+          "role": "middle-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        },
+        {
+          "start": 45.0,
+          "end": 65.0,
+          "rms_dbfs": -17.64,
+          "role": "higher-energy",
+          "status": "ENERGY_CANDIDATE_NOT_AUDITIONED",
+          "basis": "20-second RMS window; not a phrase boundary, mood or beat detector"
+        }
+      ],
+      "realtime_listening": "NOT_DONE",
+      "id": "km-usuan2100030-full",
+      "title": "Space Jazz",
+      "artist": "Kevin MacLeod",
+      "variant": "full",
+      "isrc": "USUAN2100030",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN2100030",
+      "download_url": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%20Jazz.mp3",
+      "moods": [
+        "electronic-jazz",
+        "bright",
+        "relaxed"
+      ],
+      "use_cases": [
+        "quirky-technology",
+        "stylized-future",
+        "light-montage"
+      ],
+      "instruments": [
+        "Synths"
+      ],
+      "provider_bpm": "89",
+      "provider_feel": "Bright, Grooving, Relaxed",
+      "caution": "Playful electronic identity may clash with realistic domestic drama.",
+      "tag_basis": "Official catalog description/feel plus agent inference; NOT_AUDITIONED",
+      "evidence": [
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-pieces.json",
+          "sha256": "54802ad340562624b9d1c9c97aa9f005e2b9bf79001f8a1a07ed857e68b2164a",
+          "bytes": 881512
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-index.html",
+          "sha256": "0aaccc3d496fc4ae189e27e3fe2d4f5216266e3bcccf2e0ba77fb1b57a28fa94",
+          "bytes": 26826
+        },
+        {
+          "path": "assets/episode_post/local/music/_evidence/batch-02/incompetech-licenses.html",
+          "sha256": "479019ed42fd8384c63c04bd95dc6d0e0e0da505ddd6f567a13018c724f8416d",
+          "bytes": 12146
+        }
+      ],
+      "attribution": "\"Space Jazz\" Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License. https://creativecommons.org/licenses/by/4.0/",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "usage": "Attribution-required candidate; check actual production/platform use",
+        "provider_notices": [
+          "Use the official attribution code",
+          "No implication of composer endorsement"
+        ],
+        "changes_notice_required": true
+      },
+      "status": "TECHNICALLY_VERIFIED_AUDITION_REQUIRED"
+    }
+  ],
+  "updated_utc": "2026-10-23T07:52:51.562169+00:00",
+  "additional_selections": [
+    {
+      "path": "assets/episode_post/music/selection-batch-02.json",
+      "sha256": "cf33d877e907e0a3b6225873d822aa734ecacdd6e59d749f43cf35bbf5b166ea",
+      "bytes": 3555
+    }
+  ]
+}

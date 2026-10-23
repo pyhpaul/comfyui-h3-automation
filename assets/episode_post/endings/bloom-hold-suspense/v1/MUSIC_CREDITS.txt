@@ -1,0 +1,7 @@
+'Undertow' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au
+https://www.scottbuckley.com.au/library/undertow/
+https://creativecommons.org/licenses/by/4.0/
+Changes: Excerpts, fades, level changes, dialogue ducking and pitch-preserving time stretching of the ending music tail.
+Include attribution in the publication description. No attribution is burned into the picture.
+
+Additional suspense sounds: locally synthesized filtered deterministic pink noise and decaying sine waveforms. No external SFX samples used.

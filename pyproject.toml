@@ -12,6 +12,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-httpx>=0.30"]
+asr = ["faster-whisper>=1.0"]
 
 [project.scripts]
 comfy-orch = "comfy_orch.cli:app"

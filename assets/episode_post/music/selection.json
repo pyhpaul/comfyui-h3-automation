@@ -1,0 +1,15 @@
+{
+  "schema": "music-library-selection/v1",
+  "provider": "Scott Buckley",
+  "tracks": [
+    {"slug": "undertow", "title": "Undertow", "moods": ["suspense", "restrained-conflict"], "instruments": ["strings", "piano"], "use_cases": ["identity-reveal", "family-standoff"], "caution": "Existing pilot reference, not the default for every episode.", "existing": "assets/episode_post/local/pilots/lihun-v21-ep01/music/sb_undertow.mp3"},
+    {"slug": "signal-to-noise", "title": "Signal to Noise", "moods": ["mystery", "melancholy", "hope"], "instruments": ["cello", "piano", "synth", "low-strings"], "use_cases": ["investigation", "doubt", "hidden-truth"], "caution": "Lead melody can compete with dialogue; compare the no-piano mix.", "include_no_piano_mix": true},
+    {"slug": "the-old-ones", "title": "The Old Ones", "moods": ["eerie", "horror", "unease"], "instruments": ["abstract-strings", "synth"], "use_cases": ["danger", "unresolved-threat", "horror-ending"], "caution": "Not interchangeable with warm romance or calm defiance."},
+    {"slug": "machina", "title": "Machina", "moods": ["sci-fi", "cold", "mysterious"], "instruments": ["electronic", "synth", "glitch"], "use_cases": ["technology", "surveillance", "urban-mystery"], "caution": "Electronic texture may conflict with period or domestic drama."},
+    {"slug": "snowfall", "title": "Snowfall", "moods": ["reflective", "sad", "intimate"], "instruments": ["layered-piano", "strings", "synth"], "use_cases": ["loss", "memory", "quiet-regret"], "caution": "Melodic piano needs dialogue audition; sadness is an inferred use, not a verified scene fit."},
+    {"slug": "chasing-daylight", "title": "Chasing Daylight", "moods": ["contemplative", "healing", "hopeful"], "instruments": ["piano", "strings", "synth"], "use_cases": ["reconciliation", "care", "emotional-recovery"], "caution": "Keep contemplative passages distinct from later builds; audition scene transitions."},
+    {"slug": "felicity", "title": "Felicity", "moods": ["light", "hopeful", "romantic-comedy"], "instruments": ["piano", "mandolin", "violin", "synth", "drums"], "use_cases": ["light-romance", "daily-life", "positive-montage"], "caution": "Not slapstick or a neutral bed; folk/pop rhythm may be too busy under dialogue."},
+    {"slug": "pathfinder", "title": "Pathfinder", "moods": ["heroic", "adventurous", "triumphant"], "instruments": ["brass", "strings", "orchestra"], "use_cases": ["victory", "reversal", "action-montage"], "caution": "High-density scoring; prefer non-dialogue action, not every verbal reversal."},
+    {"slug": "juggernaut", "title": "Juggernaut", "moods": ["menacing", "driving", "epic"], "instruments": ["strings", "brass", "percussion"], "use_cases": ["villain", "conflict-escalation", "pursuit"], "caution": "Strong dark action treatment, not ordinary conversational tension."}
+  ]
+}

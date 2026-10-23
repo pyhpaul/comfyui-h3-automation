@@ -46,6 +46,6 @@ WSL/本机有可用 NVIDIA GPU 时，**ASR 类本地重活不要默认死锁 CPU
 ## 执行习惯
 
 1. 开工先列「可并行轨道」与「阻塞点」，阻塞点以外全部拉起来。
-2. 空闲计费资源（Colab CU、租卡）无待渲任务就关；有待办却空转等于浪费。
+2. 空闲计费资源（Colab CU、租卡）无待渲任务就关；有待办却空转等于浪费。用户说「GPU/批次做完就关」时，入队同时挂 `watch_feiniu_then_shutdown` / `watch_gpu_slice_then_shutdown`，完成后及时关机。
 3. 进度汇报按轨道分别报，不要暗示「必须等 A 全部结束才启动 B」。
 4. 复修审片：齐条即拉、`--jobs` 并发筛查；与 GPU slice、整集 `reexport`、PASS 集剪辑同开。

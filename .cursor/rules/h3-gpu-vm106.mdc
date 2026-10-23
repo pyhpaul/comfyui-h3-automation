@@ -53,6 +53,8 @@ curl -sS --max-time 20 http://192.168.50.106:8190/system_stats
 
 用户说了跑完进飞牛再关机，入队一开始就要另起等待进程，不要等下一次对话被提醒才去关。等待进程盯着这一批入队进程。入队日志出现干净的 `BATCH_DONE` 和退出码 0、飞牛上每个计划单元都有 mp4、latent、`prompt_h3.txt`、`run_meta.json`、`/queue` 为空，才点关机。归档失败、文件不齐或队列不空就打印 `HOLD` 并停住，不关机。晨羽页要一直开着。
 
+本地 GPU 切片（`queue_lihun_fix_gpu_slice.py`）同理：用户要求「GPU 做完就关」时，入队后立刻另起 `scripts/ops/watch_gpu_slice_then_shutdown.py`（盯 `GPU_SLICE_DONE fail=0` + 飞牛候选齐 + `/queue` 空），不要等切片跑完再想起来。
+
 ```bash
 PYTHONPATH=src python scripts/ops/watch_feiniu_then_shutdown.py \
   --pid <入队进程> \

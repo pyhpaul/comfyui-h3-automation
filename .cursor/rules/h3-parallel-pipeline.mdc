@@ -27,6 +27,16 @@ alwaysApply: true
 - 已拉回的缓存目录用 `--audit-only` 续跑，不要为了重审再串一遍拉飞牛
 - 多 worker 只做自动筛查；定案仍按 V2 逐条帧审，写 `fix_registry` verdict（筛查并发 ≠ 盲过）
 
+## 本地可加速的算力优先用本机 GPU
+
+WSL/本机有可用 NVIDIA GPU 时，**ASR 类本地重活不要默认死锁 CPU**：
+
+- 适用范围：`audit_candidate` / `dialogue_gate` / `batch_dialogue_check` / 整集重导出里的 Whisper ASR，以及其他只吃本地推理、不占租卡 Comfy 队列的任务
+- 默认策略：探测到 CUDA 则 `faster-whisper`（或同等 ASR）走 `device=cuda`；不可用再回退 CPU int8
+- 与 `--jobs` 并用时控制并发，避免多进程把显存打爆（常见：GPU 上 1～2 个 Whisper worker，其余 jobs 做抽帧/IO；或单 GPU 模型进程 + 任务队列）
+- **不要**把这类活塞进晨羽/Colab 租卡 Comfy 队列；租卡只作出片。本机 GPU 空着却用 CPU 慢审 = 浪费墙钟
+- 实现未落地前，新开筛查批次按本条设计；**已在跑的 CPU audit 批次不要中途重启抢切**，等本批结束后再切 GPU 路径
+
 ## 必须串行的（真依赖）
 
 - 下一条 `motion_latent` 需要上一条 GPU 上的 latent（HANDOFF）——见 `h3-queue-run.mdc`

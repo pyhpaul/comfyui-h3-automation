@@ -289,7 +289,7 @@ def prune_unused_api_ref_images(
     *,
     values: dict[str, Any],
 ) -> dict[str, Any]:
-    """Drop H3 ref_images / unused ref_videos inputs that have no job field."""
+    """Drop H3 ref_images / unused ref_videos / ref_audios inputs that have no job field."""
     out = copy.deepcopy(workflow)
     h3 = out.get("265")
     if not isinstance(h3, dict):
@@ -305,6 +305,11 @@ def prune_unused_api_ref_images(
     for i in range(0, 3):
         field = f"ref_video_{i}"
         key = f"ref_videos.ref_video_{i}"
+        if field not in values and key in inputs:
+            del inputs[key]
+    for i in range(0, 3):
+        field = f"ref_audio_{i}"
+        key = f"ref_audios.ref_audio_{i}"
         if field not in values and key in inputs:
             del inputs[key]
     h3["inputs"] = inputs

@@ -17,6 +17,7 @@ import select
 import socket
 import sys
 import threading
+import time
 from pathlib import Path
 
 import paramiko
@@ -37,23 +38,34 @@ def ensure_transport():
         t = _state["transport"]
         if t is not None and t.is_active():
             return t
-        c = paramiko.SSHClient()
-        c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        c.connect(
-            SSH_HOST,
-            port=SSH_PORT,
-            username=SSH_USER,
-            password=SSH_PASS,
-            timeout=45,
-            allow_agent=False,
-            look_for_keys=False,
-        )
-        t = c.get_transport()
-        t.set_keepalive(30)
-        _state["client"] = c
-        _state["transport"] = t
-        print("ssh connected", SSH_HOST, SSH_PORT, flush=True)
-        return t
+        last: Exception | None = None
+        for attempt in range(8):
+            c = paramiko.SSHClient()
+            c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            try:
+                c.connect(
+                    SSH_HOST,
+                    port=SSH_PORT,
+                    username=SSH_USER,
+                    password=SSH_PASS,
+                    timeout=45,
+                    banner_timeout=40,
+                    auth_timeout=40,
+                    allow_agent=False,
+                    look_for_keys=False,
+                )
+                t = c.get_transport()
+                t.set_keepalive(30)
+                _state["client"] = c
+                _state["transport"] = t
+                print("ssh connected", SSH_HOST, SSH_PORT, flush=True)
+                return t
+            except Exception as exc:
+                last = exc
+                print("ssh retry", attempt, type(exc).__name__, flush=True)
+                time.sleep(3)
+        assert last is not None
+        raise last
 
 
 def pipe(a, b):

@@ -8,7 +8,11 @@ unless ``--no-parent-sim`` is set.
 Also prints engineering columns from ``assets/prompt_audit.json`` when present:
 inject / reorder / unbound (no-face metrics are intentionally omitted).
 
-Exit 0 only when every selected job passes both gates.
+After the per-unit gates, consecutive units in one episode are checked for
+motion-latent scene continuity: ``scene-004-s01`` and ``scene-004-s03`` are one
+place; ``scene-006`` into ``scene-004`` must break the latent chain.
+
+Exit 0 only when every selected job passes both gates and the scene chain.
 """
 from __future__ import annotations
 
@@ -17,6 +21,7 @@ import json
 import sys
 from pathlib import Path
 
+from comfy_orch.latent_scene import audit_job_dirs
 from comfy_orch.paths import project_root
 from comfy_orch.prompt_wire import preflight_job_dir
 
@@ -93,6 +98,10 @@ def main() -> int:
                 block = rep.get(key) or {}
                 for w in block.get("warnings") or []:
                     print(f"  warn[{key}] {w}", flush=True)
+
+    for violation in audit_job_dirs(job_dirs):
+        failed += 1
+        print(f"FAIL latent-scene {violation}", flush=True)
 
     if args.json:
         print(json.dumps(reports, ensure_ascii=False, indent=2))

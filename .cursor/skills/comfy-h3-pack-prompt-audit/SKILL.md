@@ -66,6 +66,32 @@ Code path:
 - [ ] Warnings (e.g. unbound relative asset like U07 crystal) are acknowledged; do not treat warning-only as PASS for missing Picture slots if the asset is required for the shot
 - [ ] Motion latent stays on one scene number. `scene-004-s01` and `scene-004-s03` are the same place (time of day). `scene-006` → `scene-004` is a cut: **do not queue** that pair on one latent chain. `FAIL latent-scene` is a hard stop. Break the chain at the first unit of the new place (that unit loads no parent latent). A prompt mention of the old scene does not count; only bound `ref_image_*` scene files do. An extra plate that shares the previous scene number (phone-screen scene beside the current room) may stay on the chain.
 
+## What this audit does **not** catch
+
+`audit_pack_prompts.py` is **pre-queue text/asset wiring**. It never listens to the rendered mp4. Extra/garbled speech, silent units that still talk, speaker mismatch, both mouths delivering the same line, and tail audio junk only show up **after** render. ASR dialogue gate matches expected `（）` text and usually **misses** two characters repeating one line.
+
+### Next review focus: two-speaker echo
+
+**Post-Feiniu spot-check priority #1:** two-shot / depth-other dialogue units — watch mouths and listen for both characters delivering the same line.
+
+Not a duplicated script line: H3 joint AV latent lip-ownership crosstalk. Visible mouths follow the active speech; listeners without an explicit closed-mouth lock often mouth along. Pack risk is high when shots use `口型同步开口` plus `另一人在画面纵深` / name the other person, but never say the listener keeps lips closed / stays silent. Mitigate in `prompt_source`: speaker opens; everyone else in frame stays lips-closed and silent; forbid both mouths on one line. Official-style `(S1)/(S2)` + listener-closed beats are stronger than bare `（）` alone.
+
+Pre-queue: flag dual-dialogue units that lack a listener-closed cue as high risk (warn; do not auto-FAIL wiring audit).
+
+Official MiniMax `h3-prompt-writing` vs pack gaps, combat prompt order, and the extended audit checklist: `docs/ops/2026-10-19-minimax-h3-official-skills-vs-pack-prompts.md`. Do **not** bulk-rewrite packs to English six-section Ref2VA.
+
+**Default:** do **not** pass `--dialogue-gate` / `H3_DIALOGUE_GATE`. After films land on Feiniu, spot-check **1–2 units per episode** (**two-speaker echo first**, then money lines, short greetings, post-dialogue action, chain head/tail). Only enable the runner gate when the user asks for this batch, or after spot-check shows clear read-aloud failures.
+
+Optional gate (user-requested only):
+
+```bash
+python scripts/run_ep_units_profiled.py --continuity motion_latent --dialogue-gate \
+  --feiniu-batch '<批次>' --units U01 U02
+# or: export H3_DIALOGUE_GATE=1
+```
+
+Needs `faster-whisper` + `ffmpeg`. On `DIALOGUE_GATE_FAIL` the runner retries the same unit (`--dialogue-gate-retries`, default 2) and only prints `HANDOFF` after a pass. Dirty audio on a `parent_latent` unit can poison the next unit—use the gate selectively when that risk outweighs burn cost.
+
 ## 拆解（现行 light pack）
 
 `scripts/unpack_ep04_ep12_v7.py` 调 `scripts/unpack_ep01_dead_v1.py` 的 `write_unit`。产物在 `jobs/ep_units/`（不入库）。拆解脚本不入队。
@@ -76,7 +102,8 @@ Code path:
 - `start_mode=parent_latent`：`【H3 latent 接入文字】` 和 `【交出状态】` 各一次。`【H3 latent 接力文字】` 只在下一条也是 `parent_latent` 时出现（`expects_handoff`）。链尾不写接力。
 - 没有 `start_mode` 的旧包：三段标题仍然各一次。
 - 时长 15.083 秒，最多 9 张 `ref_image_*`。
-- 对白括号里要有空格。`（纯文字，无参考图）` 不是台词。
+- 对白括号：只有拉丁字母、数字和标点时改成 `（ text ）`。空的 `（）` 不动。含中文的括号不动。英文单词不改。`（纯文字，无参考图）` 不是台词。
+- 复用本文件的 `write_unit` 时先清空模块级 `_LABEL`。显示名用本包上传块。不清会绑成旧包角色。
 - Notime 删除只用于正式 EP06/EP08，不用于试用包。
 - 改 `assets/prompt_source.txt`。提交时 runner 会用它重写 `prompt_h3.txt`。
 - 纯文字道具不是上传 id。标了只取脸、武器待补、需适配的设定图，不要当成那套衣服绑进去。衣服以画面像素为准，提示词写位置和动作。
@@ -84,7 +111,7 @@ Code path:
 
 ## 场景四格审核
 
-场景图通常是一张 1672×941、中间白十字的四格。人物设定图是 1×4，不裁。
+场景图通常是一张 1672×941、中间白十字的四格。人物设定图是 1×4，不裁。白底产品多视图（四视图、转面）不是场景四格，不裁。
 
 把某一格裁出来替换整张之前：
 

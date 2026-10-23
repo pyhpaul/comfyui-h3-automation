@@ -1,16 +1,19 @@
 ---
-description: Before any Comfy H3 / EP queue submit, confirm 一采 vs 二采 and continuity mode
+description: H3 queues are 只一采, and continuous scenes use motion latent, unless the user says otherwise
 alwaysApply: true
 ---
 
-# H3 render mode gate
+# H3 出片约束
 
-Before starting or resuming any ComfyUI H3 EP generate/queue/serial run in this repo, **ask the user first** and wait for an explicit answer:
+没有明确指示，都是只一采。不要问采数，不要加 `--second-pass`。只有这次明确说二采，才加。
 
-1. **Passes:** 只一采，还是一采+二采（`--second-pass`）？
-2. **Continuity:** `ref_video`（整片参考）还是 `motion_latent`（AV latent / Motion Context）？
+场景连续时都用 `motion_latent`。不要问接力方式。只有这次明确说整片参考，才用 `ref_video`。
 
-Do **not** assume defaults, do **not** silently enable `--second-pass` or `motion_latent`, and keep download dirs separate for the two modes.
+场景连续指下一条还在同一地点，并且 `start_mode` 不是 `independent`。这种才接上一条的 AV latent。换场号要断开。`start_mode=independent`（时间跳过、闪前、换机位）也断开，即使场景号相同。上一条成片已经是上下分屏时也断开，见 `h3-queue-run.mdc`。
+
+成片放飞牛，不留本地下载目录。见 `h3-feiniu-archive-only.mdc`。入队接力见 `h3-queue-run.mdc`。拆包见 `h3-pack-prep.mdc`。
+
+默认不开对白门禁。飞牛上每集抽 1～2 个 U 人工复审；**重点先查双人同框是否两人同念**，再决定是否对该批或该类单开 `--dialogue-gate`。见 `h3-queue-run.mdc`。
 
  Canonical doc: `docs/ops/2026-09-10-render-profiles.md`  
  Runner: `scripts/run_ep_units_profiled.py`

@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# From WSL/orchestration host: point vm122:8190 → GPU Comfy 127.0.0.1:8188.
+# From WSL/orchestration host: point vm106:8190 → GPU Comfy 127.0.0.1:8188.
 #
 # Required (never commit secrets):
 #   COMFY_GPU_SSH_HOST
 #   COMFY_GPU_SSH_PORT
 #   COMFY_GPU_SSH_PASS   or  COMFY_GPU_SSH_PASSFILE
 #
-# Optional: VM122_SSH=vm122  COMFY_TUNNEL_LISTEN=8190
+# Optional: VM122_SSH=vm106  COMFY_TUNNEL_LISTEN=8190  COMFY_TUNNEL_HTTP=http://192.168.50.106:8190
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-VM122_SSH="${VM122_SSH:-vm122}"
+VM122_SSH="${VM122_SSH:-vm106}"
 LISTEN="${COMFY_TUNNEL_LISTEN:-8190}"
 HOST="${COMFY_GPU_SSH_HOST:?set COMFY_GPU_SSH_HOST}"
 PORT="${COMFY_GPU_SSH_PORT:?set COMFY_GPU_SSH_PORT}"
@@ -79,5 +79,6 @@ echo
 REMOTE
 
 echo "WSL check:"
-curl -sS --max-time 20 "http://192.168.5.122:${LISTEN}/system_stats" \
+CHECK_URL="${COMFY_TUNNEL_HTTP:-http://192.168.50.106:${LISTEN}}"
+curl -sS --max-time 20 "${CHECK_URL}/system_stats" \
   | python3 -c "import sys,json;d=json.load(sys.stdin);print('ok',(d.get('devices')or[{}])[0].get('name'))"

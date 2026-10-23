@@ -1,0 +1,123 @@
+{
+  "schema": "episode-edit-comparison/v1",
+  "episode": "EP01",
+  "source_version": "lihun-v21",
+  "unit_order": [
+    "U01",
+    "U02",
+    "U03",
+    "U04"
+  ],
+  "sources": {
+    "U01": {
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U01-WENXI/EP01-U01-lihun-wenxi_00001-audio.mp4",
+      "prompt": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U01-WENXI/prompt_h3.txt",
+      "meta": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U01-WENXI/run_meta.json",
+      "analysis": "assets/episode_post/local/pilots/lihun-v21-ep01/analysis/U01-WENXI.json",
+      "sha256": "d203606e77878b5bf4e29fd641dbf587db0a8cf56cc375b865d7fe86c791661a",
+      "prompt_sha256": "5eb9c80fecb483858e2290f938ddc6aeddcecb6a6089985751888fe819e05ecd",
+      "meta_sha256": "3cbe47babea67b7bf1f43498f1c1a37f92c9714176e28444065fc903d260dc63",
+      "analysis_sha256": "8ffd5ab3d7c526743efadfb8154fb6acfffbf5f430c54dd44aef7fef2a499016",
+      "expected_dialogue": [
+        "You brought it yourself? You really can't let go.",
+        "He already chose me. You don't need an audience.",
+        "You asked for the ring. Here it is."
+      ]
+    },
+    "U02": {
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U02-WENXI/EP01-U02-lihun-wenxi_00001-audio.mp4",
+      "prompt": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U02-WENXI/prompt_h3.txt",
+      "meta": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U02-WENXI/run_meta.json",
+      "analysis": "assets/episode_post/local/pilots/lihun-v21-ep01/analysis/U02-WENXI.json",
+      "sha256": "e6a1b4ac7c001abab9ea7e9ea7a37a638697a1fd2e87901e00631a2a6f00c699",
+      "prompt_sha256": "4ab06c9138d71711c2bd2fd0103a42cf0ac421559f7e4a6955be9abbca99c39f",
+      "meta_sha256": "502e5aaf71a0de88468de11123ef28f03096712916564a3e50093395b7558fa7",
+      "analysis_sha256": "bc2bdf5992e7f9846df616c82c1104fdd7d53b2273f8f3e0c5a1e6568fbf7a70",
+      "expected_dialogue": [
+        "Mom, can we go home now?",
+        "Whose kid is that? You're bringing strangers into our home?",
+        "Mine. He's your brother, Ethan.",
+        "Dad? What are you doing here?"
+      ]
+    },
+    "U03": {
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U03-WENXI/EP01-U03-lihun-wenxi_00001-audio.mp4",
+      "prompt": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U03-WENXI/prompt_h3.txt",
+      "meta": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U03-WENXI/run_meta.json",
+      "analysis": "assets/episode_post/local/pilots/lihun-v21-ep01/analysis/U03-WENXI.json",
+      "sha256": "33235d473fdc50b9aa38e022add5489116c83aa4e848934de3d4809730c76709",
+      "prompt_sha256": "9323f305b7dc292c32ef645f3c6fd6735f28dde0ae76824b9e49584d3566bea3",
+      "meta_sha256": "e577f3baf24158a665d660107f85f0048edc6260874e4fd148eb4579aec7d829",
+      "analysis_sha256": "174280b0f8f7709840e21a19f1f328f91f0fd2fca6d2e000783369390db198c9",
+      "expected_dialogue": [
+        "Ava is my wife. We married yesterday.",
+        "Damian, this isn't funny.",
+        "It wasn't meant to be."
+      ]
+    },
+    "U04": {
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U04-WENXI/EP01-U04-lihun-wenxi_00001-audio.mp4",
+      "prompt": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U04-WENXI/prompt_h3.txt",
+      "meta": "assets/episode_post/local/pilots/lihun-v21-ep01/units/U04-WENXI/run_meta.json",
+      "analysis": "assets/episode_post/local/pilots/lihun-v21-ep01/analysis/U04-WENXI.json",
+      "sha256": "54ebc96b6aa86521d9663563866a41f625f94362bcba7ab2208c1bbceb2776c8",
+      "prompt_sha256": "143b265fd53989dd5ee115fe45d663fddcee7bfc802a458b238a2d235544ca2b",
+      "meta_sha256": "90ef6269ec1e2cb1ece6bb2afe1dc39d94551ae479a1a8e9cf324f099528ed74",
+      "analysis_sha256": "76374ca84dd2a17c955d5952719e75dc42d8373c5641389ea8ed0c85aaab7227",
+      "expected_dialogue": [
+        "You married my ex-wife?",
+        "Yes. You can call me Ava."
+      ]
+    }
+  },
+  "available_music": [
+    {
+      "path": "assets/episode_post/local/pilots/lihun-v21-ep01/music/sb_undertow.mp3",
+      "sha256": "4652007dad67295f1f5c87c8cbc8e2df1a530e7671266a29f693a084375d3910",
+      "title": "Undertow",
+      "artist": "Scott Buckley",
+      "license": "CC-BY 4.0"
+    }
+  ],
+  "available_presets": [
+    {
+      "path": "docs/ending-presets/bloom-hold-suspense-v1.json",
+      "sha256": "7e8c98785f8ad05268252ac9fb0e6f089903b2fb27d67c8c088692997e750eee"
+    }
+  ],
+  "skill_snapshot": [
+    {
+      "path": ".cursor/skills/comfy-h3-episode-assembly/SKILL.md",
+      "sha256": "d0f0180bdcff5489169ca72ef7e0c0c9b86767882f73851899a78d09e0118d9a"
+    },
+    {
+      "path": ".cursor/skills/comfy-h3-episode-assembly/references/agent-direction.md",
+      "sha256": "7e0bff8489885d2112f5b838177b0c6997e0516066315499e7c881d98df9e172"
+    },
+    {
+      "path": ".cursor/skills/comfy-h3-episode-assembly/references/post-production.md",
+      "sha256": "cf993dc5f18302708d29ce9c416afd8360e6be63416c7e5011a6f7fa2e0bd582"
+    },
+    {
+      "path": ".cursor/skills/comfy-h3-episode-assembly/references/qc-review.md",
+      "sha256": "16c74a64ab87651f75f1ed803bc70d02cda6dfef8e417eda324fe960cc2392d4"
+    }
+  ],
+  "delivery": {
+    "fps": 24,
+    "width": 768,
+    "height": 1376,
+    "audio_hz": 48000,
+    "language": "en",
+    "lufs": -16,
+    "lufs_tolerance": 0.6,
+    "true_peak_ceiling": -1.5
+  },
+  "constraints": [
+    "Keep required dialogue and narrative action; no new generation or external assets.",
+    "Choose cuts, cue timing/levels and ending independently; approved preset is optional.",
+    "No prior candidate output or creative plan is needed as input.",
+    "Record decisions before rendering, then QC and review actual output.",
+    "Not a blinded experiment: historical skill examples and this conversation may influence choices."
+  ]
+}

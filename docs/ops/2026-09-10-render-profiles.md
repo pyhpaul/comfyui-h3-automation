@@ -1,15 +1,12 @@
 # EP02 渲染模式与验收流程（一采 vs latent+二采）
 
-> **必须区分开**：默认「整片参考 + 只跑一采」和「AV latent Motion Context + 可选二采」是两套流程，产物目录/文件名不同，不要混谈。
+> **现行默认：** 只一采，场景连续用 `motion_latent`。成片进飞牛，不要 `--download-dir`。用户没明确说二采，不要加 `--second-pass`。换场或 `start_mode=independent` 不接 latent。只有明确说整片参考才用 `ref_video`。
 >
-> **开工硬门禁：** 每次开跑 / 续跑前，代理必须先主动问清并等用户确认：
-> 1) **只一采** 还是 **一采+二采**？
-> 2) 接力用 **`ref_video`（整片）** 还是 **`motion_latent`（AV latent）**？
-> 未确认前不得提交队列。
+> 下面的 A/B 是 EP02 当时的对照，不是现在的默认。
 
 ## 模式对照
 
-| | **A. 单纯一采（默认/原流程）** | **B. 因果验收（本次测试）** |
+| | **A. 整片参考（须明确要求）** | **B. 因果验收（当时的二采测试）** |
 |--|-------------------------------|----------------------------|
 | 开关 | `--continuity ref_video`（默认）**不要**加 `--second-pass` | `--continuity motion_latent --second-pass` |
 | 跨 U 接力 | 上一 U **MP4** → `ref_video_0` + 提示词 `<Video 1>` / `父片段` | 上一 U **一采 AV latent** → Motion Context Load（**无** MP4 parent） |
@@ -27,12 +24,23 @@
 
 ## 命令
 
+现行：
+
 ```bash
-export COMFY_BASE_URL=http://192.168.5.122:8190
+export COMFY_BASE_URL=http://192.168.50.106:8190
+export PYTHONPATH=src
 cd /home/linux_dev/projects/comfyui-h3-automation
 source .worktrees/feat-orch/.venv/bin/activate
 
-# A — 单纯一采（原串行）
+python scripts/run_ep_units_profiled.py --units U01 U02 \
+  --continuity motion_latent \
+  --feiniu-batch '<批次>'
+```
+
+下面是 EP02 当时的对照，不要照抄 `--download-dir`：
+
+```bash
+# A — 整片参考（须明确要求）
 python scripts/run_ep_units_profiled.py --units U01 U02 --continuity ref_video \
   --download-dir /mnt/c/Users/lxy/Downloads/EP02-H3-causality-v21-rewire
 

@@ -8,7 +8,10 @@ from __future__ import annotations
 import re
 from typing import Iterable
 
-_AT = re.compile(r"@(char|prop|scene)-([A-Za-z0-9._-]+)\b", re.I)
+_AT = re.compile(
+    r"@(char|prop|scene)-([A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)*)",
+    re.I,
+)
 _EP_HEAD = re.compile(r"(EP\d+)", re.I)
 _BIND_LINE = re.compile(r"^绑定资产：.*$", re.M)
 

@@ -1,6 +1,6 @@
-# Ops：租卡 Comfy（H3）+ vm122 隧道
+# Ops：租卡 Comfy（H3）+ vm106 隧道
 
-编排入口：`COMFY_BASE_URL=http://192.168.5.122:8190`。
+编排入口：`COMFY_BASE_URL=http://192.168.50.106:8190`。部署和关机见 `.cursor/rules/h3-gpu-vm106.mdc`。入队接力见 `.cursor/rules/h3-queue-run.mdc`。成片见 `.cursor/rules/h3-feiniu-archive-only.mdc`。
 
 ## 固化流程（推荐）
 
@@ -13,15 +13,19 @@
 | `comfy_gpu_stop.sh` | 租卡 | 可选停止（勿并入启动） |
 | `comfy_gpu_start.sh` | 租卡 | **正式** H3 启动参数 |
 | `remote_comfy_h3.sh` | WSL | SSH 上租卡执行 status/stop/start/restart |
-| `switch_gpu_tunnel.sh` | WSL | 把 vm122:8190 指到当前租卡 |
-| `comfy_ssh_forward.example.py` | 部署到 vm122 `/tmp` | 8190→8188 转发 |
+| `switch_gpu_tunnel.sh` | WSL | 把 vm106:8190 指到当前租卡（`VM122_SSH=vm106`） |
+| `comfy_ssh_forward.example.py` | 部署到 vm106 `/tmp` | 8190→8188 转发 |
 | `run_ep_manual_call_defaults.sh` | WSL | 锁定 `motion_latent` + 无二采 + `gpu-profile auto` |
 | `h3_manual_call_run_defaults.env.example` | WSL | 上述默认的环境变量样例 |
 | `refresh_manual_call_bind_labels.py` | WSL | 刷新 job「绑定资产」剧名标签（工程加强，不改正文） |
+| `watch_feiniu_then_shutdown.py` | WSL | 入队一开始另起。飞牛齐且队列空才关机，否则 `HOLD` |
+| `chenyu_ssh_info.py` | WSL | 从已打开的晨羽 `podExample` 页 CDP 读取各运行中实例的 SSH 主机/端口，密码写入 passfile |
+| `chenyu_shutdown.py` | WSL | 点晨羽页上的 `关机`。入队脚本不会自己调用它 |
 
 ```bash
 export COMFY_GPU_SSH_HOST=….chenyu.cn COMFY_GPU_SSH_PORT=….
-export COMFY_GPU_SSH_PASS='…'   # 不上库
+export COMFY_GPU_SSH_PASSFILE=/home/linux_dev/.config/fnos/.chenyu-gpu.pass
+export VM122_SSH=vm106
 bash scripts/ops/remote_comfy_h3.sh restart
 bash scripts/ops/switch_gpu_tunnel.sh
 ```

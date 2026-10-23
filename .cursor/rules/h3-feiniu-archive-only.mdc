@@ -1,0 +1,33 @@
+---
+description: H3 成片只放飞牛 archive，不留在本地 Downloads 或 outputs
+alwaysApply: true
+---
+
+# H3 成片只放飞牛
+
+成片一个单元是六件：mp4、latent、`prompt_h3.txt`、`run_meta.json`，加上对白审核补的词轨 `.srt` 与 `dialogue_check.json`。前四件渲染后归档，后两件审核后补进同一个单元目录（`comfy_orch.feiniu_archive.add_qc_files`）。入队后只放到飞牛，不留在本机。
+
+- 用 `--feiniu-batch '<批次>'`。批次名向用户要，不要沿用上一次的批次。不要传 `--download-dir`。
+- 新资产在 `H3_comfyUI_5090/inbox/<批次>/`。成片在 `H3_comfyUI_5090/archive/<批次>/<集>/<单元>/`。不打 zip。集目录用 `EP\d+`，例如 `EP01`。
+- 上传成功后删除 `outputs/<job_id>/` 里的成片。不要复制到 `/mnt/c/Users/lxy/Downloads/`。
+- `runs/<job_id>/status.json` 可以留在本地。那是运行记录，不是成片。
+- SMB：`192.168.60.103:445`，共享 `ai短剧同步文件夹`，用户 `ai`。密码只在 `/home/linux_dev/.config/fnos/ai.pass`（600）。用 `.worktrees/feat-orch/.venv` 里的 impacket `SMBConnection`。不要打印密码，不要写进 git。
+
+```bash
+export COMFY_BASE_URL=http://192.168.50.106:8190
+python scripts/run_ep_units_profiled.py --units U01 \
+  --continuity motion_latent \
+  --feiniu-batch '<批次>'
+```
+
+场景连续时用 `motion_latent` 接上一条的 latent。换场，或 `start_mode=independent`，都不接。
+
+# 归档后固定动作：对白审核＋词轨归档（与渲染并行）
+
+每集渲染四件进飞牛后，**立刻并行**做对白审核，不要等整批跑完，更不能卡住下一条/下一集的入队（ASR 是本机 CPU 活，和 GPU 渲染互不影响）。六件齐了才算这一单元归档完成：
+
+- 从飞牛拉回该集 mp4，跑 `scripts/ops/batch_dialogue_check.py`（`--emit-srt`），期望台词取各 job 的 `prompt_source.txt` 里 `（）`英文。做法见 `.cursor/skills/comfy-h3-dialogue-check/SKILL.md`。
+- 产出三件：判定 JSON、双语报告 md（真对白问题与工具误读分开写；「台词重复说」单独点名）、每条同名 `.srt` 词轨（UTF-8，给剪映专业版导入）。
+- 审核产物一律跟随产物路径，不另建文件夹：词轨 `.srt` 与单条判定 `dialogue_check.json` 进**对应单元目录**，作第五、六件（`add_qc_files` 补传）；批次级双语报告 md 作单个文件放批次根目录 `archive/<批次>/对白审核报告.md`。上传后逐个回读验大小。
+- 口径说清：ASR 只核「说了什么」，查不出双人同念；每集仍按 `h3-queue-run.mdc` 抽 1–2 条人工看嘴型归属，结论写进双语报告。
+- 审核发现真对白问题（缺句、乱序、多说进保留版）按问题条处理，不要默认开入队门禁 `--dialogue-gate`（默认不开，见 `h3-queue-run.mdc`）。

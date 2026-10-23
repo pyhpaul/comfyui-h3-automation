@@ -1,0 +1,772 @@
+{
+  "19": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "None",
+      "upload": "image"
+    },
+    "_meta": {
+      "title": "YZ参考图4"
+    }
+  },
+  "23": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "None",
+      "upload": "image"
+    },
+    "_meta": {
+      "title": "YZ参考图5"
+    }
+  },
+  "36": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_int8_convrot.safetensors"
+    },
+    "_meta": {
+      "title": "VAELoader"
+    }
+  },
+  "37": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "_meta": {
+      "title": "VAELoader"
+    }
+  },
+  "26": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "video": "",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 0,
+      "skip_first_frames": 0,
+      "select_every_nth": 1,
+      "format": "AnimateDiff",
+      "choose video to upload": "image",
+      "videopreview": {
+        "paused": false,
+        "hidden": false,
+        "params": {
+          "custom_height": 0,
+          "force_rate": 0,
+          "custom_width": 0,
+          "select_every_nth": 1,
+          "frame_load_cap": 0,
+          "skip_first_frames": 0
+        }
+      }
+    },
+    "_meta": {
+      "title": "VHS_LoadVideo"
+    }
+  },
+  "27": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "video": "",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 0,
+      "skip_first_frames": 0,
+      "select_every_nth": 1,
+      "format": "AnimateDiff",
+      "choose video to upload": "image",
+      "videopreview": {
+        "paused": false,
+        "hidden": false,
+        "params": {
+          "custom_height": 0,
+          "force_rate": 0,
+          "custom_width": 0,
+          "select_every_nth": 1,
+          "frame_load_cap": 0,
+          "skip_first_frames": 0
+        }
+      }
+    },
+    "_meta": {
+      "title": "VHS_LoadVideo"
+    }
+  },
+  "25": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "video": "",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 0,
+      "skip_first_frames": 0,
+      "select_every_nth": 1,
+      "format": "AnimateDiff",
+      "choose video to upload": "image",
+      "videopreview": {
+        "paused": false,
+        "hidden": false,
+        "params": {
+          "custom_height": 0,
+          "force_rate": 0,
+          "custom_width": 0,
+          "select_every_nth": 1,
+          "frame_load_cap": 0,
+          "skip_first_frames": 0
+        }
+      }
+    },
+    "_meta": {
+      "title": "VHS_LoadVideo"
+    }
+  },
+  "199": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "None",
+      "upload": "image"
+    },
+    "_meta": {
+      "title": "YZ参考图6"
+    }
+  },
+  "200": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "None",
+      "upload": "image"
+    },
+    "_meta": {
+      "title": "YZ参考图7"
+    }
+  },
+  "201": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "None",
+      "upload": "image"
+    },
+    "_meta": {
+      "title": "YZ参考图8"
+    }
+  },
+  "15": {
+    "class_type": "LoadAudio",
+    "inputs": {
+      "audio": "None",
+      "upload": null
+    },
+    "_meta": {
+      "title": "LoadAudio"
+    }
+  },
+  "43": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "None",
+      "upload": "image"
+    },
+    "_meta": {
+      "title": "YZ参考图3"
+    }
+  },
+  "331": {
+    "class_type": "ModelAttentionBackend",
+    "inputs": {
+      "model": [
+        "343",
+        0
+      ],
+      "attention": "comfy kitchen attention"
+    },
+    "_meta": {
+      "title": "ModelAttentionBackend"
+    }
+  },
+  "329": {
+    "class_type": "ModelPreviewOverrideKJ",
+    "inputs": {
+      "model": [
+        "403",
+        0
+      ],
+      "vae": [
+        "36",
+        0
+      ],
+      "max_resolution": 1024,
+      "jpeg_quality": 80,
+      "suppress_default_preview": true,
+      "preview_frames": 1024,
+      "preview_fps": 12,
+      "tiny_vae": "taeh3.safetensors",
+      "preview": ""
+    },
+    "_meta": {
+      "title": "ModelPreviewOverrideKJ"
+    }
+  },
+  "343": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "345",
+        0
+      ],
+      "lora_name": "motion_speed_slider_mmh3_v1.1.safetensors",
+      "strength_model": 3.0000000000000004
+    },
+    "_meta": {
+      "title": "LoraLoaderModelOnly"
+    }
+  },
+  "250": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "values.a": [
+        "259",
+        0
+      ],
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17"
+    },
+    "_meta": {
+      "title": "ComfyMathExpression"
+    }
+  },
+  "344": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "342",
+        0
+      ],
+      "lora_name": "Motion_Repair_V2.safetensors",
+      "strength_model": 0.3500000000000001
+    },
+    "_meta": {
+      "title": "LoraLoaderModelOnly"
+    }
+  },
+  "342": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "400",
+        0
+      ],
+      "lora_name": "H3_Combat_V2.safetensors",
+      "strength_model": 0.6500000000000001
+    },
+    "_meta": {
+      "title": "LoraLoaderModelOnly"
+    }
+  },
+  "345": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "344",
+        0
+      ],
+      "lora_name": "H3_Fight_Flow_V1.safetensors",
+      "strength_model": 0.3500000000000001
+    },
+    "_meta": {
+      "title": "LoraLoaderModelOnly"
+    }
+  },
+  "192": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "minimax_h3_hybrid_fl2va_ref2va_b25-49-int8.safetensors",
+      "weight_dtype": "default"
+    },
+    "_meta": {
+      "title": "UNETLoader"
+    }
+  },
+  "38": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "CLIPLoader"
+    }
+  },
+  "253": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "397",
+        0
+      ],
+      "vae": [
+        "36",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "VAEDecode"
+    }
+  },
+  "254": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "397",
+        0
+      ],
+      "vae": [
+        "37",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "VAEDecodeAudio"
+    }
+  },
+  "332": {
+    "class_type": "BlockSparseAttention",
+    "inputs": {
+      "model": [
+        "331",
+        0
+      ],
+      "selection": "sol-attn",
+      "selection.tau": 1.3,
+      "start_percent": 0.2,
+      "end_percent": 1,
+      "dense_blocks": "",
+      "min_tokens": 12288,
+      "extra_tokens": 256,
+      "sink_conditioning": "exact_kv_and_rows",
+      "verbose": true
+    },
+    "_meta": {
+      "title": "BlockSparseAttention"
+    }
+  },
+  "333": {
+    "class_type": "MiniMaxH3SigmaShift",
+    "inputs": {
+      "model": [
+        "332",
+        0
+      ],
+      "shift_video": 12,
+      "shift_audio": 3.0000000000000004
+    },
+    "_meta": {
+      "title": "MiniMaxH3SigmaShift"
+    }
+  },
+  "328": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "265",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "ConditioningZeroOut"
+    }
+  },
+  "265": {
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "inputs": {
+      "clip": [
+        "38",
+        0
+      ],
+      "vae": [
+        "36",
+        0
+      ],
+      "audio_vae": [
+        "37",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "51",
+        0
+      ],
+      "ref_images.ref_image_1": [
+        "49",
+        0
+      ],
+      "ref_images.ref_image_2": [
+        "50",
+        0
+      ],
+      "ref_images.ref_image_3": [
+        "43",
+        0
+      ],
+      "ref_images.ref_image_4": [
+        "19",
+        0
+      ],
+      "ref_images.ref_image_5": [
+        "23",
+        0
+      ],
+      "ref_images.ref_image_6": [
+        "199",
+        0
+      ],
+      "ref_videos.ref_video_0": [
+        "27",
+        0
+      ],
+      "ref_videos.ref_video_1": [
+        "25",
+        0
+      ],
+      "ref_videos.ref_video_2": [
+        "26",
+        0
+      ],
+      "ref_audios.ref_audio_0": [
+        "48",
+        0
+      ],
+      "ref_audios.ref_audio_1": [
+        "14",
+        0
+      ],
+      "ref_audios.ref_audio_2": [
+        "15",
+        0
+      ],
+      "ref_images.ref_image_7": [
+        "200",
+        0
+      ],
+      "ref_images.ref_image_8": [
+        "201",
+        0
+      ],
+      "prompt": [
+        "263",
+        0
+      ],
+      "width": [
+        "252",
+        0
+      ],
+      "height": [
+        "252",
+        1
+      ],
+      "length": [
+        "250",
+        1
+      ],
+      "ref_image_size": "match"
+    },
+    "_meta": {
+      "title": "MiniMaxH3ReferenceToVideo"
+    }
+  },
+  "49": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "男患者角色设定图2.jpg",
+      "upload": "image"
+    },
+    "_meta": {
+      "title": "YZ参考图1"
+    }
+  },
+  "50": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "首帧场景4.jpg",
+      "upload": "image"
+    },
+    "_meta": {
+      "title": "YZ参考图2"
+    }
+  },
+  "263": {
+    "class_type": "Text",
+    "inputs": {
+      "text": ""
+    },
+    "_meta": {
+      "title": "YZ提示词"
+    }
+  },
+  "364": {
+    "class_type": "VHS_VideoCombine",
+    "inputs": {
+      "images": [
+        "253",
+        0
+      ],
+      "audio": [
+        "254",
+        0
+      ],
+      "frame_rate": 24,
+      "loop_count": 0,
+      "filename_prefix": "YZ_H3_",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 19,
+      "save_metadata": true,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": true,
+      "videopreview": {
+        "paused": false,
+        "hidden": false,
+        "params": {
+          "storageProvider": "tos",
+          "metadata": {
+            "duration": 13.666666666666666,
+            "kind": "video",
+            "frame_count": 328,
+            "width": 1920,
+            "fps": 24,
+            "height": 1088
+          },
+          "cos_url": "https://rh-comfyui01.tos-cn-beijing.volces.com/0bda426bcfea2b97ff263ebac2036b97/output/YZ_H3__00002_p82-audio_kxkqy_1791910446.mp4",
+          "workflow": "YZ_H3__00002_p82.png",
+          "format": "video/h264-mp4",
+          "subfolder": "",
+          "label": "Normal",
+          "type": "output",
+          "frame_rate": 24,
+          "bucket": "rh-comfyui01",
+          "score": 0,
+          "filename": "YZ_H3__00002_p82-audio_kxkqy_1791910446.mp4",
+          "fullpath": "/data/ComfyUI/personal/0bda426bcfea2b97ff263ebac2036b97/output/YZ_H3__00002_p82-audio.mp4",
+          "objectKey": "0bda426bcfea2b97ff263ebac2036b97/output/YZ_H3__00002_p82-audio_kxkqy_1791910446.mp4"
+        }
+      }
+    },
+    "_meta": {
+      "title": "YZ成片输出"
+    }
+  },
+  "53": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "192",
+        0
+      ],
+      "lora_name": "minimax_h3_dmad_full_dareties_v4_step600_comfy_fro.safetensors",
+      "strength_model": 0.8000000000000002
+    },
+    "_meta": {
+      "title": "LoraLoaderModelOnly"
+    }
+  },
+  "400": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "53",
+        0
+      ],
+      "lora_name": "MysticXXX_MMH3-V1.safetensors",
+      "strength_model": 0.35
+    },
+    "_meta": {
+      "title": "LoraLoaderModelOnly"
+    }
+  },
+  "397": {
+    "class_type": "SelfLiftH3Sampler",
+    "inputs": {
+      "model": [
+        "329",
+        0
+      ],
+      "positive": [
+        "265",
+        0
+      ],
+      "negative": [
+        "328",
+        0
+      ],
+      "vae": [
+        "36",
+        0
+      ],
+      "latent_image": [
+        "265",
+        1
+      ],
+      "sampler": [
+        "255",
+        0
+      ],
+      "sigmas": [
+        "261",
+        0
+      ],
+      "seed": 905138662823835,
+      "cfg": 1,
+      "transition_step": 6,
+      "lowres_scale": 0.6000000000000001,
+      "rho": 0,
+      "w_min": 0.5,
+      "w_max": 1,
+      "upscaler_model": "minimax_h3_latent_upscaler_3d_fp16.safetensors",
+      "highres_tiling": false,
+      "upscaler_unload": true
+    },
+    "_meta": {
+      "title": "SelfLiftH3Sampler"
+    }
+  },
+  "255": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "261": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+      "model": [
+        "329",
+        0
+      ],
+      "scheduler": "simple",
+      "steps": 10,
+      "denoise": 1
+    },
+    "_meta": {
+      "title": "BasicScheduler"
+    }
+  },
+  "51": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "女医生角色设定图.jpg",
+      "upload": "image"
+    },
+    "_meta": {
+      "title": "YZ控制图"
+    }
+  },
+  "366": {
+    "class_type": "GoohaiUniversalSlider",
+    "inputs": {
+      "值": 3,
+      "output_type": "int"
+    },
+    "_meta": {
+      "title": "速度滑块（-10 - +10）"
+    }
+  },
+  "14": {
+    "class_type": "LoadAudio",
+    "inputs": {
+      "audio": "None",
+      "upload": null
+    },
+    "_meta": {
+      "title": "LoadAudio"
+    }
+  },
+  "48": {
+    "class_type": "LoadAudio",
+    "inputs": {
+      "audio": "None",
+      "upload": null
+    },
+    "_meta": {
+      "title": "LoadAudio"
+    }
+  },
+  "252": {
+    "class_type": "ResolutionSelector",
+    "inputs": {
+      "aspect_ratio": "16:9 (Widescreen)",
+      "megapixels": 1.5,
+      "multiple": 32
+    },
+    "_meta": {
+      "title": "分辨率选择器"
+    }
+  },
+  "259": {
+    "class_type": "PrimitiveFloat",
+    "inputs": {
+      "value": 10
+    },
+    "_meta": {
+      "title": "视频时长（秒）"
+    }
+  },
+  "401": {
+    "class_type": "MiniMaxChunkFeedForward",
+    "inputs": {
+      "model": [
+        "333",
+        0
+      ],
+      "chunks": 2,
+      "seq_threshold": 4096
+    },
+    "_meta": {
+      "title": "MiniMaxChunkFeedForward"
+    }
+  },
+  "403": {
+    "class_type": "MiniMaxLowVRAMAttention",
+    "inputs": {
+      "model": [
+        "401",
+        0
+      ],
+      "head_chunks": 4
+    },
+    "_meta": {
+      "title": "MiniMaxLowVRAMAttention"
+    }
+  },
+  "9001": {
+    "class_type": "MiniMaxH3MotionContextSaveLatent",
+    "inputs": {
+      "latent": [
+        "397",
+        0
+      ],
+      "filename_prefix": "h3_context/wenwu_test",
+      "clip_index": 1
+    },
+    "_meta": {
+      "title": "H3 Motion Context Save Latent (TEST)"
+    }
+  },
+  "9002": {
+    "class_type": "PreviewAny",
+    "inputs": {
+      "source": [
+        "9001",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Preview Motion Context Latent Path"
+    }
+  }
+}

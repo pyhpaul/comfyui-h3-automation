@@ -1,0 +1,28 @@
+---
+description: H3 motion-latent queues the next unit at HANDOFF, and a finished unit is never re-queued
+alwaysApply: true
+---
+
+# H3 入队与接力
+
+`motion_latent` 下，history 里已经有 GPU latent 路径就打印 `HANDOFF`，马上入下一条。下载和飞牛上传在后台。不要等日志里的 `FEINIU` 或 `SUCCESS` 再 `queue_prompt`。下一条要的是租卡上的 `h3_context/*.safetensors`，不是飞牛上的拷贝。
+
+默认不加 `--dialogue-gate`，也不设 `H3_DIALOGUE_GATE`。出片先看成片效果；只有这次用户明确要求对白门禁，才开。门禁会在 HANDOFF 前 ASR 对照 `（）` 英文并可能重抽，需要 `faster-whisper` 与 `ffmpeg`。
+
+成片进飞牛后，每集抽 1～2 个单元做人工复审。**下次审核重点：双人同框对白条是否两人同念同一句**（看嘴听声）；其次金额、短招呼、对白后还有戏、链头或链尾。不要默认全量门禁或全量复审。抽检有问题再改包或对该类单开门禁。
+
+两人同念是 H3 口型归属串扰（可见嘴跟当前人声；听者未锁闭嘴），不是文案把同一句写给两人。潮缚类提示常缺听者闭口硬锁、又写「另一人在纵深」，风险高。ASR 门禁拦不住。改提示时写清：说话者开口；画内其他人全程闭口无声；禁止同念。
+
+已经裂开成上下分屏的成片，它的 motion latent 不能接给下一条。下一条必须断开，当作新链头重跑。只裁下一条的场景图去不掉上一条已经写进 latent 的分屏。
+
+`ref_video` 仍要先拿到上一条成片，再提交下一条。
+
+后台归档已经失败时，不要再入下一条。`BATCH_DONE` 之前要等所有归档线程结束。有失败就不要报整批成功。
+
+`/queue` 为空，而本地日志还停在 `queue=running`，或正在下载、上传，不是暂停。不要因此杀掉入队进程，也不要重入队。history 已经 `success`，或飞牛上该单元四个文件已经齐，都不要重入队。
+
+隧道断开时按已有 `prompt_id` 续等。队列里没有、history 里也没有，先报告丢失，不要直接再交一次。
+
+编排用 `.worktrees/feat-orch/.venv`，并设 `PYTHONPATH=src`，这样用的是本仓库的 `comfy_orch`。系统 python 经常缺 paramiko 和 impacket。
+
+入队脚本不会自己关机。用户说了跑完进飞牛再关机，入队一开始就要另起 `scripts/ops/watch_feiniu_then_shutdown.py`，不要等下一次对话再关。归档失败或飞牛文件不齐就停住。

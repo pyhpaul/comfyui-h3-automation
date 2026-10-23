@@ -1,0 +1,73 @@
+---
+description: H3 GPU tunnel is vm106:8190, canonical Comfy on the Chenyu pod, and shutdown is the 关机 button
+alwaysApply: true
+---
+
+# H3 租卡部署与关机
+
+出片入口是 **vm106**，不是 vm122。`COMFY_BASE_URL=http://192.168.50.106:8190`。
+
+```text
+WSL  --HTTP-->  vm106 192.168.50.106:8190  --SSH-->  租卡 127.0.0.1:8188
+```
+
+vm106 SSH：`Host vm106`，`HostName 192.168.50.106`，`User pyh`，`IdentityFile ~/.ssh/id_ed25519_vm122_192_168_5_122`。转发进程在 vm106：`/tmp/comfy_ssh_forward.py`，监听 `0.0.0.0:8190`，密码文件 `/tmp/.comfy_gpu_ssh_pass`（600）。
+
+## 隧道转发固定用 OpenSSH 原生转发（2026-10-21 定）
+
+paramiko 写的 Python 转发器（`comfy_ssh_forward*.py`）**禁止承载生产流量**：实测同一 2.19MB 参考图上传，paramiko 转发 49.7s（44KB/s）、OpenSSH 原生转发 0.24s（9.1MB/s），差约 200 倍。瓶颈在 Python 转发的窗口/包处理，不在显卡、Comfy 或局域网。症状是条间传图空档长达数分钟、Comfy 队列看着像停了。`switch_gpu_tunnel.sh` 的 paramiko 转发只留作应急。
+
+固定做法（vm106 上，vm106 没有 sshpass，不要为此装包）：
+
+```bash
+# 一次性：生成转发专用密钥并装到卡（经 paramiko 用 passfile 安装）
+ssh-keygen -t ed25519 -N '' -f /tmp/.comfy_fwd_key
+#   用 /tmp/comfy-fwd-venv 的 paramiko + /tmp/.comfy_gpu_ssh_pass_<port> 把
+#   /tmp/.comfy_fwd_key.pub 追加到卡的 ~/.ssh/authorized_keys
+# 每张卡开机后起转发：
+ssh -i /tmp/.comfy_fwd_key -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes \
+  -o ServerAliveInterval=30 -N -L 0.0.0.0:<8191>:127.0.0.1:8188 root@<id>.gz1x.chenyu.cn -p <port>
+curl -sS --max-time 20 http://192.168.50.106:<8191>/system_stats   # 验设备名
+```
+
+切换转发只在集与集之间、`/queue` 为空时做；切换前确认没有在跑的 prompt 会被孤儿化，换完立刻验 `/system_stats`。runner 侧配合：同一进程内相同参考图只上传一次（`scripts/run_lihun_wenxi.py` 已做 `(文件名, 大小)` 去重），不要每条重复传全套图。实测与切换过程见 `docs/ops/2026-10-21-openssh-forward-tunnel.md`。
+
+每次开机都要重新准备环境。平台自带的 `/root/restart.sh` 不能用。正式 Comfy 是 `/root/autodl-tmp/ComfyUI` 加它的 `.venv`，由 `scripts/ops/comfy_gpu_start.sh` 上传成 `/root/start_comfy_h3.sh`。监听只允许 `127.0.0.1:8188`，参数是 `--cuda-device 0 --lowvram --reserve-vram 4 --disable-smart-memory --force-fp16 --disable-cuda-graphs --enable-manager`。
+
+租卡 SSH 主机和端口每次开机都会变。用户说已开机时，先用 CDP 从已打开的晨羽 `podExample` 页读取（`scripts/ops/chenyu_ssh_info.py`，见 `.cursor/skills/comfy-h3-env/reference-env.md`）。页面没有或读失败再向用户要。不要写进 git。密码只写 passfile（600），不要打印、不要进命令行或仓库。WSL 上用带 paramiko 的 `.worktrees/feat-orch/.venv`。
+
+```bash
+export COMFY_GPU_SSH_HOST='<id>.gz15.chenyu.cn'
+export COMFY_GPU_SSH_PORT='<port>'
+export COMFY_GPU_SSH_PASSFILE=/home/linux_dev/.config/fnos/.chenyu-gpu.pass
+export VM122_SSH=vm106
+export PATH="/home/linux_dev/projects/comfyui-h3-automation/.worktrees/feat-orch/.venv/bin:$PATH"
+bash scripts/ops/remote_comfy_h3.sh restart
+bash scripts/ops/switch_gpu_tunnel.sh
+curl -sS --max-time 20 http://192.168.50.106:8190/system_stats
+```
+
+`/system_stats` 里要有 CUDA 设备。通过后再入队。
+
+成片都在飞牛、`/queue` 为空、没有入队进程之后，用户说关机再关。用已经开着的晨羽页 `https://www.chenyu.cn/console/podExample`，CDP 是 `http://localhost:3456`。不要新开标签，也不要关掉用户的页。入队脚本不会自己关机。
+
+用户说了跑完进飞牛再关机，入队一开始就要另起等待进程，不要等下一次对话被提醒才去关。等待进程盯着这一批入队进程。入队日志出现干净的 `BATCH_DONE` 和退出码 0、飞牛上每个计划单元都有 mp4、latent、`prompt_h3.txt`、`run_meta.json`、`/queue` 为空，才点关机。归档失败、文件不齐或队列不空就打印 `HOLD` 并停住，不关机。晨羽页要一直开着。
+
+```bash
+PYTHONPATH=src python scripts/ops/watch_feiniu_then_shutdown.py \
+  --pid <入队进程> \
+  --log <入队日志> \
+  --exit-marker '<日志里的 EXIT 前缀>' \
+  --ssh-host '<id>.gz15.chenyu.cn' \
+  --feiniu-batch '<批次>' \
+  --episode EP01 \
+  --units U01 U02
+```
+
+直接点关机时：
+
+```bash
+python3 scripts/ops/chenyu_shutdown.py <ssh-host>
+```
+
+页面实例 ID 比 SSH 主机名少一截后缀，按前缀匹配。只点文字正好是 `关机` 的按钮，确认框标题是 `关机确认`，再点主按钮 `确定`。不要点 `重启`、`另存储为镜像并关机`、`关机并销毁`。成功时页面出现 `关机中` 或 `已关机`，脚本打印 `OFF`。GPU 随后停止计费，实例保留并做备份。

@@ -1,0 +1,22 @@
+{
+  "schema": "music-library-selection/v1",
+  "provider": "Kevin MacLeod / Incompetech",
+  "tracks": [
+    {"title": "Jazz Brunch", "moods": ["relaxed", "jazz", "everyday"], "use_cases": ["cafe", "conversation", "daily-life"], "caution": "Groove may be too light for serious betrayal."},
+    {"title": "Bossa Antigua", "moods": ["relaxed", "bossa-nova", "bright"], "use_cases": ["date", "travel", "leisure"], "caution": "Specific bossa character, not universal romance music."},
+    {"title": "Airport Lounge", "moods": ["lounge", "calm", "relaxed"], "use_cases": ["waiting", "office", "low-stakes-dialogue"], "caution": "Low narrative urgency; audition lead instruments under speech."},
+    {"title": "Local Forecast - Elevator", "moods": ["awkward", "light", "jazz"], "use_cases": ["elevator", "deadpan", "awkward-silence"], "caution": "Intentionally filtered to resemble poor elevator speakers; not a defective download."},
+    {"title": "Carefree", "moods": ["bright", "optimistic", "casual"], "use_cases": ["daily-life", "positive-montage", "family"], "caution": "Cheerful ukulele can make serious scenes feel like advertisements."},
+    {"title": "Sneaky Snitch", "moods": ["mischievous", "comic-suspense"], "use_cases": ["sneaking", "comic-scheming", "playful-secret"], "caution": "Comic suspicion, not serious horror; oboe melody may dominate dialogue."},
+    {"title": "Fluffing a Duck", "moods": ["slapstick", "playful", "bouncy"], "use_cases": ["visual-joke", "comic-mishap"], "caution": "Official description says two short versions in one file; audition internal boundaries before selecting."},
+    {"title": "Investigations", "moods": ["humorous", "mysterious", "light"], "use_cases": ["comic-investigation", "banter", "small-misunderstanding"], "caution": "Do not confuse its title with a serious crime-thriller mood."},
+    {"title": "Funky Chunk", "moods": ["funk", "grooving", "upbeat"], "use_cases": ["confident-entrance", "work-montage", "playful-reversal"], "caution": "Bass and rhythm are prominent; leave space for dialogue."},
+    {"title": "Exhilarate", "moods": ["rock", "driving", "intense"], "use_cases": ["chase", "sport", "action-montage"], "caution": "Fast rock energy, not a default argument bed."},
+    {"title": "Dream Culture", "moods": ["dreamlike", "calm", "relaxed"], "use_cases": ["dream", "memory", "soft-transition"], "caution": "Reverse effects need audition around cuts and dialogue."},
+    {"title": "There is Romance", "moods": ["romantic", "calm", "uplifting"], "use_cases": ["affection", "reconciliation", "tender-moment"], "caution": "Solo piano character; audition melody against spoken lines."},
+    {"title": "Heartbreaking", "moods": ["somber", "sad", "intimate"], "use_cases": ["loss", "breakup", "regret"], "caution": "Do not force grief onto ambiguous acting; silence may be stronger."},
+    {"title": "Desert City", "moods": ["mysterious", "grooving", "relaxed"], "use_cases": ["travel", "setting-establishment", "exploration"], "caution": "Percussion/dulcimer texture is not proof of cultural or geographic authenticity."},
+    {"title": "Dub Eastern", "moods": ["dub", "dark", "relaxed"], "use_cases": ["urban-night", "low-key-intrigue", "stylized-montage"], "caution": "A stylized dub track, not authentic regional scoring; prominent bass needs mixing."},
+    {"title": "Space Jazz", "moods": ["electronic-jazz", "bright", "relaxed"], "use_cases": ["quirky-technology", "stylized-future", "light-montage"], "caution": "Playful electronic identity may clash with realistic domestic drama."}
+  ]
+}

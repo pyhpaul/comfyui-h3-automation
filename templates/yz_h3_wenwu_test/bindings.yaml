@@ -1,0 +1,53 @@
+# TEST template for 文武双全 SelfLift workflow. Does not replace yz_h3_ep_unit.
+bindings:
+  - field: ref_image_0
+    node_id: "51"
+    input: image
+    media: true
+  - field: ref_image_1
+    node_id: "49"
+    input: image
+    media: true
+  - field: ref_image_2
+    node_id: "50"
+    input: image
+    media: true
+  - field: ref_image_3
+    node_id: "43"
+    input: image
+    media: true
+  - field: ref_image_4
+    node_id: "19"
+    input: image
+    media: true
+  - field: ref_image_5
+    node_id: "23"
+    input: image
+    media: true
+  - field: ref_image_6
+    node_id: "199"
+    input: image
+    media: true
+  - field: ref_image_7
+    node_id: "200"
+    input: image
+    media: true
+  - field: ref_image_8
+    node_id: "201"
+    input: image
+    media: true
+  - field: prompt
+    node_id: "263"
+    input: text
+  - field: duration_seconds
+    node_id: "259"
+    input: value
+  - field: aspect_ratio
+    node_id: "252"
+    input: aspect_ratio
+  - field: megapixels
+    node_id: "252"
+    input: megapixels
+  - field: filename_prefix
+    node_id: "364"
+    input: filename_prefix

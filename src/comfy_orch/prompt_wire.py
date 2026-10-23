@@ -12,8 +12,12 @@ _PACK_REL_ASSET = re.compile(
     r"(?<![A-Za-z0-9_/-])(?:characters|props|scenes)[\\/]([^\s\\/]+?\.(?:png|jpe?g|webp))",
     re.I,
 )
-# Seedance-style / JARVIS Production refs: @char-002 @prop-001 @scene-001
-_AT_ASSET = re.compile(r"@(char|prop|scene)-([A-Za-z0-9._-]+)\b", re.I)
+# @char-002 / @prop-020-v2 / @scene-001-v4. Do not use \b after the id:
+# '-' is a non-word char, so \b splits @scene-001-v4 into @scene-001-.
+_AT_ASSET = re.compile(
+    r"@(char|prop|scene)-([A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)*)",
+    re.I,
+)
 _PICTURE = re.compile(r"<Picture\s+(\d+)>")
 _VIDEO = re.compile(r"<Video\s+(\d+)>")
 

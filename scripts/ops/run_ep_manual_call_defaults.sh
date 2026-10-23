@@ -6,8 +6,10 @@
 #   bash scripts/ops/run_ep_manual_call_defaults.sh \
 #     --job-glob 'EP04-H3-manual-v16-{unit}' \
 #     --units U01 U02 U03 \
-#     --download-dir /mnt/c/Users/lxy/Downloads/EP04-manual-v16-latent-mc \
+#     --feiniu-batch '批次名'
 #     [--batch-log runs/ep04_manual_v16.json]
+#   # or keep a local download dir instead of Feiniu:
+#     --download-dir /mnt/c/Users/lxy/Downloads/EP04-manual-v16-latent-mc \
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -24,13 +26,14 @@ elif [[ -f "${ROOT}/scripts/ops/h3_manual_call_run_defaults.env.example" ]]; the
   source "${ROOT}/scripts/ops/h3_manual_call_run_defaults.env.example"
 fi
 
-export COMFY_BASE_URL="${COMFY_BASE_URL:-http://192.168.5.122:8190}"
+export COMFY_BASE_URL="${COMFY_BASE_URL:-http://192.168.50.106:8190}"
 GPU_PROFILE="${COMFY_GPU_PROFILE:-auto}"
 CONTINUITY="${H3_MANUAL_CONTINUITY:-motion_latent}"
 
 JOB_GLOB=""
 UNITS=()
 DOWNLOAD_DIR=""
+FEINIU_BATCH=""
 BATCH_LOG=""
 EXTRA=()
 
@@ -42,13 +45,18 @@ while [[ $# -gt 0 ]]; do
       while [[ $# -gt 0 && "$1" != --* ]]; do UNITS+=("$1"); shift; done
       ;;
     --download-dir) DOWNLOAD_DIR="$2"; shift 2 ;;
+    --feiniu-batch) FEINIU_BATCH="$2"; shift 2 ;;
     --batch-log) BATCH_LOG="$2"; shift 2 ;;
     *) EXTRA+=("$1"); shift ;;
   esac
 done
 
-if [[ -z "$JOB_GLOB" || ${#UNITS[@]} -eq 0 || -z "$DOWNLOAD_DIR" ]]; then
-  echo "need --job-glob --units --download-dir" >&2
+if [[ -z "$JOB_GLOB" || ${#UNITS[@]} -eq 0 ]]; then
+  echo "need --job-glob --units and either --feiniu-batch or --download-dir" >&2
+  exit 1
+fi
+if [[ -z "$FEINIU_BATCH" && -z "$DOWNLOAD_DIR" ]]; then
+  echo "need --feiniu-batch or --download-dir" >&2
   exit 1
 fi
 
@@ -58,8 +66,12 @@ ARGS=(
   --continuity "$CONTINUITY"
   --gpu-profile "$GPU_PROFILE"
   --job-glob "$JOB_GLOB"
-  --download-dir "$DOWNLOAD_DIR"
 )
+if [[ -n "$FEINIU_BATCH" ]]; then
+  ARGS+=(--feiniu-batch "$FEINIU_BATCH")
+else
+  ARGS+=(--download-dir "$DOWNLOAD_DIR")
+fi
 if [[ -n "$BATCH_LOG" ]]; then
   ARGS+=(--batch-log "$BATCH_LOG")
 fi

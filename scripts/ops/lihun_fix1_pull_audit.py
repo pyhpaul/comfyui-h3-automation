@@ -13,9 +13,11 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import re
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -145,6 +147,10 @@ def main() -> int:
     ap.add_argument("--min-candidates", type=int, default=3)
     ap.add_argument("--audit", action="store_true",
                     help="run audit_candidate after pull")
+    ap.add_argument("--audit-only", action="store_true",
+                    help="skip Feiniu pull; audit pending dirs under review cache")
+    ap.add_argument("--jobs", type=int, default=max(2, min(6, (os.cpu_count() or 4) // 2)),
+                    help="parallel audit workers (default ~half CPUs, capped at 6)")
     ap.add_argument("--init-registry", action="store_true")
     ap.add_argument("--limit", type=int, default=0,
                     help="max units to process this invocation (0=all ready)")
@@ -154,54 +160,90 @@ def main() -> int:
     if args.init_registry:
         registry_init(all_fails)
 
-    smb = connect_feiniu(PASSFILE)
     ready: list[tuple[str, dict[str, tuple[str, str]]]] = []
     pulled: list[tuple[str, str, Path, Path]] = []
-    try:
-        targets = args.units or all_fails
-        for unit in targets:
-            cands = list_remote_candidates(smb, unit)
-            if len(cands) >= args.min_candidates:
-                ready.append((unit, cands))
-        print(f"READY_UNITS {len(ready)}/{len(targets)} "
-              f"(need ≥{args.min_candidates} mp4)", flush=True)
-        if args.limit:
-            ready = ready[: args.limit]
-        # Phase 1: pull all mp4s (reconnect-friendly). Phase 2: audit offline.
-        for unit, cands in ready:
-            prompt = PROMPT_DIR / f"{unit}.txt"
-            if not prompt.is_file():
-                print(f"SKIP {unit}: missing prompt {prompt}", flush=True)
-                continue
-            for tag in sorted(cands):
-                remote_dir, fn = cands[tag]
-                cand_dir = REVIEW / unit / tag
-                dest = cand_dir / fn
-                print(f"PULL {unit}/{tag} <- {remote_dir}\\{fn}", flush=True)
-                smb = download_file(smb, remote_dir, fn, dest)
-                try:
-                    smb = download_file(
-                        smb, remote_dir, "prompt_h3.txt",
-                        cand_dir / "prompt_h3.txt")
-                except Exception as exc:
-                    print(f"WARN prompt_h3 {unit}/{tag}: {exc}", flush=True)
-                registry_add(unit, tag, dest)
-                pulled.append((unit, tag, cand_dir, prompt))
-    finally:
-        try:
-            smb.close()
-        except Exception:
-            pass
 
-    if args.audit:
-        for unit, tag, cand_dir, prompt in pulled:
-            if (cand_dir / "candidate_audit.json").is_file():
-                print(f"AUDIT_SKIP {unit}/{tag} (exists)", flush=True)
+    if args.audit_only:
+        for unit_dir in sorted(REVIEW.iterdir() if REVIEW.is_dir() else []):
+            if not unit_dir.is_dir():
                 continue
-            print(f"AUDIT {unit}/{tag}", flush=True)
+            prompt = PROMPT_DIR / f"{unit_dir.name}.txt"
+            if not prompt.is_file():
+                continue
+            for tag_dir in sorted(unit_dir.iterdir()):
+                if not tag_dir.is_dir():
+                    continue
+                if not any(tag_dir.glob("*.mp4")):
+                    continue
+                pulled.append((unit_dir.name, tag_dir.name, tag_dir, prompt))
+        print(f"AUDIT_ONLY pending_scan={len(pulled)} jobs={args.jobs}",
+              flush=True)
+    else:
+        smb = connect_feiniu(PASSFILE)
+        try:
+            targets = args.units or all_fails
+            for unit in targets:
+                cands = list_remote_candidates(smb, unit)
+                if len(cands) >= args.min_candidates:
+                    ready.append((unit, cands))
+            print(f"READY_UNITS {len(ready)}/{len(targets)} "
+                  f"(need ≥{args.min_candidates} mp4)", flush=True)
+            if args.limit:
+                ready = ready[: args.limit]
+            for unit, cands in ready:
+                prompt = PROMPT_DIR / f"{unit}.txt"
+                if not prompt.is_file():
+                    print(f"SKIP {unit}: missing prompt {prompt}", flush=True)
+                    continue
+                for tag in sorted(cands):
+                    remote_dir, fn = cands[tag]
+                    cand_dir = REVIEW / unit / tag
+                    dest = cand_dir / fn
+                    print(f"PULL {unit}/{tag} <- {remote_dir}\\{fn}", flush=True)
+                    smb = download_file(smb, remote_dir, fn, dest)
+                    try:
+                        smb = download_file(
+                            smb, remote_dir, "prompt_h3.txt",
+                            cand_dir / "prompt_h3.txt")
+                    except Exception as exc:
+                        print(f"WARN prompt_h3 {unit}/{tag}: {exc}", flush=True)
+                    registry_add(unit, tag, dest)
+                    pulled.append((unit, tag, cand_dir, prompt))
+        finally:
+            try:
+                smb.close()
+            except Exception:
+                pass
+
+    if args.audit or args.audit_only:
+        pending = [
+            (unit, tag, cand_dir, prompt)
+            for unit, tag, cand_dir, prompt in pulled
+            if not (cand_dir / "candidate_audit.json").is_file()
+        ]
+        skipped = len(pulled) - len(pending)
+        print(f"AUDIT_QUEUE n={len(pending)} skip={skipped} jobs={args.jobs}",
+              flush=True)
+
+        def _one(item: tuple[str, str, Path, Path]) -> tuple[str, str, int]:
+            unit, tag, cand_dir, prompt = item
+            # Skip if another worker finished first.
+            if (cand_dir / "candidate_audit.json").is_file():
+                return unit, tag, 0
+            print(f"AUDIT_START {unit}/{tag}", flush=True)
             rc = run_audit(unit, cand_dir, prompt)
             print(f"AUDIT_DONE {unit}/{tag} rc={rc}", flush=True)
-    print(f"DONE processed={len(ready)} out={REVIEW}", flush=True)
+            return unit, tag, rc
+
+        fails = 0
+        with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
+            futs = [pool.submit(_one, item) for item in pending]
+            for fut in as_completed(futs):
+                _unit, _tag, rc = fut.result()
+                if rc:
+                    fails += 1
+        print(f"AUDIT_BATCH_DONE fail={fails}/{len(pending)}", flush=True)
+    print(f"DONE processed={len(ready) or len(pulled)} out={REVIEW}", flush=True)
     return 0
 
 

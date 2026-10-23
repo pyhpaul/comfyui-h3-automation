@@ -417,6 +417,14 @@ def process_episode(episode: str, *, upload: bool, keep_media: bool) -> None:
     plan_draft = dict(old_plan)
     plan_draft["shared_input_sha256"] = digest(shared_path)
     plan_draft["revision"] = f"{plan_draft.get('revision', 'edit')}-spec-v2"
+    # Fresh Whisper often contracts "going to"→"gonna"; expand heard side
+    # so scripted phrases still align (alias value may be multi-token).
+    plan_draft["subtitle_aliases"] = {
+        "gonna": "going to",
+        "wanna": "want to",
+        "gotta": "got to",
+        **(plan_draft.get("subtitle_aliases") or {}),
+    }
     config = load_config(ROOT, shared, plan_draft)
     clips = [Clip(c["unit"], c["in_frame"], c["out_frame"]) for c in plan_draft["clips"]]
     captions, _words = collect_captions(config, clips)

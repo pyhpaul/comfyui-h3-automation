@@ -15,6 +15,7 @@ from ep_pilot_media import (
 )
 from ep_pilot_audio_qc import check_music_timing
 from ep_pilot_creative import validate_protected_ranges
+from ep_pilot_mix import mix_pcm_tracks
 from ep_pilot_timeline import (
     Clip, Subtitle, Word, align_dialogue, remap_subtitles, render_srt,
     presentation_cues, validate_clips, verify_source, wrap_caption,
@@ -61,26 +62,78 @@ def ass_time(seconds: float) -> str:
     return f"{hours}:{minutes:02d}:{secs:02d}.{centis:02d}"
 
 
-def write_subtitles(out: Path, cues: list[Subtitle], words: list[Subtitle],
-                    style: dict | None = None, episode: str = "EP01") -> list[Subtitle]:
-    style = style or {}
-    readable = presentation_cues(cues, style)
-    (out / f"{episode}.en.srt").write_text(render_srt(readable))
-    (out / f"{episode}.words.srt").write_text(render_srt(words))
+_ZH_IN_PAREN = re.compile(
+    r"^(?P<en>.+?)（(?P<zh>[\u4e00-\u9fffA-Za-z0-9，。！？、；：…「」『』\s'\-]+)）$"
+)
+
+
+def extract_zh_from_bilingual(line: str) -> str | None:
+    """Pull Chinese from `English.（中文）` when packs embed both in one cue."""
+    match = _ZH_IN_PAREN.match(line.strip())
+    return match.group("zh").strip() if match else None
+
+
+def resolve_zh_captions(readable: list[Subtitle], config: dict) -> list[str]:
+    """Chinese phrase texts aligned 1:1 with displayed English cues.
+
+    Prefer explicit `zh_captions` (creative plan / manifest). Fall back to
+    bilingual English cues that embed `（中文）`. Missing coverage fails loud.
+    """
+    explicit = config.get("zh_captions")
+    if explicit is not None:
+        if len(explicit) != len(readable):
+            raise ValueError(
+                f"zh_captions length {len(explicit)} != English cues {len(readable)}")
+        texts = [str(t).strip() for t in explicit]
+        if any(not t for t in texts):
+            raise ValueError("zh_captions contains empty lines")
+        return texts
+    texts = []
+    for cue in readable:
+        zh = extract_zh_from_bilingual(cue.text)
+        if not zh:
+            raise ValueError(
+                "Chinese word track required: set zh_captions on the plan "
+                f"(missing for English cue {cue.text!r})")
+        texts.append(zh)
+    return texts
+
+
+def _write_ass(path: Path, cues: list[Subtitle], style: dict, *, font: str) -> None:
     header = (
         "[Script Info]\nScriptType: v4.00+\nPlayResX: 768\nPlayResY: 1376\nWrapStyle: 2\n\n"
         "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, "
         "OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, "
         "Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
-        f"Style: Dialogue,DejaVu Sans,{style.get('font_size', 34)},&H00F1F3F6,&H00FFFFFF,&H00141210,&H80000000,"
+        f"Style: Dialogue,{font},{style.get('font_size', 34)},&H00F1F3F6,&H00FFFFFF,&H00141210,&H80000000,"
         f"0,0,0,0,100,100,0,0,1,{style.get('outline', 1.8)},0.6,2,64,64,170,1\n\n"
         "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
     )
     events = []
-    for cue in readable:
+    for cue in cues:
         text = wrap_caption(cue.text).replace("\n", r"\N")
-        events.append(f"Dialogue: 0,{ass_time(cue.start)},{ass_time(cue.end)},Dialogue,,0,0,0,,{text}\n")
-    (out / f"{episode}.en.ass").write_text(header + "".join(events))
+        events.append(
+            f"Dialogue: 0,{ass_time(cue.start)},{ass_time(cue.end)},Dialogue,,0,0,0,,{text}\n")
+    path.write_text(header + "".join(events), encoding="utf-8")
+
+
+def write_subtitles(out: Path, cues: list[Subtitle], words: list[Subtitle],
+                    style: dict | None = None, episode: str = "EP01",
+                    config: dict | None = None) -> list[Subtitle]:
+    style = style or {}
+    readable = presentation_cues(cues, style)
+    (out / f"{episode}.en.srt").write_text(render_srt(readable), encoding="utf-8")
+    (out / f"{episode}.words.srt").write_text(render_srt(words), encoding="utf-8")
+    _write_ass(out / f"{episode}.en.ass", readable, style, font="DejaVu Sans")
+    # Chinese phrase track shares English cue timing (not ASR word splits).
+    # Off by default so legacy pilots keep working; lihun comparison turns it on.
+    if config is not None and config.get("require_zh_captions", False):
+        zh_texts = resolve_zh_captions(readable, config)
+        zh_cues = [Subtitle(c.unit, c.start, c.end, text)
+                   for c, text in zip(readable, zh_texts)]
+        (out / f"{episode}.zh.srt").write_text(render_srt(zh_cues), encoding="utf-8")
+        _write_ass(out / f"{episode}.zh.ass", zh_cues, style,
+                   font=str(style.get("zh_font", "Noto Sans CJK SC")))
     return readable
 
 
@@ -153,7 +206,9 @@ def render(config: dict, out: Path) -> None:
     validate_clips(clips, frames)
     validate_protected_ranges(config.get("protected_ranges", []), clips)
     cues, words = collect_captions(config, clips)
-    displayed = write_subtitles(out, cues, words, config.get("subtitle_style"))
+    # Legacy pilots may omit zh; lihun delivery sets require_zh_captions (default).
+    displayed = write_subtitles(out, cues, words, config.get("subtitle_style"),
+                                config.get("episode", "EP01"), config)
     total_frames = sum(c.out_frame - c.in_frame for c in clips) + config["endcard_frames"]
     save(out / "edit_manifest.json", config)
     if "creative_plan" in config:
@@ -172,10 +227,23 @@ def render(config: dict, out: Path) -> None:
     measurement = loudness(mixed, logs / "mix-first-pass.log")
     normalized = out / "work/normalized.wav"
     normalize_audio(mixed, normalized, measurement, logs / "mix-second-pass.log")
+    # Master: dialogue only (no BGM). Pilot has no ending SFX stem here.
+    dialogue_only = out / "work/dialogue-only.wav"
+    mix_pcm_tracks(picture, [], dialogue_only, total_frames / 24, [],
+                   logs / "dialogue-only.log")
+    master_meas = loudness(dialogue_only, logs / "master-first-pass.log")
+    master_audio = out / "work/master-normalized.wav"
+    normalize_audio(dialogue_only, master_audio, master_meas,
+                    logs / "master-second-pass.log")
+    episode = config.get("episode", "EP01")
     outputs = []
-    for name, subtitles in (("EP01-master.mp4", None), ("EP01-review-en.mp4", out / "EP01.en.ass")):
+    for name, audio, subtitles, credit in (
+        (f"{episode}-master.mp4", master_audio, None, False),
+        (f"{episode}-review-en.mp4", normalized, out / f"{episode}.en.ass", True),
+    ):
         path = out / name
-        export_video(picture, normalized, path, logs / f"export-{name}.log", subtitles)
+        export_video(picture, audio, path, logs / f"export-{name}.log", subtitles,
+                     music_credit=credit)
         outputs.append(check_output(path, total_frames, logs))
     validate_sources(config, logs / "after-render")
     config["measured_unit_staging"] = stages

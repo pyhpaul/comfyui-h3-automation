@@ -154,7 +154,7 @@ def normalize_audio(source: Path, dest: Path, measurement: dict, log: Path,
 
 
 def export_video(picture: Path, audio: Path, dest: Path, log: Path,
-                  subtitles: Path | None = None) -> None:
+                  subtitles: Path | None = None, *, music_credit: bool = True) -> None:
     args = ["ffmpeg", "-nostdin", "-hide_banner", "-n", "-i", str(picture), "-i", str(audio),
             "-map", "0:v:0", "-map", "1:a:0"]
     if subtitles:
@@ -162,7 +162,12 @@ def export_video(picture: Path, audio: Path, dest: Path, log: Path,
                  "-preset", "slow", "-crf", "18"]
     else:
         args += ["-c:v", "copy"]
+    comment = (
+        "Music: Undertow by Scott Buckley; CC-BY 4.0; www.scottbuckley.com.au; excerpted, faded and mixed."
+        if music_credit else
+        "Dialogue/SFX master; no BGM bed."
+    )
     args += ["-c:a", "aac", "-b:a", "192k", "-ar", "48000",
-             "-metadata", "comment=Music: Undertow by Scott Buckley; CC-BY 4.0; www.scottbuckley.com.au; excerpted, faded and mixed.",
+             "-metadata", f"comment={comment}",
              "-movflags", "+faststart", "-shortest", str(dest)]
     run_logged(args, log)

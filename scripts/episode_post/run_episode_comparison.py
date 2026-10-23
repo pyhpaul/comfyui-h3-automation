@@ -76,7 +76,13 @@ def render_picture(config: dict, preset: dict, clips: list[Clip], out: Path,
     return picture, stages, layout
 
 
-def render_audio(config: dict, preset: dict, picture: Path, layout: dict, cues: list, out: Path) -> tuple[Path, dict]:
+def render_audio(config: dict, preset: dict, picture: Path, layout: dict, cues: list,
+                 out: Path) -> tuple[Path, Path, dict]:
+    """Return (master_audio, review_audio, qc).
+
+    master = dialogue + ending SFX, no BGM.
+    review = dialogue + BGM (ducked) + ending SFX.
+    """
     total = layout["total_frames"] / 24
     music = config["music"]
     for i, cue in enumerate(music["cues"]):
@@ -99,10 +105,19 @@ def render_audio(config: dict, preset: dict, picture: Path, layout: dict, cues: 
     sound_qc = check_music_timing(bed, mix, sound_cues, total)
     sound_qc["scope"] = "SFX residual before whole-episode normalization"
     save(out / "sfx_timing_qc.json", sound_qc)
-    normalized = out / "work/normalized.wav"
+    review_audio = out / "work/normalized-review.wav"
     measurement = loudness(mix, out / "logs/final-first-pass.log", true_peak_target=-2.5)
-    normalize_audio(mix, normalized, measurement, out / "logs/final-second-pass.log", true_peak_target=-2.5)
-    return normalized, {"music": music_qc, "sfx": sound_qc, "sfx_cues": sound_cues}
+    normalize_audio(mix, review_audio, measurement, out / "logs/final-second-pass.log",
+                    true_peak_target=-2.5)
+    master_mix = out / "work/master-mix.wav"
+    mix_pcm_tracks(picture, stems, master_mix, total, [], out / "logs/master-sfx-mix.log")
+    master_audio = out / "work/normalized-master.wav"
+    master_meas = loudness(master_mix, out / "logs/master-first-pass.log",
+                           true_peak_target=-2.5)
+    normalize_audio(master_mix, master_audio, master_meas,
+                    out / "logs/master-second-pass.log", true_peak_target=-2.5)
+    return master_audio, review_audio, {"music": music_qc, "sfx": sound_qc,
+                                        "sfx_cues": sound_cues}
 
 
 def render(root: Path, shared_file: Path, plan_file: Path, out: Path) -> None:
@@ -131,8 +146,12 @@ def render(root: Path, shared_file: Path, plan_file: Path, out: Path) -> None:
     validate_clips(clips, frames)
     validate_protected_ranges(config["protected_ranges"], clips)
     captions, words = collect_captions(config, clips)
+    # Pull zh from plan when present; always require a Chinese phrase track for delivery.
+    if "zh_captions" in plan:
+        config["zh_captions"] = plan["zh_captions"]
+    config["require_zh_captions"] = True
     displayed = write_subtitles(out, captions, words, config["subtitle_style"],
-                                config["episode"])
+                                config["episode"], config)
     tail_pad_frames = config["ending"].get("tail_pad_frames", 0)
     layout = ending_layout(sum(c.out_frame - c.in_frame for c in clips), preset, tail_pad_frames)
     if max(c.end for c in captions) >= layout["bloom_start_s"]:
@@ -140,13 +159,17 @@ def render(root: Path, shared_file: Path, plan_file: Path, out: Path) -> None:
     save(out / "input_contract.json", shared)
     save(out / "creative_plan.json", plan)
     picture, staging, layout = render_picture(config, preset, clips, out, tail_pad_frames)
-    normalized, audio_qc = render_audio(config, preset, picture, layout, captions, out)
+    master_audio, review_audio, audio_qc = render_audio(
+        config, preset, picture, layout, captions, out)
     outputs = []
     episode = config["episode"]
-    for name, ass in ((f"{episode}-master.mp4", None),
-                      (f"{episode}-review-en.mp4", out / f"{episode}.en.ass")):
+    for name, audio, ass, credit in (
+        (f"{episode}-master.mp4", master_audio, None, False),
+        (f"{episode}-review-en.mp4", review_audio, out / f"{episode}.en.ass", True),
+    ):
         path = out / name
-        export_video(picture, normalized, path, out / "logs" / f"export-{name}.log", ass)
+        export_video(picture, audio, path, out / "logs" / f"export-{name}.log", ass,
+                     music_credit=credit)
         result = check_output(path, layout["total_frames"], out / "logs")
         if float(result["loudness"]["input_tp"]) > shared["delivery"]["true_peak_ceiling"]:
             raise ValueError("final encoded peak exceeds the shared comparison ceiling")

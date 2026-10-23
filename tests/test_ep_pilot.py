@@ -135,3 +135,28 @@ def test_explicit_line_break_cannot_rewrite_dialogue(tmp_path):
     with pytest.raises(ValueError, match="text"):
         write_subtitles(tmp_path, [Subtitle("EP01", 1, 2, "First.")], [],
                         {"line_breaks": {"First.": "Different."}})
+
+
+def test_zh_captions_share_english_timing(tmp_path):
+    from run_ep_post_pilot import resolve_zh_captions
+    cues = [Subtitle("EP01", 1.0, 2.0, "You asked for the ring."),
+            Subtitle("EP01", 3.0, 4.0, "Here it is.")]
+    write_subtitles(tmp_path, cues, [], {}, "EP01",
+                    {"require_zh_captions": True,
+                     "zh_captions": ["你要的是这枚戒指。", "给你。"]})
+    en = (tmp_path / "EP01.en.srt").read_text(encoding="utf-8")
+    zh = (tmp_path / "EP01.zh.srt").read_text(encoding="utf-8")
+    assert "你要的是这枚戒指。" in zh
+    # Same cue count and identical timing lines as English track.
+    en_times = [line for line in en.splitlines() if "-->" in line]
+    zh_times = [line for line in zh.splitlines() if "-->" in line]
+    assert en_times == zh_times
+    assert (tmp_path / "EP01.zh.ass").is_file()
+    assert resolve_zh_captions(
+        [Subtitle("U01", 0, 1, "Next.（下一个。）")], {}) == ["下一个。"]
+
+
+def test_zh_captions_required_when_flag_set(tmp_path):
+    with pytest.raises(ValueError, match="zh_captions"):
+        write_subtitles(tmp_path, [Subtitle("EP01", 1, 2, "Hello.")], [], {},
+                        "EP01", {"require_zh_captions": True})

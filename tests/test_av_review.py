@@ -120,7 +120,7 @@ def test_media_rejects_extension_and_size_before_probe(project):
     with pytest.raises(MediaError, match="MP4"):
         inspect_clip(project, str(path.with_suffix(".txt")))
     with path.open("wb") as handle:
-        handle.truncate(12 * 1024 * 1024 + 1)
+        handle.truncate(32 * 1024 * 1024 + 1)
     with pytest.raises(MediaError, match="size"):
         inspect_clip(project, str(path))
 

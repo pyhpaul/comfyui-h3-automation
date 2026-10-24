@@ -47,7 +47,7 @@ PYTHONPATH=src python scripts/ops/post_feiniu_unit_qc.py \
 3. **L0 = 预期同框风险，不是成片保证。** 低风险 ≠ 已证明无同念。
 4. L2 口型定案须连续带声实看；无播放+试听 → L2 标未完成，勿用抽帧冒充。模型音画复核未经校准只出建议，不冒充人工 V2。
 5. 计划/报告绑定源视频与 prompt 的 SHA256；换候选旧报告作废。
-6. L3 默认 `NOT_RUN`；未跑写明「穿帮未检查」。
+6. L3 默认 `NOT_RUN`；未跑写明「穿帮未检查」。跑则按 **初筛 triage**（`triage_risk` 给人扫排序），不是定案清场。
 7. **ASR / 自动筛查优先借本机 GPU**；禁止挤占正在出片的租卡 Comfy GPU。
 8. 工单、已生成证据、实际检查覆盖率分别计数；灰区或审核未闭环时，不写「风险排查完成」。
 
@@ -82,7 +82,7 @@ L1 词面、L2 自动筛查（faster-whisper、密帧导航）在 CPU 上会很�
 | L0 | 剧本同镜风险；Strict+Medium 双跑；灰区复核入口 | **必做** |
 | L1 | 挂接 `comfy-h3-dialogue-check` | 可选挂接 |
 | L2 | HIGH 触发的 **整 U** 全部对白 V2 实看 | P1 **不做定案** |
-| L3 | 穿帮筛查 | 默认 `NOT_RUN` |
+| L3 | 穿帮初筛 triage（人体/道具乱套） | 默认 `NOT_RUN`；赢家/烂批再开 |
 | L4 | 结案 / 升复修 | P1 只到 plan 状态 |
 
 ## P1 交付标准（当前阶段）
@@ -166,7 +166,8 @@ L1 词面、L2 自动筛查（faster-whisper、密帧导航）在 CPU 上会很�
 
 ## L3 摘要（见 references/l3-blooper-screen.md）
 
-状态与覆盖率见 references；抽帧完成或未发现嫌疑不等于人工清场。默认 `NOT_RUN`。
+穿帮**初筛**：输出 `triage_risk` 给人扫排序（HIGH 先看）。未知 frame_id 软降级，不整单作废。
+抽帧完成或未发现嫌疑不等于人工清场。默认 `NOT_RUN`；赢家/烂批再开。
 
 ## 与其它规程
 

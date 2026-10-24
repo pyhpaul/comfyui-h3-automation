@@ -8,7 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-MAX_BYTES = 12 * 1024 * 1024
+# H3 unit mp4s commonly land ~10–15 MiB; 12 MiB blocked L3 pilot screens.
+MAX_BYTES = 32 * 1024 * 1024
 MAX_SECONDS = 30.0
 MAX_SAMPLED_FRAMES = 240
 
@@ -48,7 +49,7 @@ def _allowed_path(project_root: Path, media_path: str) -> Path:
     if not path.is_file():
         raise MediaError("Media file does not exist")
     if not 0 < path.stat().st_size <= MAX_BYTES:
-        raise MediaError("Media size must be between 1 byte and 12 MiB")
+        raise MediaError("Media size must be between 1 byte and 32 MiB")
     return path
 
 

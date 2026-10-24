@@ -165,7 +165,13 @@ v3 的 cue 支持 `gain_offset_db`、`fade_in`、`fade_out`，逐段控制相对
   下载 stage 与上传可以重叠。
 
 实现：`scripts/episode_post/ep_pilot_media.video_encode_args`；
-硬剪批流水线 `/tmp/lihun_hardcut_batch_piped.py`。
+硬剪批流水线（已入库）：
+
+```bash
+PYTHONPATH=src .worktrees/feat-orch/.venv/bin/python -u \
+  scripts/episode_post/lihun_hardcut_batch_piped.py EP43 EP45
+# helpers: lihun_stage_asr.py · lihun_plan_render_archive.py
+```
 
 ### 6.1 实测提速（lihun-v23 硬剪批，本机 1660S）
 
@@ -180,8 +186,8 @@ v3 的 cue 支持 `gain_offset_db`、`fade_in`、`fade_out`，逐段控制相对
 约束：
 
 - 不要在 NVENC 编码同一时刻再开 Whisper ASR（同卡）。
-- 硬剪批：`--skip-archive` 渲完；后台 `--archive-only`；主线程
-  stage→render 下一集；`WAIT archive_before_put` 串行化 put。
+- 硬剪批：`lihun_hardcut_batch_piped.py`（`--skip-archive` 渲完；后台
+  `--archive-only`；最多 2 路跨集 archive；同集 master/review 双 put）。
 - `ensure_zh_captions` / `warm_zh_map`：`scripts/episode_post/reexport_lihun_edits_v2.py`。
 
 ## 7. 复现已审 EP01 试片

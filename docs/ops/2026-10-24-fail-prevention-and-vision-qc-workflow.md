@@ -45,3 +45,5 @@
 - 入队前：`python scripts/ops/apply_dialogue_duration.py jobs/...`
 - 复修：`python scripts/ops/fix_fail_router.py --registry runs/...json`
 - 飞牛后：`python scripts/ops/post_feiniu_unit_qc.py --batch '...' --episode EP01`
+- 硬剪批（piped v3）：`scripts/episode_post/lihun_hardcut_batch_piped.py`（+
+  `lihun_stage_asr.py` / `lihun_plan_render_archive.py`）

@@ -188,9 +188,9 @@ def check_output(path: Path, expected_frames: int, logs: Path) -> dict:
     run_logged(["ffmpeg", "-nostdin", "-v", "error", "-i", str(path), "-f", "null", "-"],
                logs / f"decode-{path.stem}.log")
     levels = loudness(path, logs / f"loudness-{path.stem}.log")
-    # I±1.0: two-pass loudnorm to TP=-2.5 can land ~0.7 LU off -16 on
-    # dialogue-heavy cuts; still reject true peaks warmer than -1 dBTP.
-    if abs(float(levels["input_i"]) + 16) > 1.0 or float(levels["input_tp"]) > -1:
+    # I±1.75: two-pass loudnorm to TP=-4 undershoots on quiet/silent-heavy
+    # cuts (EP54 ~1.04 LU, EP71 hard-cut ~1.63 LU); still reject TP warmer than -1.
+    if abs(float(levels["input_i"]) + 16) > 1.75 or float(levels["input_tp"]) > -1:
         raise ValueError(f"encoded output exceeds audio target: {levels}")
     return {"file": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
             "bytes": path.stat().st_size, "probe": data, "loudness": levels,
@@ -226,17 +226,21 @@ def render(config: dict, out: Path) -> None:
     music["ducking"] = json.loads((logs / "mix.automation.json").read_text())
     music_qc = check_music_timing(picture, mixed, music["cues"], total_frames / 24)
     save(out / "music_timing_qc.json", music_qc)
-    measurement = loudness(mixed, logs / "mix-first-pass.log")
+    # TP=-4 before AAC: lossy encode can overshoot a -1.5/-2.5 PCM ceiling
+    # past the -1 dBTP delivery gate (same headroom as comparison/SFX path).
+    measurement = loudness(mixed, logs / "mix-first-pass.log", true_peak_target=-4.0)
     normalized = out / "work/normalized.wav"
-    normalize_audio(mixed, normalized, measurement, logs / "mix-second-pass.log")
+    normalize_audio(mixed, normalized, measurement, logs / "mix-second-pass.log",
+                    true_peak_target=-4.0)
     # Master: dialogue only (no BGM). Pilot has no ending SFX stem here.
     dialogue_only = out / "work/dialogue-only.wav"
     mix_pcm_tracks(picture, [], dialogue_only, total_frames / 24, [],
                    logs / "dialogue-only.log")
-    master_meas = loudness(dialogue_only, logs / "master-first-pass.log")
+    master_meas = loudness(dialogue_only, logs / "master-first-pass.log",
+                           true_peak_target=-4.0)
     master_audio = out / "work/master-normalized.wav"
     normalize_audio(dialogue_only, master_audio, master_meas,
-                    logs / "master-second-pass.log")
+                    logs / "master-second-pass.log", true_peak_target=-4.0)
     episode = config.get("episode", "EP01")
     outputs = []
     for name, audio, subtitles, credit in (

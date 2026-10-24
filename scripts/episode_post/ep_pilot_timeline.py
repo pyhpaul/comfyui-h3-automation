@@ -105,7 +105,14 @@ def tokens(text: str, aliases: dict[str, str]) -> list[str]:
     return result
 
 
-_WEAK_LEAD = frozenset({"i", "a", "oh", "uh", "um", "and", "but", "so"})
+# Soft lead tokens Whisper often drops at phrase onset (quiet attack).
+# Allow dropping a short run of these so e.g. scripted
+# "It has a wheel that squeaks." still matches heard "A wheel that squeaks."
+_WEAK_LEAD = frozenset({
+    "i", "a", "an", "the", "oh", "uh", "um", "and", "but", "so",
+    "it", "he", "she", "we", "they", "you",
+    "has", "have", "had", "is", "are", "was", "were",
+})
 
 
 def _find_token_span(heard_tokens: list[str], need: list[str], cursor: int,
@@ -113,14 +120,16 @@ def _find_token_span(heard_tokens: list[str], need: list[str], cursor: int,
     """Return (start, need_len_used) for the best span match at/after cursor.
 
     Exact match first. If ASR dropped a weak leading pronoun/filler
-    (e.g. scripted \"I wanted to.\" heard as \"wanted to.\"), retry without
-    that lead token. Returns the heard span start and how many *heard*
-    tokens were consumed (always len(matched need slice)).
+    (e.g. scripted \"I wanted to.\" heard as \"wanted to.\", or
+    \"It has a wheel...\" heard as \"A wheel...\"), retry without a short
+    function-word prefix. Returns the heard span start and how many
+    *heard* tokens were consumed (always len(matched need slice)).
     """
     start_at = cursor if after is None else after
-    for drop in (0, 1):
-        if drop and (len(need) < 2 or need[0] not in _WEAK_LEAD):
-            break
+    max_drop = min(2, max(0, len(need) - 2))
+    for drop in range(0, max_drop + 1):
+        if drop and any(tok not in _WEAK_LEAD for tok in need[:drop]):
+            continue
         use = need[drop:]
         match = next((i for i in range(start_at, len(heard_tokens) - len(use) + 1)
                       if heard_tokens[i:i + len(use)] == use), None)

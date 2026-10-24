@@ -45,7 +45,9 @@ python scripts/ops/batch_dialogue_check.py \
   追加一行中文，并供双语报告引用。没有映射时 SRT 只有英文转写。
 
 16 条 12 秒片子 CPU 约 100 秒。`faster-whisper` 在 feat-orch venv 里；
-Whisper 模型首次用会下载 small。
+Whisper 模型首次用会下载 small。默认实现是 `device=cpu`；批量或与
+`comfy-h3-unit-visual-qc` 联跑时**优先本机 GPU**（`device=cuda`），
+规则见该 skill「算力（GPU）」——不抢正在出片的租卡 Comfy。
 
 ## Report format（给人看的双语版）
 

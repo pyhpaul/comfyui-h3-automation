@@ -105,17 +105,19 @@ def render_audio(config: dict, preset: dict, picture: Path, layout: dict, cues: 
     sound_qc = check_music_timing(bed, mix, sound_cues, total)
     sound_qc["scope"] = "SFX residual before whole-episode normalization"
     save(out / "sfx_timing_qc.json", sound_qc)
+    # TP=-4 before AAC: ending SFX transients still overshoot a -2.5 PCM
+    # ceiling into the lossy encode (EP62: PCM -2.49 → AAC -0.74 dBTP).
     review_audio = out / "work/normalized-review.wav"
-    measurement = loudness(mix, out / "logs/final-first-pass.log", true_peak_target=-2.5)
+    measurement = loudness(mix, out / "logs/final-first-pass.log", true_peak_target=-4.0)
     normalize_audio(mix, review_audio, measurement, out / "logs/final-second-pass.log",
-                    true_peak_target=-2.5)
+                    true_peak_target=-4.0)
     master_mix = out / "work/master-mix.wav"
     mix_pcm_tracks(picture, stems, master_mix, total, [], out / "logs/master-sfx-mix.log")
     master_audio = out / "work/normalized-master.wav"
     master_meas = loudness(master_mix, out / "logs/master-first-pass.log",
-                           true_peak_target=-2.5)
+                           true_peak_target=-4.0)
     normalize_audio(master_mix, master_audio, master_meas,
-                    out / "logs/master-second-pass.log", true_peak_target=-2.5)
+                    out / "logs/master-second-pass.log", true_peak_target=-4.0)
     return master_audio, review_audio, {"music": music_qc, "sfx": sound_qc,
                                         "sfx_cues": sound_cues}
 

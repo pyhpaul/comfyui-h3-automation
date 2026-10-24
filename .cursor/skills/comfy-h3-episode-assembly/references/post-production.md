@@ -139,7 +139,52 @@ v3 的 cue 支持 `gain_offset_db`、`fade_in`、`fade_out`，逐段控制相对
 - 原生画幅并非精确 9:16。1080x1920、裁切/补边、平台安全区、片头和
   英文剧名仍需独立确认，不默认拉伸、放大或自行翻译。
 
-## 6. 复现已审 EP01 试片
+## 6. 编码与提速（硬约束）
+
+整集剪辑墙钟里，烧英文字幕的审片版重编码曾是主要 CPU 瓶颈
+（`libx264 -preset slow`）。
+
+- **默认**：分段 / bloom / endcard / concat / 审片 burn-in 均用 **NVENC**
+  （`h264_nvenc`，preset `p4`；中间段 `-cq 17`，burn-in `-cq 19`）。
+  `H3_EP_VIDEO_ENCODER` 缺省 `nvenc`。
+- **回退**：`H3_EP_VIDEO_ENCODER=libx264` 恢复原 x264（burn-in slow/CRF18，
+  中间段 fast/CRF16–17）。
+- **母版**：无字幕烧录时继续视频流复制，不走 NVENC。
+- **滤镜**仍在 CPU（gblur/blend/ass/drawtext）；NVENC 只接管编码。
+- **不要**用租卡 Comfy/H3 GPU 做整集 ffmpeg；与出片队列隔离。
+- ASR 与 NVENC **同集串行**（1660S 勿双开）。
+- **飞牛上传必须与下一集工作重叠（硬要求）**：本集 `ARCHIVE` 不得挡住
+  下一集开渲。正确顺序：`RENDER(本集)` → 后台 `ARCHIVE(本集)` → 同时
+  `STAGE+ASR(下集)` → **立刻** `RENDER(下集)`（此时上传仍在飞）。
+  只叠 stage、等上传完再渲下一集 = 不合格（上传 3–6 分钟会整段回临界路径）。
+- **禁止 `WAIT archive_before_put` 空等（v3）**：下一集 render 结束后不要
+  干等到上一集 `ARCHIVE_DONE` 才 `ARCH_SUBMIT`。允许 **最多 2 路跨集
+  archive 同时在飞**（`max_workers=2`）；只在已有 2 路上传未完成时才
+  `WAIT arch_slot`。否则会出现渲完空等 3–5 分钟（archive−stage−render 余量）。
+- **同一集内**两个大 mp4（master/review）2 路并行 `putFile`（各连各的 SMB）。
+  下载 stage 与上传可以重叠。
+
+实现：`scripts/episode_post/ep_pilot_media.video_encode_args`；
+硬剪批流水线 `/tmp/lihun_hardcut_batch_piped.py`。
+
+### 6.1 实测提速（lihun-v23 硬剪批，本机 1660S）
+
+| 杠杆 | 做法 | 量级（约） |
+|---|---|---|
+| NVENC 全路径 | 分段/bloom/endcard/concat/burn-in | 编码 Σ ~98s→~24s；stage→qc 墙钟 ~380s→~293s（~23%） |
+| `zh_captions` 缓存 | `.cache/…/zh_captions_map.json`；`warm_zh_map` 种子/harvest；缺词 **Argos→translators(bing/sogou)→deep_translator**；缓存前 `_zh_looks_sane` 拒乱码/复读 | 命中秒级；Argos 垃圾句走 Bing 仍可用；勿再被 Google 限流卡死整批 |
+| 跨集流水线 v1 | 仅 `ARCHIVE` ∥ `STAGE` | EP43/45/46/53：只省 stage ~25–40s；archive 190–370s **仍挡**下一集 render（如 EP53 wall 321s ≈ render 102 + archive 209） |
+| 跨集流水线 v2 | `ARCHIVE` ∥ `STAGE` ∥ **`RENDER(下集)`**；跨集 put **串行** | 上传与下一集 render 重叠；但 render 结束后若 archive 仍剩 3–5min，会 `WAIT archive_before_put` 空等（EP57→64 余 ~222s） |
+| 跨集流水线 v3 | 同上 + **最多 2 路 archive 同时在飞**；同集 mp4 双 put | 消灭常见空等：下一集渲完立刻 `ARCH_SUBMIT`，不挡 GPU/CPU 临界路径；只在 in_flight≥2 时 `WAIT arch_slot`。批末 `WAIT archive_drain` |
+
+约束：
+
+- 不要在 NVENC 编码同一时刻再开 Whisper ASR（同卡）。
+- 硬剪批：`--skip-archive` 渲完；后台 `--archive-only`；主线程
+  stage→render 下一集；`WAIT archive_before_put` 串行化 put。
+- `ensure_zh_captions` / `warm_zh_map`：`scripts/episode_post/reexport_lihun_edits_v2.py`。
+
+## 7. 复现已审 EP01 试片
 
 先核对资产和输入 hash。`prepare_ep_post_pilot.py` 会以排他模式创建固定
 试片输入，已有 v2 输入时不要重跑；该脚本固定四条源 hash，不适用新 EP。

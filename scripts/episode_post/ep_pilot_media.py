@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -9,6 +10,40 @@ import subprocess
 from ep_pilot_mix import mix_pcm_tracks
 from ep_pilot_creative import cue_fades, ending_video_filter
 from ep_pilot_audio_qc import check_residual_windows, decode_stereo
+
+
+def video_encode_args(*, role: str = "intermediate") -> list[str]:
+    """H.264 encode args for episode-post ffmpeg graph outputs.
+
+    Roles:
+      - intermediate: unit parts / bloom / endcard / concat picture
+      - burnin: review ASS burn-in (was the slow libx264 -preset slow path)
+
+    Default NVENC (`H3_EP_VIDEO_ENCODER` unset or `nvenc`). Set
+    `H3_EP_VIDEO_ENCODER=libx264` for CPU parity / no NVENC.
+    """
+    choice = os.environ.get("H3_EP_VIDEO_ENCODER", "nvenc").strip().lower()
+    if role not in {"intermediate", "burnin", "concat"}:
+        raise ValueError(f"unknown encode role: {role}")
+    if choice in {"libx264", "x264", "cpu"}:
+        if role == "burnin":
+            return ["-c:v", "libx264", "-preset", "slow", "-crf", "18"]
+        crf = "17" if role == "concat" else "16"
+        return ["-c:v", "libx264", "-preset", "fast", "-crf", crf, "-pix_fmt", "yuv420p"]
+    # NVENC: cq 19 ≈ burn-in CRF18; cq 17 ≈ intermediate CRF16/17.
+    cq = "19" if role == "burnin" else "17"
+    return [
+        "-c:v", "h264_nvenc",
+        "-preset", "p4",
+        "-cq", cq,
+        "-b:v", "0",
+        "-pix_fmt", "yuv420p",
+    ]
+
+
+def burnin_video_encode_args() -> list[str]:
+    """Backward-compatible alias for review burn-in encode args."""
+    return video_encode_args(role="burnin")
 
 
 def run_logged(args: list[str], log: Path) -> str:
@@ -56,8 +91,8 @@ def render_segment(source: Path, dest: Path, start_frame: int, end_frame: int,
     run_logged([
         "ffmpeg", "-nostdin", "-hide_banner", "-n", "-i", str(source),
         "-filter_complex", f"[0:v]{video}[v];[0:a]{audio}[a]",
-        "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "fast",
-        "-crf", "16", "-pix_fmt", "yuv420p", "-c:a", "pcm_s24le", str(dest),
+        "-map", "[v]", "-map", "[a]", *video_encode_args(role="intermediate"),
+        "-c:a", "pcm_s24le", str(dest),
     ], log)
 
 
@@ -80,8 +115,8 @@ def render_endcard(dest: Path, frames: int, log: Path,
         "ffmpeg", "-nostdin", "-hide_banner", "-n", "-f", "lavfi", "-i",
         f"color=c=0x101418:s=768x1376:r=24:d={frames / 24}",
         "-f", "lavfi", "-i", f"anullsrc=r=48000:cl=stereo:d={frames / 24}",
-        "-vf", ",".join(styles), "-c:v", "libx264", "-preset", "fast", "-crf", "16",
-        "-pix_fmt", "yuv420p", "-c:a", "pcm_s24le", "-shortest", str(dest),
+        "-vf", ",".join(styles), *video_encode_args(role="intermediate"),
+        "-c:a", "pcm_s24le", "-shortest", str(dest),
     ], log)
 
 
@@ -99,8 +134,8 @@ def concatenate(paths: list[Path], dest: Path, log: Path,
         graph = inputs + f"concat=n={len(paths)}:v=1:a=1[v][joined]"
         graph += f";[joined]apad,atrim=end_sample={samples},asetpts=N/SR/TB[a]"
     args += ["-filter_complex", graph,
-             "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "fast",
-             "-crf", "17", "-pix_fmt", "yuv420p", "-c:a", "pcm_s24le", str(dest)]
+             "-map", "[v]", "-map", "[a]", *video_encode_args(role="concat"),
+             "-c:a", "pcm_s24le", str(dest)]
     run_logged(args, log)
 
 
@@ -158,8 +193,8 @@ def export_video(picture: Path, audio: Path, dest: Path, log: Path,
     args = ["ffmpeg", "-nostdin", "-hide_banner", "-n", "-i", str(picture), "-i", str(audio),
             "-map", "0:v:0", "-map", "1:a:0"]
     if subtitles:
-        args += ["-vf", f"ass=filename='{subtitles}'", "-c:v", "libx264",
-                 "-preset", "slow", "-crf", "18"]
+        # Burn-in forces re-encode; master path stays stream-copy.
+        args += ["-vf", f"ass=filename='{subtitles}'", *video_encode_args(role="burnin")]
     else:
         args += ["-c:v", "copy"]
     comment = (

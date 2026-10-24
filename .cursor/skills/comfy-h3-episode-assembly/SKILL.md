@@ -126,6 +126,18 @@ description: >-
 
 ### 4. 完整包装与渲染
 
+**整集编码默认 NVENC**：分段 / bloom / endcard / concat / 审片烧 ASS 一律
+走 `h264_nvenc`（`H3_EP_VIDEO_ENCODER` 缺省 `nvenc`）。母版 `*-master.mp4`
+无烧录时仍 `-c:v copy`。无 NVENC 或要对齐旧 CPU 片时设
+`H3_EP_VIDEO_ENCODER=libx264`。滤镜（gblur/ass/drawtext）仍在 CPU；租卡
+Comfy GPU 不用于整集剪辑。实现：`ep_pilot_media.video_encode_args`。
+**批量飞牛上传硬要求**：本集 archive 必须与下一集 stage+ASR **和**
+render 重叠；渲完后禁止再空等上一集传完（允许最多 2 路跨集 archive
+同时在飞；同集 master/review 双 put）。只叠 stage、或
+`WAIT archive_before_put` 干等 3–5 分钟 = 不合格。同集内 ASR 与 NVENC
+仍串行。`zh_captions` 走短语缓存 + Argos/Bing 补缺。见
+[后期包装](references/post-production.md) §6 / §6.1。
+
 按后期参考执行字幕、配乐、结尾设计和样本域混音。使用审过的输入
 manifest，新建 revision 目录，不覆盖旧片。计划须含与英文 cue 一一对应
 的 `zh_captions`（继母包 `（）` 内通常只有英文，中文靠计划补齐）。

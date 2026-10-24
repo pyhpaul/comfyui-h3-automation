@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ep_pilot_media import run_logged
+from ep_pilot_media import run_logged, video_encode_args
 from ep_pilot_timeline import Clip
 
 
@@ -65,8 +65,8 @@ def render_bloom_segment(source: Path, dest: Path, clip: Clip, gain: float,
              f"afade=t=out:st={duration - 0.03}:d=0.03,apad,atrim=duration={total}[a]")
     run_logged(["ffmpeg", "-nostdin", "-v", "error", "-n", "-i", str(source),
                 "-filter_complex", graph, "-map", "[v]", "-map", "[a]",
-                "-c:v", "libx264", "-preset", "fast", "-crf", "16",
-                "-pix_fmt", "yuv420p", "-c:a", "pcm_s24le", str(dest)], log)
+                *video_encode_args(role="intermediate"),
+                "-c:a", "pcm_s24le", str(dest)], log)
 
 
 def render_sfx(preset: dict, layout: dict, out: Path, gain_db: float) -> tuple[list[Path], list[dict]]:

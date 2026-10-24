@@ -402,15 +402,21 @@ def preflight_pack_prompt(
     violations = audit_pack_prompt_wiring(source, wired, fields)
     sem_violations, sem_warnings = audit_pack_prompt_semantics(wired, fields)
     violations = [*violations, *sem_violations]
+    from comfy_orch.pack_render_risk import risks_as_warnings, scan_render_risks
+
+    # Prefer source text for dialogue/risk (wired may drop labels); fall back wired.
+    render_risks = scan_render_risks(source) or scan_render_risks(wired)
     warnings = [
         *[f"unbound relative asset remains: {p}" for p in unbound_relative_assets(wired)],
         *sem_warnings,
+        *risks_as_warnings(render_risks),
     ]
     return {
         "ok": not violations,
         "simulate_parent": simulate_parent,
         "violations": violations,
         "warnings": warnings,
+        "render_risks": [r.as_dict() for r in render_risks],
         "has_video_label": "<Video 1>" in wired,
         "wired": wired,
         "fields": fields,
@@ -441,6 +447,7 @@ def preflight_job_dir(job_dir: Path, *, require_parent_path: bool = True) -> dic
     )
     reports["ok"] = ok
     # Drop bulky wired text from top-level consumers unless needed.
+    # Keep render_risks for pack risk summaries.
     for key in ("no_parent", "with_parent"):
         if key in reports and isinstance(reports[key], dict):
             reports[key] = {k: v for k, v in reports[key].items() if k != "wired"}

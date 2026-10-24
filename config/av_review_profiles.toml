@@ -1,0 +1,11 @@
+[profiles.h3-av-review]
+provider = "google-gemini"
+base_url = "https://generativelanguage.googleapis.com/v1beta"
+api_key_env = "GEMINI_API_KEY"
+model = "gemini-3.8-flash"
+
+[profiles.h3-grok-screen]
+provider = "xai-grok"
+base_url = "https://api.x.ai/v1"
+api_key_env = "XAI_API_KEY"
+model = "grok-4.7"

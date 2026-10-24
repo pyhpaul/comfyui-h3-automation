@@ -66,17 +66,36 @@ Code path:
 - [ ] Warnings (e.g. unbound relative asset like U07 crystal) are acknowledged; do not treat warning-only as PASS for missing Picture slots if the asset is required for the shot
 - [ ] Motion latent stays on one scene number. `scene-004-s01` and `scene-004-s03` are the same place (time of day). `scene-006` → `scene-004` is a cut: **do not queue** that pair on one latent chain. `FAIL latent-scene` is a hard stop. Break the chain at the first unit of the new place (that unit loads no parent latent). A prompt mention of the old scene does not count; only bound `ref_image_*` scene files do. An extra plate that shares the previous scene number (phone-screen scene beside the current room) may stay on the chain.
 
-## What this audit does **not** catch
+## Render-risk layer（拆包必跑，防 v23 类 failall）
 
-`audit_pack_prompts.py` is **pre-queue text/asset wiring**. It never listens to the rendered mp4. Extra/garbled speech, silent units that still talk, speaker mismatch, both mouths delivering the same line, and tail audio junk only show up **after** render. ASR dialogue gate matches expected `（）` text and usually **misses** two characters repeating one line.
+接线 audit 之外，同一脚本会扫 **出片风险**（`comfy_orch.pack_render_risk`）：
+
+| code | 含义 | 入队前动作 |
+|---|---|---|
+| B HIGH | 无 `（）` 对白却写开口 | 硬锁画内闭口无声后再入队 |
+| E HIGH | 双人同框对白缺听者闭口 | 说话者开口；其余闭口无声；禁同念 |
+| C MED | 极短问句易被吞 | 拆条/独立镜头 |
+| DURATION MED | 台词估时 ≪ 默认时长 | `apply_dialogue_duration.py` 收紧 |
+| D LOW | 易近音专名 | 提示缓慢清晰读名 |
+
+```bash
+python scripts/audit_pack_prompts.py jobs/ep_units/<JOB_GLOB> --render-risk
+# 可选硬门：--fail-on-high-risk
+python scripts/ops/apply_dialogue_duration.py jobs/ep_units/<JOB_GLOB>
+```
+
+风险默认是 **警告 + 标注**；接线 FAIL 仍硬停。设计见
+`docs/ops/2026-10-24-fail-prevention-and-vision-qc-workflow.md`。
+
+## What wiring audit still does **not** catch
+
+成片里的胡话/同念/口型仍须飞牛后 QC。ASR 门禁对同念通常假通过。
 
 ### Next review focus: two-speaker echo
 
 **Post-Feiniu spot-check priority #1:** two-shot / depth-other dialogue units — watch mouths and listen for both characters delivering the same line.
 
-Not a duplicated script line: H3 joint AV latent lip-ownership crosstalk. Visible mouths follow the active speech; listeners without an explicit closed-mouth lock often mouth along. Pack risk is high when shots use `口型同步开口` plus `另一人在画面纵深` / name the other person, but never say the listener keeps lips closed / stays silent. Mitigate in `prompt_source`: speaker opens; everyone else in frame stays lips-closed and silent; forbid both mouths on one line. Official-style `(S1)/(S2)` + listener-closed beats are stronger than bare `（）` alone.
-
-Pre-queue: flag dual-dialogue units that lack a listener-closed cue as high risk (warn; do not auto-FAIL wiring audit).
+Not a duplicated script line: H3 joint AV latent lip-ownership crosstalk. Mitigate in `prompt_source` at unpack (E risk above). Official-style `(S1)/(S2)` + listener-closed beats are stronger than bare `（）` alone.
 
 Official MiniMax `h3-prompt-writing` vs pack gaps, combat prompt order, and the extended audit checklist: `docs/ops/2026-10-19-minimax-h3-official-skills-vs-pack-prompts.md`. Do **not** bulk-rewrite packs to English six-section Ref2VA.
 

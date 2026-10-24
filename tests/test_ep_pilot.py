@@ -62,6 +62,17 @@ def test_alignment_handles_asr_split_name_via_multi_token_alias():
     assert cues[0].end == pytest.approx(4.9)
 
 
+def test_alignment_maps_noaa_mishear_to_noah():
+    words = [Word("U06", i, i + 0.4, w)
+             for i, w in enumerate(["NOAA", "is", "five.", "We're", "all",
+                                    "still", "learning."])]
+    cues = align_dialogue(
+        ["Noah is five.", "We're all still learning."],
+        words, {"noaa": "noah"})
+    assert cues[0].text == "Noah is five."
+    assert cues[0].start == 0
+
+
 def test_alignment_skip_first_keeps_later_performance():
     texts = ["You'd", "stop?", "You'd", "stop?", "Yes."]
     words = [Word("U07", i, i + 0.5, text) for i, text in enumerate(texts)]
@@ -85,6 +96,18 @@ def test_alignment_tolerates_dropped_leading_pronoun():
     assert cues[0].text == "I wanted to."
     assert cues[0].start == 0
     assert cues[1].text == "But you didn't."
+
+
+def test_alignment_tolerates_dropped_it_has_lead():
+    # Quiet onset: "It has a wheel that squeaks." → "A wheel that squeaks."
+    words = [Word("U03", i, i + 0.4, w)
+             for i, w in enumerate(
+                 ["A", "wheel", "that", "squeaks.", "He", "can", "hear", "it."])]
+    cues = align_dialogue(
+        ["It has a wheel that squeaks.", "He can hear it."], words, {})
+    assert cues[0].text == "It has a wheel that squeaks."
+    assert cues[0].start == 0
+    assert cues[1].text == "He can hear it."
 
 
 def test_alignment_splits_oclock_like_whisper():

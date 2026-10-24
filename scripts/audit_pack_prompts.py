@@ -64,6 +64,16 @@ def main() -> int:
         help="Skip simulated parent video path (not recommended for serial)",
     )
     ap.add_argument("--json", action="store_true", help="Print full JSON report")
+    ap.add_argument(
+        "--render-risk",
+        action="store_true",
+        help="Print HIGH/MED render-risk summary (B/E silent-mouth, chorus, duration)",
+    )
+    ap.add_argument(
+        "--fail-on-high-risk",
+        action="store_true",
+        help="Exit non-zero when any unit has HIGH render-risk (B/E)",
+    )
     args = ap.parse_args()
 
     root = project_root()
@@ -77,23 +87,42 @@ def main() -> int:
 
     reports = []
     failed = 0
+    high_risk_units = 0
     for job_dir in job_dirs:
         rep = preflight_job_dir(job_dir, require_parent_path=not args.no_parent_sim)
         reports.append(rep)
         unit = rep.get("unit_id") or job_dir.name
         status = "PASS" if rep["ok"] else "FAIL"
         warn_n = 0
+        risks = []
         for key in ("no_parent", "with_parent"):
             block = rep.get(key) or {}
             warn_n += len(block.get("warnings") or [])
-        print(f"{status} {unit} warnings={warn_n}{_eng_flags(job_dir)}", flush=True)
+            for r in block.get("render_risks") or []:
+                if r not in risks:
+                    risks.append(r)
+        high = [r for r in risks if r.get("severity") == "HIGH"]
+        risk_tag = ""
+        if high:
+            high_risk_units += 1
+            risk_tag = " HIGH_RISK=" + ",".join(sorted({r["code"] for r in high}))
+        print(
+            f"{status} {unit} warnings={warn_n}{risk_tag}{_eng_flags(job_dir)}",
+            flush=True,
+        )
         if not rep["ok"]:
             failed += 1
             for key in ("no_parent", "with_parent"):
                 block = rep.get(key) or {}
                 for v in block.get("violations") or []:
                     print(f"  [{key}] {v}", flush=True)
-        if warn_n:
+        if warn_n and (args.render_risk or high):
+            for key in ("no_parent", "with_parent"):
+                block = rep.get(key) or {}
+                for w in block.get("warnings") or []:
+                    if args.render_risk or w.startswith("render-risk"):
+                        print(f"  warn[{key}] {w}", flush=True)
+        elif warn_n:
             for key in ("no_parent", "with_parent"):
                 block = rep.get(key) or {}
                 for w in block.get("warnings") or []:
@@ -102,6 +131,10 @@ def main() -> int:
     for violation in audit_job_dirs(job_dirs):
         failed += 1
         print(f"FAIL latent-scene {violation}", flush=True)
+
+    if args.fail_on_high_risk and high_risk_units:
+        print(f"FAIL render-risk high_units={high_risk_units}", flush=True)
+        failed += high_risk_units
 
     if args.json:
         print(json.dumps(reports, ensure_ascii=False, indent=2))

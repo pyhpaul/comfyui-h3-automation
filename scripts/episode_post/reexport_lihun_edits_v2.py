@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import io
 import json
+import re
 import shutil
 import sys
 import time
@@ -65,8 +66,49 @@ def normalize_en(text: str) -> str:
     return " ".join(text.replace("\n", " ").split())
 
 
+# Ultra-common short cues: avoid free-API rate limits on every EP.
+_BOOTSTRAP_ZH: dict[str, str] = {
+    "What?": "什么？",
+    "Why?": "为什么？",
+    "Who?": "谁？",
+    "Where?": "哪里？",
+    "When?": "什么时候？",
+    "How?": "怎么？",
+    "No.": "不。",
+    "Yes.": "是。",
+    "Okay.": "好。",
+    "Ok.": "好。",
+    "OK.": "好。",
+    "Sorry.": "对不起。",
+    "Thanks.": "谢谢。",
+    "Thank you.": "谢谢。",
+    "Please.": "拜托。",
+    "Stop.": "停。",
+    "Wait.": "等等。",
+    "Go.": "走。",
+    "Come.": "过来。",
+    "I know.": "我知道。",
+    "I see.": "我明白了。",
+    "Of course.": "当然。",
+    "Never.": "绝不。",
+    "Always.": "总是。",
+    "Really?": "真的？",
+    "Right.": "对。",
+    "Wrong.": "错了。",
+    "Fine.": "行。",
+    "Enough.": "够了。",
+    "Hello.": "你好。",
+    "Goodbye.": "再见。",
+    "Whose?": "谁的？",
+}
+
+
 def seed_zh_map_from_repo(zh_map: dict[str, str]) -> None:
-    """Absorb any existing phrase maps (exact EN keys only)."""
+    """Absorb bootstrap shorts + any existing phrase maps (exact EN keys only)."""
+    for en, zh in _BOOTSTRAP_ZH.items():
+        key = normalize_en(en)
+        if key not in zh_map:
+            zh_map[key] = zh
     for path in (
         ROOT / "runs" / "lihun_zh_map.json",
         ROOT / "runs" / "chaofu_ep01_v2_zh_map.json",
@@ -86,29 +128,167 @@ def seed_zh_map_from_repo(zh_map: dict[str, str]) -> None:
                 zh_map[key] = zh.strip()
 
 
-def _translate_one(en: str) -> str:
-    """Prefer MyMemory (free); fall back to Google."""
-    from deep_translator import GoogleTranslator, MyMemoryTranslator
+def _srt_cue_bodies(text: str) -> list[str]:
+    bodies: list[str] = []
+    for block in re.split(r"\n\s*\n", text.strip()):
+        lines = block.splitlines()
+        if len(lines) >= 3 and "-->" in lines[1]:
+            bodies.append("\n".join(lines[2:]).strip())
+    return bodies
 
+
+def harvest_zh_from_episode_edits(zh_map: dict[str, str]) -> int:
+    """Fill zh_map from already-rendered EP en.srt/zh.srt pairs (index-aligned)."""
+    root = ROOT / "outputs" / "episode-edits" / "lihun-v23"
+    if not root.is_dir():
+        return 0
+    added = 0
+    for ep_dir in sorted(root.glob("EP*")):
+        en_files = list(ep_dir.glob("*.en.srt"))
+        zh_files = list(ep_dir.glob("*.zh.srt"))
+        if not en_files or not zh_files:
+            continue
+        ens = _srt_cue_bodies(en_files[0].read_text(encoding="utf-8"))
+        zhs = _srt_cue_bodies(zh_files[0].read_text(encoding="utf-8"))
+        for en, zh in zip(ens, zhs):
+            if not en or not zh:
+                continue
+            # skip failed English leftovers in zh track
+            if not any("\u4e00" <= c <= "\u9fff" for c in zh):
+                continue
+            key = normalize_en(en)
+            if key not in zh_map:
+                zh_map[key] = zh
+                added += 1
+    return added
+
+
+def _zh_looks_sane(en: str, zh: str) -> bool:
+    """Reject runaway / garbled offline translations before caching."""
+    z = zh.strip()
+    if not z or z == en.strip():
+        return False
+    if len(z) > max(48, 6 * len(en.strip())):
+        return False
+    if any(ord(c) < 32 for c in z):
+        return False
+    # Private Use / weird compatibility junk from bad Argos outputs
+    if any(
+        0xE000 <= ord(c) <= 0xF8FF
+        or 0xF0000 <= ord(c) <= 0xFFFFD
+        or 0x3100 <= ord(c) <= 0x312F  # Bopomofo often signals mojibake here
+        for c in z
+    ):
+        return False
+    cjk = sum(1 for c in z if "\u4e00" <= c <= "\u9fff")
+    if cjk == 0:
+        return False
+    # mostly-Latin "translation" with a stray CJK punct
+    letters = sum(1 for c in z if c.isalpha())
+    if letters and cjk / max(1, letters) < 0.35 and len(en.split()) >= 2:
+        return False
+    for n in (2, 3, 4):
+        if len(z) >= n * 8:
+            chunk = z[:n]
+            if chunk * 8 in z:
+                return False
+    return True
+
+
+def _argos_translate(en: str) -> str | None:
+    """Offline EN→ZH via argostranslate when installed (no rate limit)."""
+    try:
+        import argostranslate.translate  # type: ignore
+    except ImportError:
+        return None
+    try:
+        zh = argostranslate.translate.translate(en, "en", "zh")
+    except Exception:  # noqa: BLE001
+        return None
+    if zh and _zh_looks_sane(en, zh):
+        return zh.strip()
+    return None
+
+
+def _translators_pkg(en: str) -> str | None:
+    """Optional `translators` package (bing/baidu/…) when Argos fails."""
+    try:
+        import translators as ts  # type: ignore
+    except ImportError:
+        return None
+    for engine in ("bing", "baidu", "sogou"):
+        try:
+            zh = ts.translate_text(
+                en, translator=engine, from_language="en", to_language="zh"
+            )
+            if zh and _zh_looks_sane(en, zh):
+                return zh.strip()
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+def _translate_one(en: str) -> str:
+    """Argos offline → translators pkg → deep_translator online."""
     errors: list[str] = []
+    argos = _argos_translate(en)
+    if argos:
+        return argos
+    errors.append("argos_unavailable_or_garbage")
+    pkg = _translators_pkg(en)
+    if pkg:
+        return pkg
+    errors.append("translators_pkg_unavailable")
+    try:
+        from deep_translator import GoogleTranslator, MyMemoryTranslator
+    except ImportError as exc:
+        raise RuntimeError(
+            f"translate failed for {en!r}: {'; '.join(errors)}; no deep_translator ({exc})"
+        ) from exc
     for factory in (
         lambda: MyMemoryTranslator(source="en-US", target="zh-CN"),
         lambda: GoogleTranslator(source="en", target="zh-CN"),
     ):
         try:
             zh = factory().translate(en)
-            if zh and zh.strip():
+            if zh and _zh_looks_sane(en, zh):
                 return zh.strip()
-            errors.append("empty")
+            errors.append("empty_or_insane")
         except Exception as exc:  # noqa: BLE001
             errors.append(f"{type(exc).__name__}: {exc}")
+            if "TooManyRequests" in str(exc):
+                break
             time.sleep(1.0)
     raise RuntimeError(f"translate failed for {en!r}: {'; '.join(errors)}")
 
 
-def ensure_zh_captions(english: list[str], zh_map: dict[str, str]) -> list[str]:
+def warm_zh_map(zh_map: dict[str, str] | None = None) -> dict[str, str]:
+    """Load map, seed repo phrase packs, harvest prior EP srt pairs, persist if grown."""
+    data = zh_map if zh_map is not None else load_zh_map()
+    before = len(data)
+    seed_zh_map_from_repo(data)
+    harvested = harvest_zh_from_episode_edits(data)
+    if len(data) > before or harvested:
+        save_zh_map(data)
+        print(
+            f"ZH_MAP warm +{len(data) - before} (harvest={harvested}) total={len(data)}",
+            flush=True,
+        )
+    return data
+
+
+def ensure_zh_captions(english: list[str], zh_map: dict[str, str] | None = None) -> list[str]:
     """Resolve zh lines 1:1; translate missing keys via free translators."""
-    seed_zh_map_from_repo(zh_map)
+    zh_map = warm_zh_map(zh_map)
+    # Drop previously cached garbage so we re-translate.
+    scrubbed = 0
+    for key in list(zh_map):
+        if not _zh_looks_sane(key, zh_map[key]):
+            del zh_map[key]
+            scrubbed += 1
+    if scrubbed:
+        save_zh_map(zh_map)
+        print(f"ZH_MAP scrubbed {scrubbed} bad entries", flush=True)
     # unique missing, preserve order
     missing: list[str] = []
     seen: set[str] = set()
@@ -119,22 +299,29 @@ def ensure_zh_captions(english: list[str], zh_map: dict[str, str]) -> list[str]:
         seen.add(key)
         missing.append(key)
     if missing:
+        print(f"ZH_MAP miss {len(missing)}/{len(english)}", flush=True)
         for i, en in enumerate(missing):
             last = None
-            for attempt in range(5):
+            for attempt in range(3):
                 try:
-                    zh_map[en] = _translate_one(en)
+                    zh = _translate_one(en)
+                    zh_map[en] = zh
+                    print(f"zh {en} -> {zh}", flush=True)
                     last = None
                     break
                 except Exception as exc:  # noqa: BLE001
                     last = exc
-                    time.sleep(2.0 * (attempt + 1))
+                    wait = 2.0 * (attempt + 1)
+                    print(
+                        f"ZH_RETRY {en!r} attempt={attempt + 1} wait={wait:.0f}s {type(exc).__name__}",
+                        flush=True,
+                    )
+                    time.sleep(wait)
             if last is not None:
                 raise RuntimeError(f"translate failed for {en!r}: {last}")
             if (i + 1) % 25 == 0:
                 save_zh_map(zh_map)
                 print(f"ZH_MAP progress {i + 1}/{len(missing)}", flush=True)
-            time.sleep(0.35)
         save_zh_map(zh_map)
     out = []
     for raw in english:
@@ -423,6 +610,8 @@ def process_episode(episode: str, *, upload: bool, keep_media: bool) -> None:
         "gonna": "going to",
         "wanna": "want to",
         "gotta": "got to",
+        # Whisper often hears "Noah" as the weather agency acronym.
+        "noaa": "noah",
         **(plan_draft.get("subtitle_aliases") or {}),
     }
     config = load_config(ROOT, shared, plan_draft)
